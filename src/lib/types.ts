@@ -22,8 +22,5 @@ export interface MacdData {
 
 
 export interface AnalysisResult {
-  klineData: KlineData[];
   aiAnalysis: AnalyzeCryptoPairOutput;
-  rsiData: RsiData[];
-  macdData: MacdData[];
 }

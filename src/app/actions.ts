@@ -1,7 +1,7 @@
 "use server";
 
 import { analyzeCryptoPair } from "@/ai/flows/analyze-crypto-pair";
-import type { KlineData, MacdData, RsiData } from "@/lib/types";
+import type { KlineData } from "@/lib/types";
 import { RSI, MACD, EMA } from "technicalindicators";
 
 const BYBIT_API_URL = "https://api.bybit.com";
@@ -51,19 +51,6 @@ async function fetchKlineData(pair: string, timeframe: string, limit: number = 2
     return klineData;
 }
 
-export async function getKlineData(pair: string, timeframe: string) {
-    try {
-        return { klineData: await fetchKlineData(pair, timeframe) };
-    } catch (error) {
-        console.error("Error in getKlineData:", error);
-        if (error instanceof Error) {
-        return { error: error.message };
-        }
-        return { error: "Một lỗi không xác định đã xảy ra." };
-    }
-}
-
-
 export async function getAnalysis(pair: string, timeframe: string) {
   try {
     const klineData = await fetchKlineData(pair, timeframe, 200);
@@ -108,19 +95,7 @@ export async function getAnalysis(pair: string, timeframe: string) {
       ema: latestEma,
     });
     
-    // Prepare indicator data for charts
-    const rsiData: RsiData[] = rsiResult.map((value, index) => ({
-      time: klineData[index + rsiPeriod -1].time,
-      value: value,
-    }));
-
-    const macdData: MacdData[] = macdResult.map((value, index) => ({
-        time: klineData[index + macdInput.slowPeriod - 1].time,
-        ...value
-    }));
-
-
-    return { klineData, aiAnalysis, rsiData, macdData };
+    return { aiAnalysis };
   } catch (error) {
     console.error("Error in getAnalysis:", error);
     if (error instanceof Error) {

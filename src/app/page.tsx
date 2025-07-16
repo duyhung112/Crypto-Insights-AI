@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useTransition } from "react";
+import { useState, useCallback, useTransition } from "react";
 import dynamic from 'next/dynamic';
 import {
   Card,
@@ -18,16 +18,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Loader, BarChart, AlertTriangle } from "lucide-react";
-import { getAnalysis, getKlineData } from "@/app/actions";
-import type { AnalysisResult, KlineData } from "@/lib/types";
+import { getAnalysis } from "@/app/actions";
+import type { AnalysisResult } from "@/lib/types";
 import { Label } from "@/components/ui/label";
-import { IndicatorCharts } from "@/components/indicator-charts";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AnalysisDisplay } from "@/components/analysis-display";
 
 
-const CryptoChart = dynamic(() => import('@/components/crypto-chart'), {
+const TradingViewChart = dynamic(() => import('@/components/tradingview-chart'), {
   ssr: false,
-  loading: () => <Skeleton className="w-full h-[400px] md:h-[500px]" />,
+  loading: () => <Skeleton className="w-full h-[500px]" />,
 });
 
 const pairs = [
@@ -52,27 +52,6 @@ export default function Home() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const [chartData, setChartData] = useState<KlineData[]>([]);
-  const [isChartLoading, startChartTransition] = useTransition();
-
-  const fetchChartData = useCallback(() => {
-    startChartTransition(async () => {
-      const response = await getKlineData(pair, timeframe);
-      if (response.klineData) {
-        setChartData(response.klineData);
-      } else {
-        // Optionally handle chart loading error
-        console.error("Failed to load chart data:", response.error);
-        setChartData([]);
-      }
-    });
-  }, [pair, timeframe]);
-
-  useEffect(() => {
-    fetchChartData();
-  }, [fetchChartData]);
-
-
   const handleAnalyze = async () => {
     setLoading(true);
     setError(null);
@@ -83,7 +62,9 @@ export default function Home() {
     if (response.error) {
       setError(response.error);
     } else {
-      setResult(response as AnalysisResult);
+      // The analysis result no longer contains chart data
+      // as the TradingView widget handles its own data.
+      setResult({ aiAnalysis: response.aiAnalysis });
     }
 
     setLoading(false);
@@ -91,7 +72,7 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen flex-col items-center p-4 sm:p-8 md:p-12 bg-background transition-colors duration-300">
-      <div className="w-full max-w-5xl space-y-8">
+      <div className="w-full max-w-6xl space-y-8">
         <header className="text-center">
           <h1 className="font-headline text-4xl md:text-5xl font-bold text-primary">
             Crypto Insights AI
@@ -153,16 +134,8 @@ export default function Home() {
                 {loading ? "Đang phân tích..." : "Phân tích"}
               </Button>
             </div>
-             <div className="pt-4">
-                {isChartLoading ? (
-                    <Skeleton className="w-full h-[400px] md:h-[500px]" />
-                ) : chartData.length > 0 ? (
-                    <CryptoChart data={chartData} />
-                ) : (
-                   <div className="flex justify-center items-center h-[400px] md:h-[500px]">
-                        <p className="text-muted-foreground">Không thể tải dữ liệu biểu đồ.</p>
-                    </div>
-                )}
+             <div className="pt-4 h-[500px]">
+                <TradingViewChart pair={pair} timeframe={timeframe}/>
             </div>
           </CardContent>
         </Card>
@@ -188,23 +161,8 @@ export default function Home() {
           </Card>
         )}
 
-        {result && (
+        {result && result.aiAnalysis && (
           <div className="space-y-8 animate-in fade-in duration-500">
-            <Card>
-              <CardHeader>
-                <CardTitle className="font-headline">
-                  Kết quả phân tích cho {pairs.find((p) => p.value === pair)?.label} -{" "}
-                  {timeframes.find((t) => t.value === timeframe)?.label}
-                </CardTitle>
-                <CardDescription>Biểu đồ nến tại thời điểm phân tích</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <CryptoChart data={result.klineData} />
-              </CardContent>
-            </Card>
-
-            <IndicatorCharts rsiData={result.rsiData} macdData={result.macdData} />
-
             <AnalysisDisplay analysis={result.aiAnalysis} />
           </div>
         )}
