@@ -41,10 +41,10 @@ const pairs = [
 ];
 
 const timeframes = [
-  { value: "15", label: "15 minutes" },
-  { value: "60", label: "1 hour" },
-  { value: "240", label: "4 hours" },
-  { value: "D", label: "1 day" },
+  { value: "15", label: "15 phút" },
+  { value: "60", label: "1 giờ" },
+  { value: "240", label: "4 giờ" },
+  { value: "D", label: "1 ngày" },
 ];
 
 export default function Home() {
@@ -83,10 +83,10 @@ export default function Home() {
       <div className="w-full max-w-7xl space-y-6">
         <header className="text-center relative">
           <h1 className="font-headline text-3xl md:text-4xl font-bold text-primary">
-            Market Trend Analysis
+            Phân tích Xu hướng Thị trường
           </h1>
           <p className="text-muted-foreground mt-2 text-base">
-            AI-powered cryptocurrency technical analysis for Futures.
+            Phân tích kỹ thuật tiền mã hóa bằng AI cho thị trường Tương lai.
           </p>
            <div className="absolute top-0 right-0">
             <ThemeToggle />
@@ -95,9 +95,9 @@ export default function Home() {
 
         <Card>
             <CardHeader>
-                <CardTitle className="font-headline text-xl">Chart</CardTitle>
+                <CardTitle className="font-headline text-xl">Biểu đồ</CardTitle>
                 <CardDescription className="text-sm">
-                    Price chart for {pair} on the {timeframes.find(t => t.value === timeframe)?.label} timeframe.
+                    Biểu đồ giá cho {pair} trên khung thời gian {timeframes.find(t => t.value === timeframe)?.label}.
                 </CardDescription>
             </CardHeader>
             <CardContent className="h-[500px]">
@@ -107,17 +107,17 @@ export default function Home() {
 
         <Card>
             <CardHeader>
-                <CardTitle className="font-headline text-xl">Control Panel</CardTitle>
+                <CardTitle className="font-headline text-xl">Bảng điều khiển</CardTitle>
                 <CardDescription className="text-sm">
-                Select a pair and timeframe for automatic analysis.
+                Chọn một cặp tiền và khung thời gian để phân tích tự động.
                 </CardDescription>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="space-y-2">
-                    <Label htmlFor="pair-select">Pair</Label>
+                    <Label htmlFor="pair-select">Cặp tiền</Label>
                     <Select value={pair} onValueChange={setPair} disabled={loading}>
                     <SelectTrigger id="pair-select" className="text-sm">
-                        <SelectValue placeholder="Select a pair" />
+                        <SelectValue placeholder="Chọn một cặp tiền" />
                     </SelectTrigger>
                     <SelectContent>
                         {pairs.map((p) => (
@@ -129,10 +129,10 @@ export default function Home() {
                     </Select>
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="timeframe-select">Timeframe</Label>
+                    <Label htmlFor="timeframe-select">Khung thời gian</Label>
                     <Select value={timeframe} onValueChange={setTimeframe} disabled={loading}>
                     <SelectTrigger id="timeframe-select" className="text-sm">
-                        <SelectValue placeholder="Select a timeframe" />
+                        <SelectValue placeholder="Chọn một khung thời gian" />
                     </SelectTrigger>
                     <SelectContent>
                         {timeframes.map((t) => (
@@ -146,7 +146,7 @@ export default function Home() {
                 {loading && (
                     <div className="flex items-center text-sm text-muted-foreground pt-2 self-end">
                         <Loader className="mr-2 h-4 w-4 animate-spin" />
-                        <span>Analyzing...</span>
+                        <span>Đang phân tích...</span>
                     </div>
                 )}
             </CardContent>
@@ -155,7 +155,7 @@ export default function Home() {
         {loading && !result && !error && (
             <div className="flex flex-col justify-center items-center p-16 space-y-4">
                 <Loader className="h-12 w-12 animate-spin text-primary" />
-                <p className="text-muted-foreground">Fetching data and analyzing...</p>
+                <p className="text-muted-foreground">Đang lấy dữ liệu và phân tích...</p>
             </div>
         )}
 
@@ -164,7 +164,7 @@ export default function Home() {
                 <CardHeader className="flex flex-row items-center gap-4">
                 <AlertTriangle className="h-8 w-8 text-destructive" />
                 <div>
-                    <CardTitle className="text-destructive text-lg">An Error Occurred</CardTitle>
+                    <CardTitle className="text-destructive text-lg">Đã có lỗi xảy ra</CardTitle>
                     <CardDescription className="text-destructive/80 text-sm">
                     {error}
                     </CardDescription>
@@ -177,8 +177,8 @@ export default function Home() {
             <div className="animate-in fade-in duration-500">
                 <Tabs defaultValue="analysis" className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="analysis">AI Analysis</TabsTrigger>
-                    <TabsTrigger value="signals">Trading Signals</TabsTrigger>
+                    <TabsTrigger value="analysis">Phân tích AI</TabsTrigger>
+                    <TabsTrigger value="signals">Tín hiệu Giao dịch</TabsTrigger>
                 </TabsList>
                 <TabsContent value="analysis">
                     {result.aiAnalysis && <AnalysisDisplay analysis={result.aiAnalysis} />}

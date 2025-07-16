@@ -30,18 +30,18 @@ const generateTradingSignalsPrompt = ai.definePrompt({
   name: 'generateTradingSignalsPrompt',
   input: {schema: TradingSignalsInputSchema},
   output: {schema: TradingSignalsOutputSchema},
-  prompt: `You are a trading signal generator for the cryptocurrency pair {{{pair}}} on the {{{timeframe}}} timeframe.
-Analyze the following technical indicator values and generate a list of trading signals. For each indicator, provide a clear "Buy", "Sell", or "Neutral" signal, a confidence level ("High", "Medium", or "Low"), and a brief reasoning in English.
+  prompt: `Bạn là một công cụ tạo tín hiệu giao dịch cho cặp tiền mã hóa {{{pair}}} trên khung thời gian {{{timeframe}}}.
+Phân tích các giá trị chỉ báo kỹ thuật sau và tạo ra một danh sách tín hiệu giao dịch. Đối với mỗi chỉ báo, hãy cung cấp một tín hiệu rõ ràng "Mua", "Bán" hoặc "Trung tính", mức độ tự tin ("Cao", "Trung bình" hoặc "Thấp") và lý do ngắn gọn bằng tiếng Việt.
 
-Current Price: {{{price}}}
+Giá hiện tại: {{{price}}}
 - RSI (14): {{{rsi}}}
 - MACD (12, 26, 9): {{{macd}}}
 - EMA (21): {{{ema}}}
 
-Generate signals for the following:
-1.  **RSI**: Is the asset overbought (>70), oversold (<30), or neutral?
-2.  **MACD**: Is the MACD line crossing above the signal line (bullish), below (bearish), or is there no clear crossover? Consider its position relative to zero.
-3.  **EMA vs Price**: Is the current price above the 21-period EMA (bullish trend) or below it (bearish trend)?
+Tạo tín hiệu cho các chỉ báo sau:
+1.  **RSI**: Tài sản đang bị quá mua (>70), quá bán (<30), hay trung tính?
+2.  **MACD**: Đường MACD đang cắt lên trên đường tín hiệu (tăng giá), cắt xuống dưới (giảm giá), hay không có sự giao cắt rõ ràng? Xem xét vị trí của nó so với đường zero.
+3.  **EMA và Giá**: Giá hiện tại đang ở trên đường EMA 21 (xu hướng tăng) hay ở dưới (xu hướng giảm)?
 `,
 });
 

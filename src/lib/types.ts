@@ -41,13 +41,13 @@ export const AnalyzeCryptoPairInputSchema = BaseAnalysisInputSchema.extend({
 export type AnalyzeCryptoPairInput = z.infer<typeof AnalyzeCryptoPairInputSchema>;
 
 export const AnalyzeCryptoPairOutputSchema = z.object({
-  marketOverview: z.string().describe('Overall market assessment based on all indicators.'),
-  indicatorExplanations: z.string().describe('Detailed explanations of what each technical indicator is signaling.'),
-  buySellSignal: z.string().describe('The final conclusion: "BUY", "SELL", or "HOLD".'),
-  entrySuggestion: z.string().describe('Suggested entry price or range.'),
-  stopLossSuggestion: z.string().describe('Suggested stop-loss price level.'),
-  takeProfitSuggestion: z.string().describe('Suggested take-profit price level.'),
-  riskManagementAdvice: z.string().describe('A short, actionable tip for risk management.'),
+  marketOverview: z.string().describe('Đánh giá tổng quan thị trường dựa trên tất cả các chỉ báo.'),
+  indicatorExplanations: z.string().describe('Giải thích chi tiết về tín hiệu của từng chỉ báo kỹ thuật.'),
+  buySellSignal: z.string().describe('Kết luận cuối cùng: "MUA", "BÁN", hoặc "GIỮ".'),
+  entrySuggestion: z.string().describe('Giá hoặc khoảng giá đề xuất để vào lệnh.'),
+  stopLossSuggestion: z.string().describe('Mức giá dừng lỗ đề xuất.'),
+  takeProfitSuggestion: z.string().describe('Mức giá chốt lời đề xuất.'),
+  riskManagementAdvice: z.string().describe('Một mẹo ngắn gọn, có thể hành động để quản lý rủi ro.'),
 });
 export type AnalyzeCryptoPairOutput = z.infer<typeof AnalyzeCryptoPairOutputSchema>;
 
@@ -61,13 +61,13 @@ export const TradingSignalsInputSchema = BaseAnalysisInputSchema.extend({
 export type TradingSignalsInput = z.infer<typeof TradingSignalsInputSchema>;
 
 const SignalSchema = z.object({
-    indicator: z.string().describe('The name of the technical indicator (e.g., "RSI", "MACD", "EMA vs Price").'),
-    signal: z.enum(["Buy", "Sell", "Neutral"]).describe('The trading signal derived from the indicator.'),
-    confidence: z.enum(["High", "Medium", "Low"]).describe('The confidence level of the signal.'),
-    reasoning: z.string().describe('A brief explanation for the signal in English.')
+    indicator: z.string().describe('Tên của chỉ báo kỹ thuật (ví dụ: "RSI", "MACD", "EMA và Giá").'),
+    signal: z.enum(["Buy", "Sell", "Neutral", "Mua", "Bán", "Trung tính"]).describe('Tín hiệu giao dịch được suy ra từ chỉ báo.'),
+    confidence: z.enum(["High", "Medium", "Low", "Cao", "Trung bình", "Thấp"]).describe('Mức độ tin cậy của tín hiệu.'),
+    reasoning: z.string().describe('Giải thích ngắn gọn cho tín hiệu bằng tiếng Việt.')
 });
 
 export const TradingSignalsOutputSchema = z.object({
-  signals: z.array(SignalSchema).describe('An array of trading signals.'),
+  signals: z.array(SignalSchema).describe('Một mảng các tín hiệu giao dịch.'),
 });
 export type TradingSignalsOutput = z.infer<typeof TradingSignalsOutputSchema>;

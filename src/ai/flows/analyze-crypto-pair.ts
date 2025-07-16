@@ -21,46 +21,46 @@ const analyzeCryptoPairPrompt = ai.definePrompt({
   name: 'analyzeCryptoPairPrompt',
   input: {schema: AnalyzeCryptoPairInputSchema},
   output: {schema: AnalyzeCryptoPairOutputSchema},
-  prompt: `You are an expert cryptocurrency technical analyst. Based on the provided data for the {{{pair}}} pair on the {{{timeframe}}} timeframe, perform a detailed analysis.
+  prompt: `Bạn là một chuyên gia phân tích kỹ thuật thị trường tiền mã hóa. Dựa vào dữ liệu đầu vào cho cặp {{{pair}}} trên khung thời gian {{{timeframe}}}, hãy thực hiện một phân tích chi tiết.
 
-**Input Data:**
-- Current Price: {{{price}}}
-- High Price: {{{high}}}
-- Low Price: {{{low}}}
+**Dữ liệu đầu vào:**
+- Giá hiện tại: {{{price}}}
+- Giá cao nhất: {{{high}}}
+- Giá thấp nhất: {{{low}}}
 - **RSI (14):** {{{rsi}}}
 - **MACD (12, 26, 9):**
-    - MACD Line: {{{macd.line}}}
-    - Signal Line: {{{macd.signal}}}
+    - Đường MACD: {{{macd.line}}}
+    - Đường tín hiệu: {{{macd.signal}}}
 - **EMA:**
     - EMA 9: {{{ema.ema9}}}
     - EMA 21: {{{ema.ema21}}}
 
-**Perform the analysis in the following steps:**
+**Thực hiện phân tích theo các bước sau:**
 
-1.  **Overall Trend Assessment:**
-    - Trend based on the price's position relative to the EMA 9 and EMA 21.
-    - Trend based on the crossover of the two EMA lines.
-    - Trend based on the MACD (position relative to the zero line, crossover between the MACD and signal lines).
-    - Strength of the trend based on the RSI.
-    - Combine all to give a general assessment (Bullish, Bearish, Sideways).
+1.  **Đánh giá tổng quan xu hướng:**
+    - Xu hướng dựa trên vị trí của giá so với EMA 9 và EMA 21.
+    - Xu hướng dựa trên sự giao cắt của hai đường EMA.
+    - Xu hướng dựa trên MACD (vị trí so với đường zero, sự giao cắt giữa đường MACD và đường tín hiệu).
+    - Sức mạnh của xu hướng dựa trên RSI.
+    - Kết hợp tất cả để đưa ra đánh giá chung (Tăng giá, Giảm giá, Đi ngang).
 
-2.  **Indicator Explanations:**
-    - 📈 **EMA:** Is the price above or below the EMA lines? Is there a golden cross (short EMA crosses above long EMA) or a death cross (short EMA crosses below long EMA)?
-    - 📊 **MACD:** Is the histogram positive or negative? Is the MACD line crossing above or below the signal line? Is this signal strong or weak?
-    - 📉 **RSI:** Which zone is the RSI in (overbought > 70, oversold < 30, or neutral)? Is it trending up or down?
+2.  **Giải thích các chỉ báo:**
+    - 📈 **EMA:** Giá đang ở trên hay dưới các đường EMA? Có giao cắt vàng (EMA ngắn cắt lên trên EMA dài) hay giao cắt tử thần (EMA ngắn cắt xuống dưới EMA dài) không?
+    - 📊 **MACD:** Biểu đồ histogram là dương hay âm? Đường MACD đang cắt lên hay cắt xuống đường tín hiệu? Tín hiệu này mạnh hay yếu?
+    - 📉 **RSI:** RSI đang ở vùng nào (quá mua > 70, quá bán < 30, hay trung tính)? Nó đang có xu hướng tăng hay giảm?
 
-3.  **Conclusion and Trading Signal:**
-    - Based on the combined analysis, provide a final conclusion: **BUY**, **SELL**, or **HOLD**.
+3.  **Kết luận và Tín hiệu Giao dịch:**
+    - Dựa trên phân tích tổng hợp, đưa ra kết luận cuối cùng: **MUA**, **BÁN**, hoặc **GIỮ**.
 
-4.  **Proposed Trading Plan:**
-    - **Entry Price:** Suggest a reasonable price range for entry.
-    - **Stop-loss:** Suggest a stop-loss level to protect capital, typically below a recent support level (for a Buy order) or above a recent resistance level (for a Sell order).
-    - **Take-profit:** Suggest potential take-profit levels, typically the next resistance levels (for a Buy order) or support levels (for a Sell order).
+4.  **Kế hoạch Giao dịch Đề xuất:**
+    - **Giá vào lệnh:** Đề xuất một khoảng giá hợp lý để vào lệnh.
+    - **Dừng lỗ:** Đề xuất một mức dừng lỗ để bảo vệ vốn, thường là dưới một mức hỗ trợ gần đây (cho lệnh Mua) hoặc trên một mức kháng cự gần đây (cho lệnh Bán).
+    - **Chốt lời:** Đề xuất các mức chốt lời tiềm năng, thường là các mức kháng cự tiếp theo (cho lệnh Mua) hoặc các mức hỗ trợ (cho lệnh Bán).
 
-5.  **Risk Management:**
-    - Provide a short, concise piece of advice on risk management for this trade.
+5.  **Quản lý rủi ro:**
+    - Cung cấp một lời khuyên ngắn gọn, súc tích về quản lý rủi ro cho giao dịch này.
 
-**Requirement:** Return the result in English, presented clearly and easy to understand. Use bullet points or emojis to highlight the main points.`,
+**Yêu cầu:** Trả về kết quả bằng tiếng Việt, trình bày rõ ràng, dễ hiểu. Sử dụng các gạch đầu dòng hoặc biểu tượng cảm xúc để làm nổi bật các điểm chính.`,
 });
 
 const analyzeCryptoPairFlow = ai.defineFlow(
