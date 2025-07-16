@@ -25,6 +25,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AnalysisDisplay } from "@/components/analysis-display";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { TradingSignalsDisplay } from "@/components/trading-signals-display";
+import { RealtimeTicker } from "@/components/RealtimeTicker";
 
 
 const TradingViewChart = dynamic(() => import('@/components/tradingview-chart'), {
@@ -95,13 +96,16 @@ export default function Home() {
 
         <Card>
             <CardHeader>
-                <CardTitle className="font-headline text-lg">Biểu đồ {pair}</CardTitle>
+                <CardTitle className="font-headline text-lg">Thông tin và Biểu đồ {pair}</CardTitle>
                 <CardDescription className="text-xs">
-                    Khung thời gian: {timeframes.find(t => t.value === timeframe)?.label}. Thông tin chi tiết được hiển thị ở góc trên bên trái biểu đồ.
+                    Khung thời gian: {timeframes.find(t => t.value === timeframe)?.label}. Dữ liệu giá được cập nhật theo thời gian thực.
                 </CardDescription>
             </CardHeader>
-            <CardContent className="h-[600px]">
-                <TradingViewChart pair={pair} timeframe={timeframe}/>
+            <CardContent>
+                <RealtimeTicker pair={pair} />
+                <div className="h-[600px] mt-4">
+                    <TradingViewChart pair={pair} timeframe={timeframe}/>
+                </div>
             </CardContent>
         </Card>
 

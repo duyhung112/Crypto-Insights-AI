@@ -26,7 +26,7 @@ const TradingViewChart = ({ pair, timeframe }: TradingViewChartProps) => {
         locale: "vi",
         enable_publishing: false,
         allow_symbol_change: true,
-        details: true, // Hiển thị thông tin chi tiết (O, H, L, C, Volume, Change)
+        details: false, // Tắt thông tin chi tiết mặc định
         studies: [
             "RSI@tv-basicstudies",
             "MACD@tv-basicstudies",
