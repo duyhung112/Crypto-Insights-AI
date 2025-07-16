@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useBybitTicker } from '@/hooks/useBybitTicker';
+import { useBybitTicker, type TickerData } from '@/hooks/useBybitTicker';
 import { Skeleton } from './ui/skeleton';
 import { cn } from '@/lib/utils';
 
@@ -37,28 +37,37 @@ const TickerValue: React.FC<{
 
 export const RealtimeTicker: React.FC<RealtimeTickerProps> = ({ pair }) => {
   const { tickerData, isConnected } = useBybitTicker(pair);
-  const isLoading = !tickerData && isConnected;
+  const prevTickerDataRef = useRef<TickerData | null>(null);
+
+  useEffect(() => {
+    if (tickerData) {
+      prevTickerDataRef.current = tickerData;
+    }
+  }, [tickerData]);
+
+  const displayData = tickerData || prevTickerDataRef.current;
+  const isLoading = !displayData && isConnected;
 
   const [priceDirection, setPriceDirection] = useState<'up' | 'down' | null>(null);
   const prevPriceRef = useRef<string | undefined>();
 
   useEffect(() => {
-    if (tickerData?.lastPrice) {
-      if (prevPriceRef.current && prevPriceRef.current !== tickerData.lastPrice) {
-        if (parseFloat(tickerData.lastPrice) > parseFloat(prevPriceRef.current)) {
+    if (displayData?.lastPrice) {
+      if (prevPriceRef.current && prevPriceRef.current !== displayData.lastPrice) {
+        if (parseFloat(displayData.lastPrice) > parseFloat(prevPriceRef.current)) {
           setPriceDirection('up');
         } else {
           setPriceDirection('down');
         }
       }
-      prevPriceRef.current = tickerData.lastPrice;
+      prevPriceRef.current = displayData.lastPrice;
     }
-  }, [tickerData?.lastPrice]);
+  }, [displayData?.lastPrice]);
 
 
-  const priceChange = parseFloat(tickerData?.price24hPcnt || '0');
+  const priceChange = parseFloat(displayData?.price24hPcnt || '0');
   const priceChangeColor = priceChange > 0 ? 'text-green-500' : priceChange < 0 ? 'text-red-500' : 'text-foreground';
-  const priceChangeFormatted = tickerData ? `${(priceChange * 100).toFixed(2)}%` : '0.00%';
+  const priceChangeFormatted = displayData ? `${(priceChange * 100).toFixed(2)}%` : '0.00%';
 
   const getAnimationClass = () => {
     if (!priceDirection) return '';
@@ -73,7 +82,7 @@ export const RealtimeTicker: React.FC<RealtimeTickerProps> = ({ pair }) => {
       <TickerValue 
         label="Giá Hiện Tại"
         loading={isLoading}
-        value={formatNumber(tickerData?.lastPrice, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        value={formatNumber(displayData?.lastPrice, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         valueClassName={cn("text-lg", priceChangeColor)}
         animationClassName={getAnimationClass()}
         containerClassName="transition-colors duration-300"
@@ -87,22 +96,22 @@ export const RealtimeTicker: React.FC<RealtimeTickerProps> = ({ pair }) => {
       <TickerValue 
         label="Cao 24h"
         loading={isLoading}
-        value={formatNumber(tickerData?.highPrice24h, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        value={formatNumber(displayData?.highPrice24h, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
       />
        <TickerValue 
         label="Thấp 24h"
         loading={isLoading}
-        value={formatNumber(tickerData?.lowPrice24h, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        value={formatNumber(displayData?.lowPrice24h, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
       />
        <TickerValue 
         label="KLg (USDT)"
         loading={isLoading}
-        value={formatNumber(tickerData?.turnover24h)}
+        value={formatNumber(displayData?.turnover24h)}
       />
        <TickerValue 
         label="KLg (Coin)"
         loading={isLoading}
-        value={formatNumber(tickerData?.volume24h)}
+        value={formatNumber(displayData?.volume24h)}
       />
     </div>
   );
