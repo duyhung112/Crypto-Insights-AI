@@ -78,39 +78,33 @@ export function AnalysisDisplay({ analysis }: AnalysisDisplayProps) {
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
             <Card>
-                <CardHeader>
-                <CardTitle className="text-lg font-medium">
-                    Giá vào lệnh (Entry)
-                </CardTitle>
+                <CardHeader className="p-4">
+                    <CardDescription>Giá vào lệnh (Entry)</CardDescription>
                 </CardHeader>
-                <CardContent>
-                <p className="text-2xl font-bold text-primary">
-                    {analysis.entrySuggestion}
-                </p>
+                <CardContent className="p-4 pt-0">
+                    <p className="text-2xl font-bold text-primary">
+                        {analysis.entrySuggestion}
+                    </p>
                 </CardContent>
             </Card>
             <Card>
-                <CardHeader>
-                <CardTitle className="text-lg font-medium">
-                    Dừng lỗ (Stop-loss)
-                </CardTitle>
+                <CardHeader className="p-4">
+                    <CardDescription>Dừng lỗ (Stop-loss)</CardDescription>
                 </CardHeader>
-                <CardContent>
-                <p className="text-2xl font-bold text-destructive">
-                    {analysis.stopLossSuggestion}
-                </p>
+                <CardContent className="p-4 pt-0">
+                    <p className="text-2xl font-bold text-destructive">
+                        {analysis.stopLossSuggestion}
+                    </p>
                 </CardContent>
             </Card>
             <Card>
-                <CardHeader>
-                <CardTitle className="text-lg font-medium">
-                    Chốt lời (Take-profit)
-                </CardTitle>
+                <CardHeader className="p-4">
+                    <CardDescription>Chốt lời (Take-profit)</CardDescription>
                 </CardHeader>
-                <CardContent>
-                <p className="text-2xl font-bold text-chart-2">
-                    {analysis.takeProfitSuggestion}
-                </p>
+                <CardContent className="p-4 pt-0">
+                    <p className="text-2xl font-bold text-chart-2">
+                        {analysis.takeProfitSuggestion}
+                    </p>
                 </CardContent>
             </Card>
             </div>
