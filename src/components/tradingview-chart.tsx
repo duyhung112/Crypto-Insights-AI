@@ -23,9 +23,10 @@ const TradingViewChart = ({ pair, timeframe }: TradingViewChartProps) => {
         timezone: "Etc/UTC",
         theme: currentTheme === 'dark' ? 'dark' : 'light',
         style: "1",
-        locale: "en",
+        locale: "vi",
         enable_publishing: false,
         allow_symbol_change: true,
+        details: true, // Hiển thị thông tin chi tiết (O, H, L, C, Volume, Change)
         studies: [
             "RSI@tv-basicstudies",
             "MACD@tv-basicstudies",
@@ -39,6 +40,17 @@ const TradingViewChart = ({ pair, timeframe }: TradingViewChartProps) => {
                 id: "MovingAverageExponential@tv-basicstudies",
                 inputs: {
                     length: 21
+                }
+            },
+            {
+                id: "MovingAverageExponential@tv-basicstudies",
+                inputs: {
+                    length: 50
+                },
+                styles: {
+                    plot: {
+                        color: "#f59e0b" // a gold/yellow color
+                    }
                 }
             },
             "PivotPointsStandard@tv-basicstudies"

@@ -82,10 +82,10 @@ export default function Home() {
     <main className="flex min-h-screen flex-col items-center p-4 sm:p-6 md:p-8 bg-background transition-colors duration-300">
       <div className="w-full max-w-7xl space-y-6">
         <header className="text-center relative">
-          <h1 className="font-headline text-3xl md:text-4xl font-bold text-primary">
+          <h1 className="font-headline text-2xl md:text-3xl font-bold text-primary">
             Phân tích Xu hướng Thị trường
           </h1>
-          <p className="text-muted-foreground mt-2 text-base">
+          <p className="text-muted-foreground mt-2 text-sm">
             Phân tích kỹ thuật tiền mã hóa bằng AI cho thị trường Tương lai.
           </p>
            <div className="absolute top-0 right-0">
@@ -95,33 +95,33 @@ export default function Home() {
 
         <Card>
             <CardHeader>
-                <CardTitle className="font-headline text-xl">Biểu đồ</CardTitle>
-                <CardDescription className="text-sm">
-                    Biểu đồ giá cho {pair} trên khung thời gian {timeframes.find(t => t.value === timeframe)?.label}.
+                <CardTitle className="font-headline text-lg">Biểu đồ {pair}</CardTitle>
+                <CardDescription className="text-xs">
+                    Khung thời gian: {timeframes.find(t => t.value === timeframe)?.label}. Thông tin chi tiết được hiển thị ở góc trên bên trái biểu đồ.
                 </CardDescription>
             </CardHeader>
-            <CardContent className="h-[500px]">
+            <CardContent className="h-[600px]">
                 <TradingViewChart pair={pair} timeframe={timeframe}/>
             </CardContent>
         </Card>
 
         <Card>
             <CardHeader>
-                <CardTitle className="font-headline text-xl">Bảng điều khiển</CardTitle>
-                <CardDescription className="text-sm">
+                <CardTitle className="font-headline text-lg">Bảng điều khiển</CardTitle>
+                <CardDescription className="text-xs">
                 Chọn một cặp tiền và khung thời gian để phân tích tự động.
                 </CardDescription>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="space-y-2">
-                    <Label htmlFor="pair-select">Cặp tiền</Label>
+                    <Label htmlFor="pair-select" className="text-xs">Cặp tiền</Label>
                     <Select value={pair} onValueChange={setPair} disabled={loading}>
-                    <SelectTrigger id="pair-select" className="text-sm">
+                    <SelectTrigger id="pair-select" className="text-xs">
                         <SelectValue placeholder="Chọn một cặp tiền" />
                     </SelectTrigger>
                     <SelectContent>
                         {pairs.map((p) => (
-                        <SelectItem key={p.value} value={p.value} className="text-sm">
+                        <SelectItem key={p.value} value={p.value} className="text-xs">
                             {p.label}
                         </SelectItem>
                         ))}
@@ -129,14 +129,14 @@ export default function Home() {
                     </Select>
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="timeframe-select">Khung thời gian</Label>
+                    <Label htmlFor="timeframe-select" className="text-xs">Khung thời gian</Label>
                     <Select value={timeframe} onValueChange={setTimeframe} disabled={loading}>
-                    <SelectTrigger id="timeframe-select" className="text-sm">
+                    <SelectTrigger id="timeframe-select" className="text-xs">
                         <SelectValue placeholder="Chọn một khung thời gian" />
                     </SelectTrigger>
                     <SelectContent>
                         {timeframes.map((t) => (
-                        <SelectItem key={t.value} value={t.value} className="text-sm">
+                        <SelectItem key={t.value} value={t.value} className="text-xs">
                             {t.label}
                         </SelectItem>
                         ))}
@@ -144,10 +144,11 @@ export default function Home() {
                     </Select>
                 </div>
                 {loading && (
-                    <div className="flex items-center text-sm text-muted-foreground pt-2 self-end">
+                    <div className="flex items-center text-xs text-muted-foreground pt-2 self-end">
                         <Loader className="mr-2 h-4 w-4 animate-spin" />
                         <span>Đang phân tích...</span>
                     </div>
+
                 )}
             </CardContent>
         </Card>
@@ -164,8 +165,8 @@ export default function Home() {
                 <CardHeader className="flex flex-row items-center gap-4">
                 <AlertTriangle className="h-8 w-8 text-destructive" />
                 <div>
-                    <CardTitle className="text-destructive text-lg">Đã có lỗi xảy ra</CardTitle>
-                    <CardDescription className="text-destructive/80 text-sm">
+                    <CardTitle className="text-destructive text-base">Đã có lỗi xảy ra</CardTitle>
+                    <CardDescription className="text-destructive/80 text-xs">
                     {error}
                     </CardDescription>
                 </div>
