@@ -1,9 +1,8 @@
 "use server";
 
 import { analyzeCryptoPair } from "@/ai/flows/analyze-crypto-pair";
-import { generateTradingSignals } from "@/ai/flows/generate-trading-signals";
 import { analyzeNewsSentiment } from "@/ai/flows/analyze-news-sentiment";
-import type { AnalyzeCryptoPairInput, KlineData, TradingSignalsInput, NewsAnalysisInput, AnalyzeCryptoPairOutput } from "@/lib/types";
+import type { AnalyzeCryptoPairInput, KlineData, NewsAnalysisInput, AnalyzeCryptoPairOutput } from "@/lib/types";
 import { RSI, MACD, EMA } from "technicalindicators";
 import { sendDiscordNotificationTool } from "@/lib/tools/discord-tool";
 
@@ -147,12 +146,13 @@ export async function getAnalysis(pair: string, timeframe: string, mode: 'swing'
     const cryptoSymbol = pair.replace(/USDT$/, '');
     const newsInput: NewsAnalysisInput = { cryptoSymbol };
     
-    // Call AI Flows in parallel
-    const [aiAnalysisResponse, tradingSignalsResponse, newsAnalysisResponse] = await Promise.all([
+    // Call AI Flows in parallel - reduced from 3 to 2 calls
+    const [aiAnalysisResponse, newsAnalysisResponse] = await Promise.all([
         analyzeCryptoPair(aiInput),
-        generateTradingSignals(aiInput as TradingSignalsInput), // TradingSignalsInput is a subset of AnalyzeCryptoPairInput
         analyzeNewsSentiment(newsInput),
     ]);
+    
+    const tradingSignalsResponse = { signals: aiAnalysisResponse.signals };
 
     // After getting the analysis, handle the notification
     if (aiAnalysisResponse) {

@@ -29,9 +29,7 @@ Dựa vào dữ liệu đầu vào cho cặp {{{pair}}} trên khung thời gian 
 
 **Dữ liệu đầu vào:**
 - Giá hiện tại: {{{price}}}
-- Giá cao nhất: {{{high}}}
-- Giá thấp nhất: {{{low}}}
-- **RSI (14):** {{{rsi}}}
+- RSI (14):** {{{rsi}}}
 - **MACD (12, 26, 9):**
     - Đường MACD: {{{macd.line}}}
     - Đường tín hiệu: {{{macd.signal}}}
@@ -41,27 +39,32 @@ Dựa vào dữ liệu đầu vào cho cặp {{{pair}}} trên khung thời gian 
 
 **Thực hiện phân tích theo các bước sau, tùy chỉnh theo chế độ giao dịch '{{{mode}}}':**
 
+**Phần 1: Tín hiệu Giao dịch Chi tiết**
+Tạo một danh sách các tín hiệu giao dịch cho từng chỉ báo. Đối với mỗi chỉ báo, hãy cung cấp một tín hiệu rõ ràng "Mua", "Bán" hoặc "Trung tính", mức độ tự tin ("Cao", "Trung bình" hoặc "Thấp") và lý do ngắn gọn bằng tiếng Việt.
+1.  **RSI**: Tài sản đang bị quá mua (>70), quá bán (<30), hay trung tính? Tín hiệu này mạnh hơn cho giao dịch 'Swing' khi ở các khung giờ lớn.
+2.  **MACD**: Đường MACD đang cắt lên trên đường tín hiệu (tăng giá), cắt xuống dưới (giảm giá), hay không có sự giao cắt rõ ràng?
+3.  **EMA Crossover**: Có giao cắt vàng (EMA9 cắt lên EMA21) hay giao cắt tử thần (EMA9 cắt xuống EMA21) không?
+4.  **Price vs EMA**: Giá hiện tại đang ở trên hay dưới các đường EMA? Đây là tín hiệu nền tảng cho xu hướng.
+
+**Phần 2: Phân tích Tổng hợp**
 1.  **Đánh giá tổng quan xu hướng:**
-    - Phân tích xu hướng dựa trên các chỉ báo EMA, MACD, và RSI.
-    - Kết hợp tất cả để đưa ra đánh giá chung (Tăng giá, Giảm giá, Đi ngang).
+    - Phân tích và kết hợp tất cả các tín hiệu từ Phần 1 để đưa ra đánh giá chung (Tăng giá, Giảm giá, Đi ngang).
 
 2.  **Giải thích các chỉ báo:**
-    - 📈 **EMA:** Giá đang ở trên hay dưới các đường EMA? Có giao cắt vàng hay giao cắt tử thần không?
-    - 📊 **MACD:** Biểu đồ histogram và vị trí các đường MACD cho thấy điều gì về động lượng?
-    - 📉 **RSI:** RSI đang ở vùng nào (quá mua > 70, quá bán < 30, hay trung tính)?
+    - Giải thích ngắn gọn các tín hiệu quan trọng nhất từ Phần 1 đã dẫn đến kết luận của bạn.
 
 3.  **Kết luận và Tín hiệu Giao dịch:**
     - Dựa trên phân tích tổng hợp, đưa ra kết luận cuối cùng: **MUA**, **BÁN**, hoặc **GIỮ**.
 
 4.  **Kế hoạch Giao dịch Đề xuất (Tùy chỉnh theo chế độ '{{{mode}}}'):**
-    - **Nếu là 'Scalping'**: Tập trung vào các mục tiêu ngắn hạn. Giá vào lệnh phải rất gần giá hiện tại. Dừng lỗ và Chốt lời phải rất chặt chẽ (ví dụ: 1-2% từ giá vào lệnh).
-    - **Nếu là 'Swing'**: Tập trung vào các mục tiêu dài hạn hơn. Giá vào lệnh có thể ở một vùng rộng hơn. Dừng lỗ và Chốt lời sẽ dựa trên các mức hỗ trợ/kháng cự quan trọng trên biểu đồ.
+    - **Nếu là 'Scalping'**: Tập trung vào các mục tiêu ngắn hạn. Giá vào lệnh phải rất gần giá hiện tại. Dừng lỗ và Chốt lời phải rất chặt chẽ.
+    - **Nếu là 'Swing'**: Tập trung vào các mục tiêu dài hạn hơn. Giá vào lệnh có thể ở một vùng rộng hơn. Dừng lỗ và Chốt lời sẽ dựa trên các mức hỗ trợ/kháng cự quan trọng.
     - **Giá vào lệnh:** Đề xuất một khoảng giá hợp lý.
     - **Dừng lỗ:** Đề xuất một mức dừng lỗ để bảo vệ vốn.
     - **Chốt lời:** Đề xuất các mức chốt lời tiềm năng.
 
 5.  **Quản lý rủi ro:**
-    - Cung cấp một lời khuyên ngắn gọn, súc tích về quản lý rủi ro, phù hợp với chế độ giao dịch đã chọn.
+    - Cung cấp một lời khuyên ngắn gọn, súc tích về quản lý rủi ro.
 
 **Yêu cầu:** Trả về kết quả bằng tiếng Việt, trình bày rõ ràng, dễ hiểu, và tuân thủ nghiêm ngặt định dạng JSON đầu ra.`,
 });
