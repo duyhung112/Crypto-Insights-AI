@@ -52,7 +52,7 @@ Hãy đảm bảo kết quả trả về tuân thủ đúng định dạng đầ
   const { output } = await analyzeNewsSentimentPrompt(input);
   
   if (!output) {
-    throw new Error("AI news analysis returned an empty result.");
+    throw new Error("Phân tích tin tức AI không trả về kết quả.");
   }
   return output;
 }

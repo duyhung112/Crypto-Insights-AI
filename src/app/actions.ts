@@ -29,7 +29,7 @@ export async function getKlineData(pair: string, timeframe: string, limit: numbe
     return klineData;
 }
 
-async function sendDiscordNotification(message: string, webhookUrl: string) {
+async function handleDiscordNotification(message: string, webhookUrl: string) {
     if (!webhookUrl) return;
     try {
         await sendDiscordNotificationTool({ message, webhookUrl });
@@ -41,7 +41,7 @@ async function sendDiscordNotification(message: string, webhookUrl: string) {
 export async function getAnalysis(pair: string, timeframe: string, mode: 'swing' | 'scalping', discordWebhookUrl?: string, geminiApiKey?: string) {
   try {
     if (!geminiApiKey) {
-      throw new Error("Gemini API Key is required for analysis.");
+      throw new Error("Vui lòng cung cấp Gemini API Key trong phần Cài đặt để sử dụng tính năng phân tích.");
     }
     
     // Initialize Genkit dynamically with the user's API key
@@ -50,7 +50,7 @@ export async function getAnalysis(pair: string, timeframe: string, mode: 'swing'
     const klineData = await getKlineData(pair, timeframe, 200);
 
     if (klineData.length < 50) { // Need enough data for indicators
-      throw new Error("Not enough historical data to analyze this pair.");
+      throw new Error("Không đủ dữ liệu lịch sử để phân tích cặp tiền này.");
     }
 
     const closePrices = klineData.map((k) => k.close);
@@ -76,7 +76,6 @@ export async function getAnalysis(pair: string, timeframe: string, mode: 'swing'
     const latestEma9 = ema9Result[ema9Result.length - 1];
     const latestEma21 = ema21Result[ema21Result.length - 1];
     
-
     if (
       latestRsi === undefined ||
       latestMacdLine === undefined ||
@@ -84,7 +83,7 @@ export async function getAnalysis(pair: string, timeframe: string, mode: 'swing'
       latestEma9 === undefined ||
       latestEma21 === undefined
     ) {
-      throw new Error("Could not calculate technical indicators. More data might be needed.");
+      throw new Error("Không thể tính toán các chỉ báo kỹ thuật. Cần thêm dữ liệu.");
     }
 
     const aiInput: AnalyzeCryptoPairInput = {
@@ -126,14 +125,14 @@ export async function getAnalysis(pair: string, timeframe: string, mode: 'swing'
         const signal = aiAnalysisResponse.buySellSignal.toUpperCase();
         if (signal.includes('MUA') || signal.includes('BUY') || signal.includes('BÁN') || signal.includes('SELL')) {
             const message = `**Tín hiệu Mới: ${aiAnalysisResponse.buySellSignal.toUpperCase()} ${aiInput.pair}**
-Chế độ: ${aiInput.mode}
+Chế độ: ${aiInput.mode} | Khung: ${aiInput.timeframe}
 Giá hiện tại: ${aiInput.price}
 ---
 **Kế hoạch Giao dịch Đề xuất:**
 - **Vào lệnh:** ${aiAnalysisResponse.entrySuggestion}
 - **Dừng lỗ (SL):** ${aiAnalysisResponse.stopLossSuggestion}
 - **Chốt lời (TP):** ${aiAnalysisResponse.takeProfitSuggestion}`;
-            await sendDiscordNotification(message, discordWebhookUrl);
+            await handleDiscordNotification(message, discordWebhookUrl);
         }
     }
     
@@ -146,16 +145,16 @@ Giá hiện tại: ${aiInput.price}
     console.error("Error in getAnalysis:", error);
 
     if (discordWebhookUrl) {
-        const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
-        const notificationMessage = `**Lỗi Phân tích**
+        const errorMessage = error instanceof Error ? error.message : "An unknown error occurred during analysis.";
+        const notificationMessage = `**LỖI PHÂN TÍCH**
 Cặp: ${pair}
 Lỗi: \`\`\`${errorMessage}\`\`\``;
-        await sendDiscordNotification(notificationMessage, discordWebhookUrl);
+        await handleDiscordNotification(notificationMessage, discordWebhookUrl);
     }
     
     if (error instanceof Error) {
       return { error: error.message };
     }
-    return { error: "An unknown error occurred." };
+    return { error: "Đã xảy ra lỗi không xác định." };
   }
 }

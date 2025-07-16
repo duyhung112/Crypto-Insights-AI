@@ -85,13 +85,13 @@ export default function Home() {
         return;
     }
 
-    const discordWebhookUrl = localStorage.getItem('discordWebhookUrl') || '';
+    const discordWebhookUrl = localStorage.getItem('discordWebhookUrl') || undefined;
     const analysisTimeframe = currentMode === 'scalping' ? '5' : currentTimeframe;
     const response = await getAnalysis(currentPair, analysisTimeframe, currentMode, discordWebhookUrl, geminiApiKey);
 
     if (response.error && !isSilent) {
       setError(response.error);
-    } else if (!isSilent) {
+    } else if (!response.error) {
       setResult({ 
         aiAnalysis: response.aiAnalysis,
         tradingSignals: response.tradingSignals,
@@ -105,6 +105,7 @@ export default function Home() {
   }, [toast]);
 
   const handleMonitoringChange = (checked: boolean) => {
+    setIsMonitoring(checked);
     if (checked) {
         const discordWebhookUrl = localStorage.getItem('discordWebhookUrl') || '';
         if (!discordWebhookUrl) {
@@ -116,13 +117,11 @@ export default function Home() {
             setIsMonitoring(false);
             return;
         }
-        setIsMonitoring(true);
         toast({
             title: "Đã bật Giám sát Tự động",
             description: `Hệ thống sẽ kiểm tra tín hiệu cho ${pair} mỗi 15 phút.`,
         });
     } else {
-        setIsMonitoring(false);
         toast({
             title: "Đã tắt Giám sát Tự động",
         });

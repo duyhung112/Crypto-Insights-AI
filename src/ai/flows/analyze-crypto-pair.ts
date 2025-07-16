@@ -9,7 +9,7 @@
  * - AnalyzeCryptoPairOutput - The return type for the analyzeCryptoPair function.
  */
 
-import { initGenkit, ai } from '@/ai/genkit';
+import { ai } from '@/ai/genkit';
 import { AnalyzeCryptoPairInputSchema, type AnalyzeCryptoPairInput, AnalyzeCryptoPairOutputSchema, type AnalyzeCryptoPairOutput } from '@/lib/types';
 import type { Genkit } from 'genkit';
 
@@ -69,7 +69,7 @@ Tạo một danh sách các tín hiệu giao dịch cho từng chỉ báo. Đố
   const { output } = await analyzeCryptoPairPrompt(input);
 
   if (!output) {
-    throw new Error("AI analysis returned an empty result.");
+    throw new Error("Phân tích AI không trả về kết quả.");
   }
   return output;
 }
