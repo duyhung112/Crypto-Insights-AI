@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import {
   Card,
   CardContent,
@@ -19,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader, AlertTriangle, AreaChart, Zap, Settings, Monitor, RefreshCw } from "lucide-react";
+import { Loader, AlertTriangle, AreaChart, Zap, Settings, RefreshCw, Bell } from "lucide-react";
 import { getAnalysis } from "@/app/actions";
 import type { AnalysisResult } from "@/lib/types";
 import { Label } from "@/components/ui/label";
@@ -31,6 +30,7 @@ import { RealtimeTicker } from "@/components/RealtimeTicker";
 import { NewsAnalysisDisplay } from "@/components/news-analysis-display";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { Switch } from "@/components/ui/switch";
 
 const TradingViewChart = dynamic(() => import('@/components/tradingview-chart'), {
   ssr: false,
@@ -52,6 +52,8 @@ const timeframes = [
   { value: "D", label: "1 ngày" },
 ];
 
+const MONITORING_INTERVAL = 15 * 60 * 1000; // 15 minutes
+
 export default function Home() {
   const [pair, setPair] = useState("ETHUSDT");
   const [timeframe, setTimeframe] = useState("60");
@@ -59,22 +61,24 @@ export default function Home() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [mode, setMode] = useState<'swing' | 'scalping'>("swing");
-  const router = useRouter();
+  const [isMonitoring, setIsMonitoring] = useState(false);
   const { toast } = useToast();
+  const monitoringIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const handleAnalyze = useCallback(async (currentPair: string, currentTimeframe: string, currentMode: 'swing' | 'scalping') => {
-    setLoading(true);
-    setError(null);
-    setResult(null);
+  const handleAnalyze = useCallback(async (currentPair: string, currentTimeframe: string, currentMode: 'swing' | 'scalping', isSilent = false) => {
+    if (!isSilent) {
+        setLoading(true);
+        setError(null);
+        setResult(null);
+    }
 
     const discordWebhookUrl = localStorage.getItem('discordWebhookUrl') || '';
-    // For scalping, always use a 5m timeframe for analysis, but the chart can show other things
     const analysisTimeframe = currentMode === 'scalping' ? '5' : currentTimeframe;
     const response = await getAnalysis(currentPair, analysisTimeframe, currentMode, discordWebhookUrl);
 
-    if (response.error) {
+    if (response.error && !isSilent) {
       setError(response.error);
-    } else {
+    } else if (!isSilent) {
       setResult({ 
         aiAnalysis: response.aiAnalysis,
         tradingSignals: response.tradingSignals,
@@ -82,22 +86,35 @@ export default function Home() {
       });
     }
 
-    setLoading(false);
+    if (!isSilent) {
+        setLoading(false);
+    }
   }, []);
 
-  const handleStartMonitoring = () => {
-    const discordWebhookUrl = localStorage.getItem('discordWebhookUrl') || '';
-    if (!discordWebhookUrl) {
-      toast({
-        variant: "destructive",
-        title: "Thiếu Discord Webhook URL",
-        description: "Vui lòng vào Cài đặt để thêm Discord Webhook URL trước khi bắt đầu giám sát.",
-      });
-      return;
+  const handleMonitoringChange = (checked: boolean) => {
+    if (checked) {
+        const discordWebhookUrl = localStorage.getItem('discordWebhookUrl') || '';
+        if (!discordWebhookUrl) {
+            toast({
+                variant: "destructive",
+                title: "Thiếu Discord Webhook URL",
+                description: "Vui lòng vào Cài đặt để thêm URL trước khi bật giám sát.",
+            });
+            setIsMonitoring(false);
+            return;
+        }
+        setIsMonitoring(true);
+        toast({
+            title: "Đã bật Giám sát Tự động",
+            description: `Hệ thống sẽ kiểm tra tín hiệu cho ${pair} mỗi 15 phút.`,
+        });
+    } else {
+        setIsMonitoring(false);
+        toast({
+            title: "Đã tắt Giám sát Tự động",
+        });
     }
-    const analysisTimeframe = mode === 'scalping' ? '5' : timeframe; 
-    router.push(`/monitor?pair=${pair}&timeframe=${analysisTimeframe}&mode=${mode}`);
-  };
+  }
 
   // Effect to run analysis on initial load and when selections change
   useEffect(() => {
@@ -106,6 +123,37 @@ export default function Home() {
   // Timeframe changes will be handled by the manual refresh button.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pair, mode]);
+
+  // Effect to handle the monitoring interval
+  useEffect(() => {
+      if (isMonitoring) {
+          // Clear any existing interval
+          if (monitoringIntervalRef.current) {
+              clearInterval(monitoringIntervalRef.current);
+          }
+          // Start a new interval
+          monitoringIntervalRef.current = setInterval(() => {
+              console.log(`[Monitoring] Checking for signals for ${pair}...`);
+              const analysisTimeframe = mode === 'scalping' ? '5' : timeframe;
+              // Run analysis silently
+              handleAnalyze(pair, analysisTimeframe, mode, true);
+          }, MONITORING_INTERVAL);
+      } else {
+          // Clear interval if monitoring is turned off
+          if (monitoringIntervalRef.current) {
+              clearInterval(monitoringIntervalRef.current);
+              monitoringIntervalRef.current = null;
+          }
+      }
+      
+      // Cleanup function to clear interval on component unmount
+      return () => {
+          if (monitoringIntervalRef.current) {
+              clearInterval(monitoringIntervalref.current);
+          }
+      }
+  }, [isMonitoring, pair, timeframe, mode, handleAnalyze]);
+
 
   const onRefreshClick = () => {
     handleAnalyze(pair, timeframe, mode);
@@ -137,10 +185,6 @@ export default function Home() {
                     </Tabs>
                 </div>
                 <div className="flex items-center gap-2 pt-5">
-                    <Button variant="outline" onClick={handleStartMonitoring}>
-                        <Monitor className="mr-2 h-4 w-4" />
-                        Giám sát
-                    </Button>
                     <Link href="/settings">
                         <Button variant="outline" size="icon">
                             <Settings className="h-4 w-4" />
@@ -169,12 +213,12 @@ export default function Home() {
 
         <Card>
             <CardHeader>
-                <CardTitle className="font-headline text-lg">Bảng điều khiển</CardTitle>
+                <CardTitle className="font-headline text-lg">Bảng điều khiển và Giám sát</CardTitle>
                 <CardDescription className="text-xs">
-                Chọn một cặp tiền và khung thời gian để phân tích tự động.
+                Chọn cặp tiền, khung thời gian và bật giám sát để nhận thông báo tự động.
                 </CardDescription>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-end">
+            <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
                 <div className="space-y-2">
                     <Label htmlFor="pair-select" className="text-xs">Cặp tiền</Label>
                     <Select value={pair} onValueChange={setPair} disabled={loading}>
@@ -205,11 +249,23 @@ export default function Home() {
                     </SelectContent>
                     </Select>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center">
                     <Button onClick={onRefreshClick} disabled={loading} className="w-full">
                         <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-                        Làm mới Phân tích
+                        Làm mới
                     </Button>
+                </div>
+                 <div className="flex items-center space-x-2 justify-end">
+                    <Bell className={`h-4 w-4 ${isMonitoring ? 'text-primary' : 'text-muted-foreground'}`} />
+                    <Label htmlFor="monitoring-switch" className={`text-xs ${isMonitoring ? 'text-primary font-semibold' : 'text-muted-foreground'}`}>
+                        {isMonitoring ? 'Giám sát: Bật' : 'Giám sát: Tắt'}
+                    </Label>
+                    <Switch
+                        id="monitoring-switch"
+                        checked={isMonitoring}
+                        onCheckedChange={handleMonitoringChange}
+                        disabled={loading}
+                    />
                 </div>
             </CardContent>
         </Card>
