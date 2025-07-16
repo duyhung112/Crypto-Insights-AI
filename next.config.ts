@@ -21,6 +21,7 @@ const nextConfig: NextConfig = {
    env: {
     BYBIT_API_KEY: process.env.BYBIT_API_KEY,
     BYBIT_API_SECRET: process.env.BYBIT_API_SECRET,
+    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
   },
 };
 
