@@ -1,4 +1,4 @@
-// components/tradingview-chart.tsx
+
 "use client";
 
 import React, { useEffect, useRef, memo } from 'react';
@@ -12,67 +12,88 @@ interface TradingViewChartProps {
 const TradingViewChart = ({ pair, timeframe }: TradingViewChartProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetRef = useRef<any>(null);
-  const { theme: appTheme } = useTheme();
+  const { theme: appTheme, resolvedTheme } = useTheme();
 
-  const createWidget = () => {
-    if (containerRef.current && !widgetRef.current && (window as any).TradingView) {
-      const widgetOptions = {
+  const getWidgetOptions = () => {
+    const currentTheme = resolvedTheme || appTheme;
+     return {
         autosize: true,
         symbol: `BYBIT:${pair}`,
         interval: timeframe,
         timezone: "Etc/UTC",
-        theme: appTheme === 'dark' ? 'dark' : 'light',
+        theme: currentTheme === 'dark' ? 'dark' : 'light',
         style: "1",
         locale: "vi_VN",
-        toolbar_bg: "#f1f3f6",
         enable_publishing: false,
         allow_symbol_change: true,
-        container_id: containerRef.current.id,
+        container_id: "tradingview_container",
       };
-      const tvWidget = new (window as any).TradingView.widget(widgetOptions);
-      widgetRef.current = tvWidget;
-    }
-  };
+  }
 
-  useEffect(() => {
-    if (!(window as any).TradingView) {
-      const script = document.createElement('script');
-      script.src = 'https://s3.tradingview.com/tv.js';
-      script.async = true;
-      script.onload = createWidget;
-      document.body.appendChild(script);
-    } else {
-      createWidget();
-    }
+  const createWidget = () => {
+    if (!containerRef.current || !(window as any).TradingView) return;
 
-    return () => {
-      if (widgetRef.current) {
+    // Clean up previous widget if it exists
+    if (widgetRef.current) {
         try {
             widgetRef.current.remove();
-        } catch(e) {
-            console.error("Error removing trading view widget", e)
+        } catch (e) {
+            console.error("Error removing previous TradingView widget:", e);
         }
         widgetRef.current = null;
-      }
-    };
-  }, []);
+    }
+    
+    // Create new widget
+    const widgetOptions = getWidgetOptions();
+    const tvWidget = new (window as any).TradingView.widget(widgetOptions);
+    widgetRef.current = tvWidget;
+  };
 
+  // Effect to load script and create initial widget
   useEffect(() => {
-    if (widgetRef.current && widgetRef.current.ready) {
-      widgetRef.current.setSymbol(`BYBIT:${pair}`, timeframe, () => {
-        // console.log("Symbol changed");
-      });
+    if (!(window as any).tradingViewScriptLoaded) {
+      const script = document.createElement('script');
+      script.id = 'tradingview-widget-script';
+      script.src = 'https://s3.tradingview.com/tv.js';
+      script.async = true;
+      script.onload = () => {
+         (window as any).tradingViewScriptLoaded = true;
+         createWidget();
+      };
+      document.body.appendChild(script);
+    } else {
+        createWidget();
+    }
+    
+    return () => {
+        if (widgetRef.current) {
+            try {
+                widgetRef.current.remove();
+            } catch(e) {
+                // console.error("Error removing trading view widget on unmount", e)
+            }
+            widgetRef.current = null;
+        }
+    };
+  }, []); 
+
+  // Effect to update symbol when pair or timeframe changes
+  useEffect(() => {
+    if ((window as any).tradingViewScriptLoaded && widgetRef.current?.ready) {
+      try {
+        widgetRef.current.setSymbol(`BYBIT:${pair}`, timeframe, () => {});
+      } catch (e) {
+        console.error("Error setting symbol on TradingView widget:", e);
+      }
     }
   }, [pair, timeframe]);
 
+  // Effect to update theme
   useEffect(() => {
-      if (widgetRef.current && widgetRef.current.ready) {
-        const chart = widgetRef.current.chart();
-        chart.applyOptions({
-            theme: appTheme === 'dark' ? 'dark' : 'light',
-        });
-      }
-  }, [appTheme])
+    if ((window as any).tradingViewScriptLoaded) {
+        createWidget(); // Recreate widget with the new theme
+    }
+  }, [resolvedTheme, appTheme]);
 
 
   return (
