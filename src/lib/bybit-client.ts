@@ -1,4 +1,3 @@
-
 // This is a new file.
 const BYBIT_API_URL = "https://api.bybit.com";
 
@@ -23,29 +22,32 @@ class BybitClient {
   }
 
   public async getKline(symbol: string, interval: string, limit: number) {
-    const url = `${BYBIT_API_URL}/v5/market/kline?category=linear&symbol=${symbol}&interval=${interval}&limit=${limit}`;
+    const bybitUrl = `${BYBIT_API_URL}/v5/market/kline?category=linear&symbol=${symbol}&interval=${interval}&limit=${limit}`;
     
-    // Add a Referer header to prevent "Forbidden" errors on deployed environments.
-    const response = await fetch(url, {
+    // Use a proxy to bypass CORS/Forbidden issues on deployed environments.
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(bybitUrl)}`;
+
+    const response = await fetch(proxyUrl, {
       cache: "no-store",
-      headers: {
-        'Referer': 'https://www.google.com/' // Using a generic, safe referer.
-      }
     });
     
     if (!response.ok) {
       const errorBody = await response.text();
-      console.error("Bybit API error response:", errorBody);
-      throw new Error(`Bybit API Error: ${response.statusText}`);
+      console.error("Proxy API error response:", errorBody);
+      throw new Error(`Proxy API Error: ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const proxyData = await response.json();
+    
+    // The actual Bybit data is nested in the 'contents' field of the proxy response
+    const bybitData = JSON.parse(proxyData.contents);
 
-    if (data.retCode !== 0) {
-      throw new Error(`Bybit API Error: ${data.retMsg}`);
+    if (bybitData.retCode !== 0) {
+      console.error("Bybit API error details:", bybitData);
+      throw new Error(`Bybit API Error: ${bybitData.retMsg}`);
     }
 
-    return data.result;
+    return bybitData.result;
   }
   
   // You can add other authenticated methods here in the future
