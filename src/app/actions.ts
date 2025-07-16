@@ -2,6 +2,7 @@
 
 import { analyzeCryptoPair } from "@/ai/flows/analyze-crypto-pair";
 import { analyzeNewsSentiment } from "@/ai/flows/analyze-news-sentiment";
+import { initGenkit } from "@/ai/genkit";
 import type { AnalyzeCryptoPairInput, KlineData, NewsAnalysisInput, AnalyzeCryptoPairOutput, NewsArticle } from "@/lib/types";
 import { RSI, MACD, EMA } from "technicalindicators";
 import { sendDiscordNotificationTool } from "@/lib/tools/discord-tool";
@@ -37,8 +38,15 @@ async function sendDiscordNotification(message: string, webhookUrl: string) {
     }
 }
 
-export async function getAnalysis(pair: string, timeframe: string, mode: 'swing' | 'scalping', discordWebhookUrl?: string) {
+export async function getAnalysis(pair: string, timeframe: string, mode: 'swing' | 'scalping', discordWebhookUrl?: string, geminiApiKey?: string) {
   try {
+    if (!geminiApiKey) {
+      throw new Error("Gemini API Key is required for analysis.");
+    }
+    
+    // Initialize Genkit dynamically with the user's API key
+    const userAi = initGenkit(geminiApiKey);
+
     const klineData = await getKlineData(pair, timeframe, 200);
 
     if (klineData.length < 50) { // Need enough data for indicators
@@ -106,9 +114,10 @@ export async function getAnalysis(pair: string, timeframe: string, mode: 'swing'
       articles: newsArticles,
     };
 
+    // Use the dynamically created Genkit instance to call the flows
     const [aiAnalysisResponse, newsAnalysisResponse] = await Promise.all([
-        analyzeCryptoPair(aiInput),
-        analyzeNewsSentiment(newsInput),
+        analyzeCryptoPair(aiInput, userAi),
+        analyzeNewsSentiment(newsInput, userAi),
     ]);
     
     const tradingSignalsResponse = { signals: aiAnalysisResponse.signals };

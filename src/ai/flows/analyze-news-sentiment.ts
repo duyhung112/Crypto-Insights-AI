@@ -16,21 +16,17 @@ import {
   NewsAnalysisOutputSchema,
   type NewsAnalysisOutput,
 } from '@/lib/types';
+import type { Genkit } from 'genkit';
 
 
-export async function analyzeNewsSentiment(input: NewsAnalysisInput): Promise<NewsAnalysisOutput> {
-  const result = await analyzeNewsSentimentFlow(input);
-  if (!result) {
-    throw new Error("AI news analysis returned an empty result.");
-  }
-  return result;
-}
-
-const analyzeNewsSentimentPrompt = ai.definePrompt({
-  name: 'newsSentimentAnalysisPrompt',
-  input: { schema: NewsAnalysisInputSchema },
-  output: { schema: NewsAnalysisOutputSchema },
-  prompt: `Bạn là một nhà phân tích tài chính chuyên về thị trường tiền mã hóa.
+export async function analyzeNewsSentiment(input: NewsAnalysisInput, dynamicAi?: Genkit): Promise<NewsAnalysisOutput> {
+  const currentAi = dynamicAi || ai;
+  
+  const analyzeNewsSentimentPrompt = currentAi.definePrompt({
+    name: 'newsSentimentAnalysisPrompt',
+    input: { schema: NewsAnalysisInputSchema },
+    output: { schema: NewsAnalysisOutputSchema },
+    prompt: `Bạn là một nhà phân tích tài chính chuyên về thị trường tiền mã hóa.
 Nhiệm vụ của bạn là phân tích danh sách các tin tức được cung cấp về tiền mã hóa '{{{cryptoSymbol}}}' để xác định tâm lý chung của thị trường.
 
 **Dữ liệu đầu vào (Các bài báo):**
@@ -51,17 +47,12 @@ Dựa trên các tin tức được cung cấp, hãy thực hiện các bước 
 4.  **Liệt kê các Bài báo:** Trả về danh sách các bài báo đã được sử dụng cho việc phân tích, đúng như dữ liệu đầu vào.
 
 Hãy đảm bảo kết quả trả về tuân thủ đúng định dạng đầu ra JSON.`,
-});
+  });
 
-const analyzeNewsSentimentFlow = ai.defineFlow(
-  {
-    name: 'analyzeNewsSentimentFlow',
-    inputSchema: NewsAnalysisInputSchema,
-    outputSchema: NewsAnalysisOutputSchema,
-  },
-  async (input) => {
-    // The articles are now passed directly in the input.
-    const { output } = await analyzeNewsSentimentPrompt(input);
-    return output;
+  const { output } = await analyzeNewsSentimentPrompt(input);
+  
+  if (!output) {
+    throw new Error("AI news analysis returned an empty result.");
   }
-);
+  return output;
+}

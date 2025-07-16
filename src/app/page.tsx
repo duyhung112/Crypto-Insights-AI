@@ -71,10 +71,23 @@ export default function Home() {
         setError(null);
         setResult(null);
     }
+    
+    const geminiApiKey = localStorage.getItem('geminiApiKey');
+    if (!geminiApiKey) {
+        if (!isSilent) {
+            toast({
+                variant: "destructive",
+                title: "Thiếu Gemini API Key",
+                description: "Vui lòng vào Cài đặt để thêm API Key của bạn trước khi phân tích.",
+            });
+            setLoading(false);
+        }
+        return;
+    }
 
     const discordWebhookUrl = localStorage.getItem('discordWebhookUrl') || '';
     const analysisTimeframe = currentMode === 'scalping' ? '5' : currentTimeframe;
-    const response = await getAnalysis(currentPair, analysisTimeframe, currentMode, discordWebhookUrl);
+    const response = await getAnalysis(currentPair, analysisTimeframe, currentMode, discordWebhookUrl, geminiApiKey);
 
     if (response.error && !isSilent) {
       setError(response.error);
@@ -89,7 +102,7 @@ export default function Home() {
     if (!isSilent) {
         setLoading(false);
     }
-  }, []);
+  }, [toast]);
 
   const handleMonitoringChange = (checked: boolean) => {
     if (checked) {
@@ -149,7 +162,7 @@ export default function Home() {
       // Cleanup function to clear interval on component unmount
       return () => {
           if (monitoringIntervalRef.current) {
-              clearInterval(monitoringIntervalref.current);
+              clearInterval(monitoringIntervalRef.current);
           }
       }
   }, [isMonitoring, pair, timeframe, mode, handleAnalyze]);

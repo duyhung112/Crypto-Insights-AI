@@ -9,22 +9,19 @@
  * - AnalyzeCryptoPairOutput - The return type for the analyzeCryptoPair function.
  */
 
-import {ai} from '@/ai/genkit';
+import { initGenkit, ai } from '@/ai/genkit';
 import { AnalyzeCryptoPairInputSchema, type AnalyzeCryptoPairInput, AnalyzeCryptoPairOutputSchema, type AnalyzeCryptoPairOutput } from '@/lib/types';
+import type { Genkit } from 'genkit';
 
-export async function analyzeCryptoPair(input: AnalyzeCryptoPairInput): Promise<AnalyzeCryptoPairOutput> {
-  const result = await analyzeCryptoPairFlow(input);
-  if (!result) {
-    throw new Error("AI analysis returned an empty result.");
-  }
-  return result;
-}
 
-const analyzeCryptoPairPrompt = ai.definePrompt({
-  name: 'analyzeCryptoPairPrompt',
-  input: {schema: AnalyzeCryptoPairInputSchema},
-  output: {schema: AnalyzeCryptoPairOutputSchema},
-  prompt: `Bạn là một chuyên gia phân tích kỹ thuật thị trường tiền mã hóa, đưa ra lời khuyên cho chế độ giao dịch: {{{mode}}}.
+export async function analyzeCryptoPair(input: AnalyzeCryptoPairInput, dynamicAi?: Genkit): Promise<AnalyzeCryptoPairOutput> {
+  const currentAi = dynamicAi || ai;
+
+  const analyzeCryptoPairPrompt = currentAi.definePrompt({
+    name: 'analyzeCryptoPairPrompt',
+    input: {schema: AnalyzeCryptoPairInputSchema},
+    output: {schema: AnalyzeCryptoPairOutputSchema},
+    prompt: `Bạn là một chuyên gia phân tích kỹ thuật thị trường tiền mã hóa, đưa ra lời khuyên cho chế độ giao dịch: {{{mode}}}.
 Dựa vào dữ liệu đầu vào cho cặp {{{pair}}} trên khung thời gian {{{timeframe}}}, hãy thực hiện một phân tích chi tiết.
 
 **Dữ liệu đầu vào:**
@@ -67,16 +64,12 @@ Tạo một danh sách các tín hiệu giao dịch cho từng chỉ báo. Đố
     - Cung cấp một lời khuyên ngắn gọn, súc tích về quản lý rủi ro.
 
 **Yêu cầu:** Trả về kết quả bằng tiếng Việt, trình bày rõ ràng, dễ hiểu, và tuân thủ nghiêm ngặt định dạng JSON đầu ra.`,
-});
+  });
 
-const analyzeCryptoPairFlow = ai.defineFlow(
-  {
-    name: 'analyzeCryptoPairFlow',
-    inputSchema: AnalyzeCryptoPairInputSchema,
-    outputSchema: AnalyzeCryptoPairOutputSchema,
-  },
-  async input => {
-    const {output} = await analyzeCryptoPairPrompt(input);
-    return output;
+  const { output } = await analyzeCryptoPairPrompt(input);
+
+  if (!output) {
+    throw new Error("AI analysis returned an empty result.");
   }
-);
+  return output;
+}
