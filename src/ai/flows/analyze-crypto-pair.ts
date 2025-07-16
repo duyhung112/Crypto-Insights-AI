@@ -21,7 +21,8 @@ const analyzeCryptoPairPrompt = ai.definePrompt({
   name: 'analyzeCryptoPairPrompt',
   input: {schema: AnalyzeCryptoPairInputSchema},
   output: {schema: AnalyzeCryptoPairOutputSchema},
-  prompt: `Bạn là một chuyên gia phân tích kỹ thuật thị trường tiền mã hóa. Dựa vào dữ liệu đầu vào cho cặp {{{pair}}} trên khung thời gian {{{timeframe}}}, hãy thực hiện một phân tích chi tiết.
+  prompt: `Bạn là một chuyên gia phân tích kỹ thuật thị trường tiền mã hóa, đưa ra lời khuyên cho chế độ giao dịch: {{{mode}}}.
+Dựa vào dữ liệu đầu vào cho cặp {{{pair}}} trên khung thời gian {{{timeframe}}}, hãy thực hiện một phân tích chi tiết.
 
 **Dữ liệu đầu vào:**
 - Giá hiện tại: {{{price}}}
@@ -35,32 +36,31 @@ const analyzeCryptoPairPrompt = ai.definePrompt({
     - EMA 9: {{{ema.ema9}}}
     - EMA 21: {{{ema.ema21}}}
 
-**Thực hiện phân tích theo các bước sau:**
+**Thực hiện phân tích theo các bước sau, tùy chỉnh theo chế độ giao dịch '{{{mode}}}':**
 
 1.  **Đánh giá tổng quan xu hướng:**
-    - Xu hướng dựa trên vị trí của giá so với EMA 9 và EMA 21.
-    - Xu hướng dựa trên sự giao cắt của hai đường EMA.
-    - Xu hướng dựa trên MACD (vị trí so với đường zero, sự giao cắt giữa đường MACD và đường tín hiệu).
-    - Sức mạnh của xu hướng dựa trên RSI.
+    - Phân tích xu hướng dựa trên các chỉ báo EMA, MACD, và RSI.
     - Kết hợp tất cả để đưa ra đánh giá chung (Tăng giá, Giảm giá, Đi ngang).
 
 2.  **Giải thích các chỉ báo:**
-    - 📈 **EMA:** Giá đang ở trên hay dưới các đường EMA? Có giao cắt vàng (EMA ngắn cắt lên trên EMA dài) hay giao cắt tử thần (EMA ngắn cắt xuống dưới EMA dài) không?
-    - 📊 **MACD:** Biểu đồ histogram là dương hay âm? Đường MACD đang cắt lên hay cắt xuống đường tín hiệu? Tín hiệu này mạnh hay yếu?
-    - 📉 **RSI:** RSI đang ở vùng nào (quá mua > 70, quá bán < 30, hay trung tính)? Nó đang có xu hướng tăng hay giảm?
+    - 📈 **EMA:** Giá đang ở trên hay dưới các đường EMA? Có giao cắt vàng hay giao cắt tử thần không?
+    - 📊 **MACD:** Biểu đồ histogram và vị trí các đường MACD cho thấy điều gì về động lượng?
+    - 📉 **RSI:** RSI đang ở vùng nào (quá mua > 70, quá bán < 30, hay trung tính)?
 
 3.  **Kết luận và Tín hiệu Giao dịch:**
     - Dựa trên phân tích tổng hợp, đưa ra kết luận cuối cùng: **MUA**, **BÁN**, hoặc **GIỮ**.
 
-4.  **Kế hoạch Giao dịch Đề xuất:**
-    - **Giá vào lệnh:** Đề xuất một khoảng giá hợp lý để vào lệnh.
-    - **Dừng lỗ:** Đề xuất một mức dừng lỗ để bảo vệ vốn, thường là dưới một mức hỗ trợ gần đây (cho lệnh Mua) hoặc trên một mức kháng cự gần đây (cho lệnh Bán).
-    - **Chốt lời:** Đề xuất các mức chốt lời tiềm năng, thường là các mức kháng cự tiếp theo (cho lệnh Mua) hoặc các mức hỗ trợ (cho lệnh Bán).
+4.  **Kế hoạch Giao dịch Đề xuất (Tùy chỉnh theo chế độ '{{{mode}}}'):**
+    - **Nếu là 'Scalping'**: Tập trung vào các mục tiêu ngắn hạn. Giá vào lệnh phải rất gần giá hiện tại. Dừng lỗ và Chốt lời phải rất chặt chẽ (ví dụ: 1-2% từ giá vào lệnh).
+    - **Nếu là 'Swing'**: Tập trung vào các mục tiêu dài hạn hơn. Giá vào lệnh có thể ở một vùng rộng hơn. Dừng lỗ và Chốt lời sẽ dựa trên các mức hỗ trợ/kháng cự quan trọng trên biểu đồ.
+    - **Giá vào lệnh:** Đề xuất một khoảng giá hợp lý.
+    - **Dừng lỗ:** Đề xuất một mức dừng lỗ để bảo vệ vốn.
+    - **Chốt lời:** Đề xuất các mức chốt lời tiềm năng.
 
 5.  **Quản lý rủi ro:**
-    - Cung cấp một lời khuyên ngắn gọn, súc tích về quản lý rủi ro cho giao dịch này.
+    - Cung cấp một lời khuyên ngắn gọn, súc tích về quản lý rủi ro, phù hợp với chế độ giao dịch đã chọn.
 
-**Yêu cầu:** Trả về kết quả bằng tiếng Việt, trình bày rõ ràng, dễ hiểu. Sử dụng các gạch đầu dòng hoặc biểu tượng cảm xúc để làm nổi bật các điểm chính.`,
+**Yêu cầu:** Trả về kết quả bằng tiếng Việt, trình bày rõ ràng, dễ hiểu.`,
 });
 
 const analyzeCryptoPairFlow = ai.defineFlow(

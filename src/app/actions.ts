@@ -53,7 +53,7 @@ export async function getKlineData(pair: string, timeframe: string, limit: numbe
     return klineData;
 }
 
-export async function getAnalysis(pair: string, timeframe: string) {
+export async function getAnalysis(pair: string, timeframe: string, mode: 'swing' | 'scalping') {
   try {
     const klineData = await getKlineData(pair, timeframe, 200);
 
@@ -99,6 +99,7 @@ export async function getAnalysis(pair: string, timeframe: string) {
       pair,
       timeframe,
       price: latestPrice,
+      mode,
       rsi: latestRsi,
       macd: {
         line: latestMacdLine,

@@ -43,10 +43,10 @@ const pairs = [
 ];
 
 const timeframes = [
-  { value: "15", label: "15 min" },
-  { value: "60", label: "1 hour" },
-  { value: "240", label: "4 hours" },
-  { value: "D", label: "1 day" },
+  { value: "15", label: "15 phút" },
+  { value: "60", label: "1 giờ" },
+  { value: "240", label: "4 giờ" },
+  { value: "D", label: "1 ngày" },
 ];
 
 export default function Home() {
@@ -55,14 +55,14 @@ export default function Home() {
   const [loading, setLoading] = useState(true); // Set initial loading to true
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [mode, setMode] = useState("swing");
+  const [mode, setMode] = useState<'swing' | 'scalping'>("swing");
 
-  const handleAnalyze = useCallback(async (currentPair: string, currentTimeframe: string) => {
+  const handleAnalyze = useCallback(async (currentPair: string, currentTimeframe: string, currentMode: 'swing' | 'scalping') => {
     setLoading(true);
     setError(null);
     setResult(null);
 
-    const response = await getAnalysis(currentPair, currentTimeframe);
+    const response = await getAnalysis(currentPair, currentTimeframe, currentMode);
 
     if (response.error) {
       setError(response.error);
@@ -79,41 +79,47 @@ export default function Home() {
 
   // Effect to run analysis on initial load and when selections change
   useEffect(() => {
-    const effectiveTimeframe = mode === 'scalping' ? '5' : timeframe;
-    handleAnalyze(pair, effectiveTimeframe);
+    // For scalping, always use a 1m timeframe for analysis, but the chart can show other things
+    const analysisTimeframe = mode === 'scalping' ? '5' : timeframe; 
+    handleAnalyze(pair, analysisTimeframe, mode);
   }, [pair, timeframe, handleAnalyze, mode]);
 
   return (
     <main className="flex min-h-screen flex-col items-center p-4 sm:p-6 md:p-8 bg-background transition-colors duration-300">
       <div className="w-full max-w-7xl space-y-6">
-        <header className="flex flex-col sm:flex-row justify-between items-center gap-4">
+        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="flex items-center gap-3">
-                 <h1 className="font-headline text-xl font-bold text-primary">
-                    🤖 Trading AI
+                 <h1 className="font-headline text-2xl font-bold text-foreground">
+                    Trading Expert AI
                 </h1>
             </div>
-          <Tabs value={mode} onValueChange={setMode} className="w-full sm:w-auto">
-              <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="swing" className="flex items-center gap-2">
-                      <AreaChart className="h-4 w-4"/>
-                      Swing (5m+)
-                  </TabsTrigger>
-                  <TabsTrigger value="scalping" className="flex items-center gap-2">
-                       <Zap className="h-4 w-4"/>
-                      Scalping (1m)
-                  </TabsTrigger>
-              </TabsList>
-          </Tabs>
-           <div className="absolute top-4 right-4 sm:static">
-            <ThemeToggle />
-          </div>
+             <div className="flex w-full sm:w-auto items-center gap-4 justify-between">
+                <div className="flex flex-col items-start sm:items-end">
+                    <Label className="text-xs text-muted-foreground mb-1">Chế độ</Label>
+                    <Tabs value={mode} onValueChange={(value) => setMode(value as 'swing' | 'scalping')} className="w-full sm:w-auto">
+                        <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="swing" className="flex items-center gap-2 text-xs">
+                                <AreaChart className="h-4 w-4"/>
+                                Swing (5m+)
+                            </TabsTrigger>
+                            <TabsTrigger value="scalping" className="flex items-center gap-2 text-xs">
+                                <Zap className="h-4 w-4"/>
+                                Scalping (1m)
+                            </TabsTrigger>
+                        </TabsList>
+                    </Tabs>
+                </div>
+                <div className="pt-5">
+                    <ThemeToggle />
+                </div>
+            </div>
         </header>
 
         <Card>
             <CardHeader>
                 <CardTitle className="font-headline text-lg">Thông tin và Biểu đồ {pair}</CardTitle>
                 <CardDescription className="text-xs">
-                    Khung thời gian: {timeframes.find(t => t.value === timeframe)?.label}. Dữ liệu giá được cập nhật theo thời gian thực.
+                    Khung thời gian: {mode === 'scalping' ? '1 phút' : timeframes.find(t => t.value === timeframe)?.label}. Dữ liệu giá được cập nhật theo thời gian thực.
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -148,7 +154,7 @@ export default function Home() {
                     </Select>
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="timeframe-select" className="text-xs">Khung thời gian</Label>
+                    <Label htmlFor="timeframe-select" className="text-xs">Khung thời gian (Swing)</Label>
                     <Select value={timeframe} onValueChange={setTimeframe} disabled={loading || mode === 'scalping'}>
                     <SelectTrigger id="timeframe-select" className="text-xs">
                         <SelectValue placeholder="Chọn một khung thời gian" />
@@ -197,8 +203,8 @@ export default function Home() {
             <div className="animate-in fade-in duration-500">
                 <Tabs defaultValue="analysis" className="w-full">
                 <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="analysis">Phân tích AI</TabsTrigger>
-                    <TabsTrigger value="signals">Tín hiệu Giao dịch</TabsTrigger>
+                    <TabsTrigger value="analysis">Phân tích AI ({mode === 'scalping' ? 'Scalping' : 'Swing'})</TabsTrigger>
+                    <TabsTrigger value="signals">Tín hiệu Giao dịch ({mode === 'scalping' ? 'Scalping' : 'Swing'})</TabsTrigger>
                     <TabsTrigger value="news">Tin tức &amp; Tâm lý</TabsTrigger>
                 </TabsList>
                 <TabsContent value="analysis">

@@ -29,6 +29,7 @@ const BaseAnalysisInputSchema = z.object({
   pair: z.string().describe("The cryptocurrency pair to analyze (e.g., ETH/USDT)."),
   timeframe: z.string().describe("The timeframe for the analysis (e.g., 15m, 1h, 4h, 1d)."),
   price: z.number().describe("Current price of the crypto pair."),
+  mode: z.enum(["swing", "scalping"]).describe("The trading mode: 'swing' for longer-term, 'scalping' for short-term."),
   rsi: z.number().describe("Relative Strength Index (14) value."),
   macd: MACDSchema,
   ema: EMASchema,
@@ -86,7 +87,7 @@ const NewsArticleSchema = z.object({
 });
 
 export const NewsAnalysisOutputSchema = z.object({
-    sentiment: z.enum(["Positive", "Negative", "Neutral"]).describe("The overall market sentiment based on the news."),
+    sentiment: z.enum(["Positive", "Negative", "Neutral"]).describe("The overall market sentiment based on the news. MUST be one of the three English strings."),
     summary: z.string().describe("A summary of the key news affecting the cryptocurrency."),
     reasoning: z.string().describe("An explanation for why the sentiment was determined."),
     articles: z.array(NewsArticleSchema).describe("A list of the news articles that were analyzed."),

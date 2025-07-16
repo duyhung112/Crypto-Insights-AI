@@ -30,18 +30,23 @@ const generateTradingSignalsPrompt = ai.definePrompt({
   name: 'generateTradingSignalsPrompt',
   input: {schema: TradingSignalsInputSchema},
   output: {schema: TradingSignalsOutputSchema},
-  prompt: `Bạn là một công cụ tạo tín hiệu giao dịch cho cặp tiền mã hóa {{{pair}}} trên khung thời gian {{{timeframe}}}.
+  prompt: `Bạn là một công cụ tạo tín hiệu giao dịch cho cặp tiền mã hóa {{{pair}}} trên khung thời gian {{{timeframe}}}, với chế độ giao dịch là '{{{mode}}}'.
 Phân tích các giá trị chỉ báo kỹ thuật sau và tạo ra một danh sách tín hiệu giao dịch. Đối với mỗi chỉ báo, hãy cung cấp một tín hiệu rõ ràng "Mua", "Bán" hoặc "Trung tính", mức độ tự tin ("Cao", "Trung bình" hoặc "Thấp") và lý do ngắn gọn bằng tiếng Việt.
 
+**Chế độ giao dịch: {{{mode}}}**
+- Nếu là 'Scalping', hãy tập trung vào các tín hiệu rất ngắn hạn.
+- Nếu là 'Swing', hãy xem xét các tín hiệu trong bối cảnh xu hướng lớn hơn.
+
+**Dữ liệu đầu vào:**
 Giá hiện tại: {{{price}}}
 - RSI (14): {{{rsi}}}
 - MACD (12, 26, 9): {{{macd}}}
 - EMA (21): {{{ema}}}
 
 Tạo tín hiệu cho các chỉ báo sau:
-1.  **RSI**: Tài sản đang bị quá mua (>70), quá bán (<30), hay trung tính?
-2.  **MACD**: Đường MACD đang cắt lên trên đường tín hiệu (tăng giá), cắt xuống dưới (giảm giá), hay không có sự giao cắt rõ ràng? Xem xét vị trí của nó so với đường zero.
-3.  **EMA và Giá**: Giá hiện tại đang ở trên đường EMA 21 (xu hướng tăng) hay ở dưới (xu hướng giảm)?
+1.  **RSI**: Tài sản đang bị quá mua (>70), quá bán (<30), hay trung tính? Tín hiệu này mạnh hơn cho giao dịch 'Swing' khi ở các khung giờ lớn.
+2.  **MACD**: Đường MACD đang cắt lên trên đường tín hiệu (tăng giá), cắt xuống dưới (giảm giá), hay không có sự giao cắt rõ ràng? Giao cắt MACD rất quan trọng cho cả hai chế độ.
+3.  **EMA và Giá**: Giá hiện tại đang ở trên đường EMA 21 (xu hướng tăng) hay ở dưới (xu hướng giảm)? Đây là tín hiệu nền tảng cho giao dịch 'Swing'. Đối với 'Scalping', hãy xem xét vị trí giá so với EMA một cách tức thời.
 `,
 });
 
