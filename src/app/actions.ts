@@ -6,43 +6,17 @@ import type { AnalyzeCryptoPairInput, KlineData, NewsAnalysisInput, AnalyzeCrypt
 import { RSI, MACD, EMA } from "technicalindicators";
 import { sendDiscordNotificationTool } from "@/lib/tools/discord-tool";
 import { getNewsForCryptoTool } from "@/lib/tools";
-
-const BYBIT_API_URL = "https://api.bybit.com";
-
-interface BybitKlineResponse {
-  retCode: number;
-  retMsg: string;
-  result: {
-    category: string;
-    symbol: string;
-    list: string[][];
-  };
-  retExtInfo: object;
-  time: number;
-}
+import { bybitClient } from "@/lib/bybit-client";
 
 export async function getKlineData(pair: string, timeframe: string, limit: number = 200): Promise<KlineData[]> {
-    const url = `${BYBIT_API_URL}/v5/market/kline?category=linear&symbol=${pair}&interval=${timeframe}&limit=${limit}`;
+    const result = await bybitClient.getKline(pair, timeframe, limit);
 
-    const response = await fetch(url, { cache: "no-store" });
-    if (!response.ok) {
-      const errorBody = await response.text();
-      console.error("Bybit API error response:", errorBody);
-      throw new Error(`Bybit API Error: ${response.statusText}`);
-    }
-
-    const data: BybitKlineResponse = await response.json();
-
-    if (data.retCode !== 0) {
-      throw new Error(`Bybit API Error: ${data.retMsg}`);
-    }
-
-    if (!data.result.list || data.result.list.length === 0) {
+    if (!result.list || result.list.length === 0) {
       return [];
     }
 
-    const klineData: KlineData[] = data.result.list
-      .map((d) => ({
+    const klineData: KlineData[] = result.list
+      .map((d: string[]) => ({
         time: parseInt(d[0]),
         open: parseFloat(d[1]),
         high: parseFloat(d[2]),

@@ -18,6 +18,10 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+   env: {
+    BYBIT_API_KEY: process.env.BYBIT_API_KEY,
+    BYBIT_API_SECRET: process.env.BYBIT_API_SECRET,
+  },
 };
 
 export default nextConfig;
