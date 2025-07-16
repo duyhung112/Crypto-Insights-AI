@@ -18,7 +18,7 @@ const TradingViewChart = ({ pair, timeframe }: TradingViewChartProps) => {
     const currentTheme = resolvedTheme || appTheme;
      return {
         autosize: true,
-        symbol: `BYBIT:${pair}`,
+        symbol: `BYBIT:${pair}.P`,
         interval: timeframe,
         timezone: "Etc/UTC",
         theme: currentTheme === 'dark' ? 'dark' : 'light',
@@ -81,7 +81,7 @@ const TradingViewChart = ({ pair, timeframe }: TradingViewChartProps) => {
   useEffect(() => {
     if ((window as any).tradingViewScriptLoaded && widgetRef.current?.ready) {
       try {
-        widgetRef.current.setSymbol(`BYBIT:${pair}`, timeframe, () => {});
+        widgetRef.current.setSymbol(`BYBIT:${pair}.P`, timeframe, () => {});
       } catch (e) {
         console.error("Error setting symbol on TradingView widget:", e);
       }

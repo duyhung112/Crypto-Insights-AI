@@ -19,7 +19,7 @@ interface BybitKlineResponse {
 }
 
 async function fetchKlineData(pair: string, timeframe: string, limit: number = 200): Promise<KlineData[]> {
-    const url = `${BYBIT_API_URL}/v5/market/kline?category=spot&symbol=${pair}&interval=${timeframe}&limit=${limit}`;
+    const url = `${BYBIT_API_URL}/v5/market/kline?category=linear&symbol=${pair}&interval=${timeframe}&limit=${limit}`;
 
     const response = await fetch(url, { cache: "no-store" });
     if (!response.ok) {
