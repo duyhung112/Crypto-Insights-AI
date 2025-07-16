@@ -26,13 +26,13 @@ export async function getKlineData(pair: string, timeframe: string, limit: numbe
     if (!response.ok) {
       const errorBody = await response.text();
       console.error("Bybit API error response:", errorBody);
-      throw new Error(`Lỗi API Bybit: ${response.statusText}`);
+      throw new Error(`Bybit API Error: ${response.statusText}`);
     }
 
     const data: BybitKlineResponse = await response.json();
 
     if (data.retCode !== 0) {
-      throw new Error(`Lỗi API Bybit: ${data.retMsg}`);
+      throw new Error(`Bybit API Error: ${data.retMsg}`);
     }
 
     if (!data.result.list || data.result.list.length === 0) {
@@ -57,7 +57,7 @@ export async function getAnalysis(pair: string, timeframe: string) {
     const klineData = await getKlineData(pair, timeframe, 200);
 
     if (klineData.length < 50) { // Need enough data for indicators
-      throw new Error("Không có đủ dữ liệu lịch sử để phân tích cho cặp tiền này.");
+      throw new Error("Not enough historical data to analyze this pair.");
     }
 
     const closePrices = klineData.map((k) => k.close);
@@ -91,7 +91,7 @@ export async function getAnalysis(pair: string, timeframe: string) {
       latestEma9 === undefined ||
       latestEma21 === undefined
     ) {
-      throw new Error("Không thể tính toán các chỉ báo kỹ thuật. Cần nhiều dữ liệu hơn.");
+      throw new Error("Could not calculate technical indicators. More data might be needed.");
     }
 
     const aiInput: AnalyzeCryptoPairInput = {
@@ -127,6 +127,6 @@ export async function getAnalysis(pair: string, timeframe: string) {
     if (error instanceof Error) {
       return { error: error.message };
     }
-    return { error: "Một lỗi không xác định đã xảy ra." };
+    return { error: "An unknown error occurred." };
   }
 }

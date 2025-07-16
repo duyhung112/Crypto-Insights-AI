@@ -23,7 +23,7 @@ const TradingViewChart = ({ pair, timeframe }: TradingViewChartProps) => {
         timezone: "Etc/UTC",
         theme: currentTheme === 'dark' ? 'dark' : 'light',
         style: "1",
-        locale: "vi_VN",
+        locale: "en",
         enable_publishing: false,
         allow_symbol_change: true,
         studies: [
@@ -32,7 +32,13 @@ const TradingViewChart = ({ pair, timeframe }: TradingViewChartProps) => {
             {
                 id: "MovingAverageExponential@tv-basicstudies",
                 inputs: {
-                    length: 50
+                    length: 9
+                }
+            },
+            {
+                id: "MovingAverageExponential@tv-basicstudies",
+                inputs: {
+                    length: 21
                 }
             },
             "PivotPointsStandard@tv-basicstudies"

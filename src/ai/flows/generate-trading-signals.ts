@@ -31,7 +31,7 @@ const generateTradingSignalsPrompt = ai.definePrompt({
   input: {schema: TradingSignalsInputSchema},
   output: {schema: TradingSignalsOutputSchema},
   prompt: `You are a trading signal generator for the cryptocurrency pair {{{pair}}} on the {{{timeframe}}} timeframe.
-Analyze the following technical indicator values and generate a list of trading signals. For each indicator, provide a clear "Buy", "Sell", or "Neutral" signal, a confidence level ("High", "Medium", or "Low"), and a brief reasoning in Vietnamese.
+Analyze the following technical indicator values and generate a list of trading signals. For each indicator, provide a clear "Buy", "Sell", or "Neutral" signal, a confidence level ("High", "Medium", or "Low"), and a brief reasoning in English.
 
 Current Price: {{{price}}}
 - RSI (14): {{{rsi}}}

@@ -1,4 +1,4 @@
-import type { AnalyzeCryptoPairOutput } from "@/ai/flows/analyze-crypto-pair";
+import type { AnalyzeCryptoPairOutput } from "@/lib/types";
 import {
   Card,
   CardContent,
@@ -37,7 +37,7 @@ export function AnalysisDisplay({ analysis }: AnalysisDisplayProps) {
     <Card className="w-full">
       <CardHeader>
         <CardTitle className="font-headline text-2xl flex flex-wrap items-center gap-4">
-          Phân tích từ Chuyên gia AI
+          AI Expert Analysis
           <Badge
             variant={getSignalBadgeVariant(analysis.buySellSignal)}
             className="text-lg px-4 py-1"
@@ -49,13 +49,13 @@ export function AnalysisDisplay({ analysis }: AnalysisDisplayProps) {
           </Badge>
         </CardTitle>
         <CardDescription>
-          Dưới đây là phân tích chi tiết được cung cấp bởi Gemini AI dựa trên các chỉ báo kỹ thuật.
+          Below is a detailed analysis provided by Gemini AI based on technical indicators.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6 text-base">
         <div className="space-y-2">
           <h3 className="font-headline text-xl font-semibold">
-            Tổng quan thị trường
+            Market Overview
           </h3>
           <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
             {analysis.marketOverview}
@@ -63,7 +63,7 @@ export function AnalysisDisplay({ analysis }: AnalysisDisplayProps) {
         </div>
         <div className="space-y-2">
           <h3 className="font-headline text-xl font-semibold">
-            Diễn giải chỉ báo
+            Indicator Explanations
           </h3>
           <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
             {analysis.indicatorExplanations}
@@ -74,12 +74,12 @@ export function AnalysisDisplay({ analysis }: AnalysisDisplayProps) {
         
         <div className="space-y-4">
             <h3 className="font-headline text-xl font-semibold">
-                Kế hoạch Giao dịch Đề xuất
+                Proposed Trading Plan
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
             <Card>
                 <CardHeader className="p-4">
-                    <CardDescription>Giá vào lệnh (Entry)</CardDescription>
+                    <CardDescription>Entry Price</CardDescription>
                 </CardHeader>
                 <CardContent className="p-4 pt-0">
                     <p className="text-2xl font-bold text-primary">
@@ -89,7 +89,7 @@ export function AnalysisDisplay({ analysis }: AnalysisDisplayProps) {
             </Card>
             <Card>
                 <CardHeader className="p-4">
-                    <CardDescription>Dừng lỗ (Stop-loss)</CardDescription>
+                    <CardDescription>Stop-loss</CardDescription>
                 </CardHeader>
                 <CardContent className="p-4 pt-0">
                     <p className="text-2xl font-bold text-destructive">
@@ -99,7 +99,7 @@ export function AnalysisDisplay({ analysis }: AnalysisDisplayProps) {
             </Card>
             <Card>
                 <CardHeader className="p-4">
-                    <CardDescription>Chốt lời (Take-profit)</CardDescription>
+                    <CardDescription>Take-profit</CardDescription>
                 </CardHeader>
                 <CardContent className="p-4 pt-0">
                     <p className="text-2xl font-bold text-chart-2">
@@ -115,7 +115,7 @@ export function AnalysisDisplay({ analysis }: AnalysisDisplayProps) {
                 <ShieldCheck className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
                 <div>
                     <CardTitle className="text-lg font-semibold font-headline text-primary">
-                        Lời khuyên Quản lý Rủi ro
+                        Risk Management Advice
                     </CardTitle>
                     <CardDescription className="text-muted-foreground/90 whitespace-pre-wrap pt-2">
                         {analysis.riskManagementAdvice}

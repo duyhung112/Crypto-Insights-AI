@@ -1,4 +1,4 @@
-import type { TradingSignalsOutput } from "@/ai/flows/generate-trading-signals";
+import type { TradingSignalsOutput } from "@/lib/types";
 import {
   Card,
   CardContent,
@@ -47,19 +47,19 @@ export function TradingSignalsDisplay({ signals }: TradingSignalsDisplayProps) {
   return (
     <Card className="w-full">
        <CardHeader>
-        <CardTitle className="font-headline text-2xl">Tín hiệu Giao dịch</CardTitle>
+        <CardTitle className="font-headline text-2xl">Trading Signals</CardTitle>
         <CardDescription>
-          Các tín hiệu được tạo tự động dựa trên các chỉ báo kỹ thuật phổ biến.
+          Automated signals based on common technical indicators.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[150px]">Chỉ báo</TableHead>
-              <TableHead className="text-center w-[120px]">Tín hiệu</TableHead>
-              <TableHead className="text-center w-[120px]">Độ tin cậy</TableHead>
-              <TableHead>Lý do</TableHead>
+              <TableHead className="w-[150px]">Indicator</TableHead>
+              <TableHead className="text-center w-[120px]">Signal</TableHead>
+              <TableHead className="text-center w-[120px]">Confidence</TableHead>
+              <TableHead>Reasoning</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
