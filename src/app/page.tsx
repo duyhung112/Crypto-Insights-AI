@@ -28,7 +28,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 
 const TradingViewChart = dynamic(() => import('@/components/tradingview-chart'), {
   ssr: false,
-  loading: () => <Skeleton className="w-full h-[500px]" />,
+  loading: () => <Skeleton className="w-full h-[700px]" />,
 });
 
 const pairs = [
@@ -136,7 +136,7 @@ export default function Home() {
                 {loading ? "Đang phân tích..." : "Phân tích"}
               </Button>
             </div>
-             <div className="pt-4 h-[500px]">
+             <div className="pt-4 h-[700px]">
                 <TradingViewChart pair={pair} timeframe={timeframe}/>
             </div>
           </CardContent>
