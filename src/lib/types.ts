@@ -8,7 +8,22 @@ export interface KlineData {
   close: number;
 }
 
+export interface RsiData {
+    time: number;
+    value: number;
+}
+
+export interface MacdData {
+    time: number;
+    MACD?: number;
+    signal?: number;
+    histogram?: number;
+}
+
+
 export interface AnalysisResult {
   klineData: KlineData[];
   aiAnalysis: AnalyzeCryptoPairOutput;
+  rsiData: RsiData[];
+  macdData: MacdData[];
 }

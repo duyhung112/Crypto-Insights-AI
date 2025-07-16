@@ -1,7 +1,7 @@
 "use server";
 
 import { analyzeCryptoPair } from "@/ai/flows/analyze-crypto-pair";
-import type { KlineData } from "@/lib/types";
+import type { KlineData, MacdData, RsiData } from "@/lib/types";
 import { RSI, MACD, EMA } from "technicalindicators";
 
 const BYBIT_API_URL = "https://api.bybit.com";
@@ -42,7 +42,7 @@ export async function getAnalysis(pair: string, timeframe: string) {
 
     const klineData: KlineData[] = data.result.list
       .map((d) => ({
-        time: parseInt(d[0]) / 1000,
+        time: parseInt(d[0]),
         open: parseFloat(d[1]),
         high: parseFloat(d[2]),
         low: parseFloat(d[3]),
@@ -54,14 +54,17 @@ export async function getAnalysis(pair: string, timeframe: string) {
     const latestPrice = closePrices[closePrices.length - 1];
 
     // Calculate indicators
-    const rsiResult = RSI.calculate({ values: closePrices, period: 14 });
-    const macdResult = MACD.calculate({
+    const rsiPeriod = 14;
+    const rsiResult = RSI.calculate({ values: closePrices, period: rsiPeriod });
+
+    const macdInput = {
       values: closePrices,
       fastPeriod: 12,
       slowPeriod: 26,
       signalPeriod: 9,
       SimpleMA: false,
-    });
+    };
+    const macdResult = MACD.calculate(macdInput);
     const emaResult = EMA.calculate({ values: closePrices, period: 50 });
 
     // Get the latest values
@@ -86,8 +89,20 @@ export async function getAnalysis(pair: string, timeframe: string) {
       macd: latestMacd,
       ema: latestEma,
     });
+    
+    // Prepare indicator data for charts
+    const rsiData: RsiData[] = rsiResult.map((value, index) => ({
+      time: klineData[index + rsiPeriod -1].time,
+      value: value,
+    }));
 
-    return { klineData, aiAnalysis };
+    const macdData: MacdData[] = macdResult.map((value, index) => ({
+        time: klineData[index + macdInput.slowPeriod - 1].time,
+        ...value
+    }));
+
+
+    return { klineData, aiAnalysis, rsiData, macdData };
   } catch (error) {
     console.error("Error in getAnalysis:", error);
     if (error instanceof Error) {

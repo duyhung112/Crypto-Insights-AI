@@ -22,6 +22,7 @@ import CryptoChart from "@/components/crypto-chart";
 import { AnalysisDisplay } from "@/components/analysis-display";
 import type { AnalysisResult } from "@/lib/types";
 import { Label } from "@/components/ui/label";
+import { IndicatorCharts } from "@/components/indicator-charts";
 
 const pairs = [
   { value: "BTCUSDT", label: "BTC/USDT" },
@@ -163,6 +164,8 @@ export default function Home() {
                 <CryptoChart data={result.klineData} />
               </CardContent>
             </Card>
+
+            <IndicatorCharts rsiData={result.rsiData} macdData={result.macdData} />
 
             <AnalysisDisplay analysis={result.aiAnalysis} />
           </div>
