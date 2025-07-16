@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import dynamic from 'next/dynamic';
 import {
   Card,
@@ -9,7 +9,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -51,16 +50,16 @@ const timeframes = [
 export default function Home() {
   const [pair, setPair] = useState("ETHUSDT");
   const [timeframe, setTimeframe] = useState("60");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Set initial loading to true
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleAnalyze = async () => {
+  const handleAnalyze = useCallback(async (currentPair: string, currentTimeframe: string) => {
     setLoading(true);
     setError(null);
     setResult(null);
 
-    const response = await getAnalysis(pair, timeframe);
+    const response = await getAnalysis(currentPair, currentTimeframe);
 
     if (response.error) {
       setError(response.error);
@@ -72,7 +71,12 @@ export default function Home() {
     }
 
     setLoading(false);
-  };
+  }, []);
+
+  // Effect to run analysis on initial load and when selections change
+  useEffect(() => {
+    handleAnalyze(pair, timeframe);
+  }, [pair, timeframe, handleAnalyze]);
 
   return (
     <main className="flex min-h-screen flex-col items-center p-4 sm:p-6 md:p-8 bg-background transition-colors duration-300">
@@ -96,13 +100,13 @@ export default function Home() {
                     <CardHeader>
                         <CardTitle className="font-headline">Bảng điều khiển</CardTitle>
                         <CardDescription>
-                        Chọn cặp tiền và khung thời gian để phân tích.
+                        Chọn cặp tiền và khung thời gian để tự động phân tích.
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="space-y-2">
                             <Label htmlFor="pair-select">Cặp tiền</Label>
-                            <Select value={pair} onValueChange={setPair}>
+                            <Select value={pair} onValueChange={setPair} disabled={loading}>
                             <SelectTrigger id="pair-select">
                                 <SelectValue placeholder="Chọn cặp tiền" />
                             </SelectTrigger>
@@ -117,7 +121,7 @@ export default function Home() {
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="timeframe-select">Khung thời gian</Label>
-                            <Select value={timeframe} onValueChange={setTimeframe}>
+                            <Select value={timeframe} onValueChange={setTimeframe} disabled={loading}>
                             <SelectTrigger id="timeframe-select">
                                 <SelectValue placeholder="Chọn khung thời gian" />
                             </SelectTrigger>
@@ -130,22 +134,16 @@ export default function Home() {
                             </SelectContent>
                             </Select>
                         </div>
-                        <Button
-                            onClick={handleAnalyze}
-                            disabled={loading}
-                            className="bg-accent text-accent-foreground hover:bg-accent/90 w-full"
-                        >
-                            {loading ? (
-                            <Loader className="mr-2 h-4 w-4 animate-spin" />
-                            ) : (
-                            <BarChart className="mr-2 h-4 w-4" />
-                            )}
-                            {loading ? "Đang phân tích..." : "Phân tích"}
-                        </Button>
+                         {loading && (
+                            <div className="flex items-center text-sm text-muted-foreground pt-2">
+                                <Loader className="mr-2 h-4 w-4 animate-spin" />
+                                <span>Đang phân tích...</span>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
 
-                {loading && (
+                {loading && !result && !error && (
                     <div className="flex flex-col justify-center items-center p-16 space-y-4">
                         <Loader className="h-12 w-12 animate-spin text-primary" />
                         <p className="text-muted-foreground">Đang lấy dữ liệu và phân tích...</p>
