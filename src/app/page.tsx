@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import dynamic from 'next/dynamic';
 import {
   Card,
@@ -30,7 +30,7 @@ import { TradingSignalsDisplay } from "@/components/trading-signals-display";
 
 const TradingViewChart = dynamic(() => import('@/components/tradingview-chart'), {
   ssr: false,
-  loading: () => <Skeleton className="w-full h-[700px]" />,
+  loading: () => <Skeleton className="w-full h-full min-h-[600px]" />,
 });
 
 const pairs = [
@@ -75,8 +75,8 @@ export default function Home() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center p-4 sm:p-8 md:p-12 bg-background transition-colors duration-300">
-      <div className="w-full max-w-6xl space-y-8">
+    <main className="flex min-h-screen flex-col items-center p-4 sm:p-6 md:p-8 bg-background transition-colors duration-300">
+      <div className="w-full max-w-7xl space-y-6">
         <header className="text-center relative">
           <h1 className="font-headline text-4xl md:text-5xl font-bold text-primary">
             Crypto Insights AI
@@ -89,101 +89,116 @@ export default function Home() {
           </div>
         </header>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="font-headline">Bảng điều khiển</CardTitle>
-            <CardDescription>
-              Chọn cặp tiền mã hóa và khung thời gian để xem biểu đồ và bắt đầu phân tích.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-              <div className="space-y-2">
-                <Label htmlFor="pair-select">Cặp tiền</Label>
-                <Select value={pair} onValueChange={setPair}>
-                  <SelectTrigger id="pair-select">
-                    <SelectValue placeholder="Chọn cặp tiền" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {pairs.map((p) => (
-                      <SelectItem key={p.value} value={p.value}>
-                        {p.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="timeframe-select">Khung thời gian</Label>
-                <Select value={timeframe} onValueChange={setTimeframe}>
-                  <SelectTrigger id="timeframe-select">
-                    <SelectValue placeholder="Chọn khung thời gian" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {timeframes.map((t) => (
-                      <SelectItem key={t.value} value={t.value}>
-                        {t.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button
-                onClick={handleAnalyze}
-                disabled={loading}
-                className="bg-accent text-accent-foreground hover:bg-accent/90 w-full md:col-start-3"
-              >
-                {loading ? (
-                  <Loader className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <BarChart className="mr-2 h-4 w-4" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left Column */}
+            <div className="lg:col-span-1 flex flex-col gap-6">
+                 <Card>
+                    <CardHeader>
+                        <CardTitle className="font-headline">Bảng điều khiển</CardTitle>
+                        <CardDescription>
+                        Chọn cặp tiền và khung thời gian để phân tích.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="pair-select">Cặp tiền</Label>
+                            <Select value={pair} onValueChange={setPair}>
+                            <SelectTrigger id="pair-select">
+                                <SelectValue placeholder="Chọn cặp tiền" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {pairs.map((p) => (
+                                <SelectItem key={p.value} value={p.value}>
+                                    {p.label}
+                                </SelectItem>
+                                ))}
+                            </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="timeframe-select">Khung thời gian</Label>
+                            <Select value={timeframe} onValueChange={setTimeframe}>
+                            <SelectTrigger id="timeframe-select">
+                                <SelectValue placeholder="Chọn khung thời gian" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {timeframes.map((t) => (
+                                <SelectItem key={t.value} value={t.value}>
+                                    {t.label}
+                                </SelectItem>
+                                ))}
+                            </SelectContent>
+                            </Select>
+                        </div>
+                        <Button
+                            onClick={handleAnalyze}
+                            disabled={loading}
+                            className="bg-accent text-accent-foreground hover:bg-accent/90 w-full"
+                        >
+                            {loading ? (
+                            <Loader className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                            <BarChart className="mr-2 h-4 w-4" />
+                            )}
+                            {loading ? "Đang phân tích..." : "Phân tích"}
+                        </Button>
+                    </CardContent>
+                </Card>
+
+                {loading && (
+                    <div className="flex flex-col justify-center items-center p-16 space-y-4">
+                        <Loader className="h-12 w-12 animate-spin text-primary" />
+                        <p className="text-muted-foreground">Đang lấy dữ liệu và phân tích...</p>
+                    </div>
                 )}
-                {loading ? "Đang phân tích..." : "Phân tích"}
-              </Button>
+
+                {error && (
+                    <Card className="border-destructive bg-destructive/10">
+                        <CardHeader className="flex flex-row items-center gap-4">
+                        <AlertTriangle className="h-8 w-8 text-destructive" />
+                        <div>
+                            <CardTitle className="text-destructive">Đã xảy ra lỗi</CardTitle>
+                            <CardDescription className="text-destructive/80">
+                            {error}
+                            </CardDescription>
+                        </div>
+                        </CardHeader>
+                    </Card>
+                )}
+
+                {result && (
+                    <div className="animate-in fade-in duration-500">
+                        <Tabs defaultValue="analysis" className="w-full">
+                        <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="analysis">Phân tích AI</TabsTrigger>
+                            <TabsTrigger value="signals">Tín hiệu Giao dịch</TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="analysis">
+                            {result.aiAnalysis && <AnalysisDisplay analysis={result.aiAnalysis} />}
+                        </TabsContent>
+                        <TabsContent value="signals">
+                            {result.tradingSignals && <TradingSignalsDisplay signals={result.tradingSignals} />}
+                        </TabsContent>
+                        </Tabs>
+                    </div>
+                )}
             </div>
-             <div className="pt-4 h-[700px]">
-                <TradingViewChart pair={pair} timeframe={timeframe}/>
+
+            {/* Right Column */}
+            <div className="lg:col-span-2">
+                <Card className="h-full">
+                     <CardHeader>
+                        <CardTitle className="font-headline">Biểu đồ</CardTitle>
+                        <CardDescription>
+                            Biểu đồ giá của cặp {pair} trên khung thời gian {timeframes.find(t => t.value === timeframe)?.label}.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="h-[700px]">
+                        <TradingViewChart pair={pair} timeframe={timeframe}/>
+                    </CardContent>
+                </Card>
             </div>
-          </CardContent>
-        </Card>
-
-        {loading && (
-          <div className="flex flex-col justify-center items-center p-16 space-y-4">
-            <Loader className="h-12 w-12 animate-spin text-primary" />
-            <p className="text-muted-foreground">Đang lấy dữ liệu và phân tích...</p>
-          </div>
-        )}
-
-        {error && (
-          <Card className="border-destructive bg-destructive/10">
-            <CardHeader className="flex flex-row items-center gap-4">
-              <AlertTriangle className="h-8 w-8 text-destructive" />
-              <div>
-                <CardTitle className="text-destructive">Đã xảy ra lỗi</CardTitle>
-                <CardDescription className="text-destructive/80">
-                  {error}
-                </CardDescription>
-              </div>
-            </CardHeader>
-          </Card>
-        )}
-
-        {result && (
-          <div className="space-y-8 animate-in fade-in duration-500">
-             <Tabs defaultValue="analysis" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="analysis">Phân tích AI</TabsTrigger>
-                <TabsTrigger value="signals">Tín hiệu Giao dịch</TabsTrigger>
-              </TabsList>
-              <TabsContent value="analysis">
-                {result.aiAnalysis && <AnalysisDisplay analysis={result.aiAnalysis} />}
-              </TabsContent>
-              <TabsContent value="signals">
-                {result.tradingSignals && <TradingSignalsDisplay signals={result.tradingSignals} />}
-              </TabsContent>
-            </Tabs>
-          </div>
-        )}
+        </div>
       </div>
     </main>
   );
