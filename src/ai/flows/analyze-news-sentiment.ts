@@ -35,15 +35,16 @@ Nhiệm vụ của bạn là phân tích các tin tức gần đây về một l
 Sử dụng công cụ 'getNewsForCrypto' để lấy các bài báo mới nhất cho {{{cryptoSymbol}}}.
 
 Dựa trên các tin tức lấy được, hãy thực hiện các bước sau:
-1.  **Xác định Tâm lý Thị trường:** Đọc qua các tiêu đề và đoạn tóm tắt. Quyết định xem tâm lý chung là "Tích cực" (Positive), "Tiêu cực" (Negative), hay "Trung lập" (Neutral).
-    - **Tích cực:** Tin tức về việc áp dụng, nâng cấp công nghệ thành công, đầu tư lớn, quy định có lợi.
-    - **Tiêu cực:** Tin tức về các vụ tấn công, lừa đảo, quy định bất lợi, sự cố kỹ thuật, sự sụt giảm niềm tin.
-    - **Trung lập:** Tin tức mang tính thông tin chung, không có tác động rõ rệt đến giá cả hoặc tâm lý.
-2.  **Tóm tắt các Điểm chính:** Viết một đoạn tóm tắt ngắn gọn (2-3 câu) nêu bật những thông tin quan trọng nhất từ các bài báo đã phân tích.
-3.  **Giải thích Lý do:** Cung cấp một lời giải thích ngắn gọn (1-2 câu) về lý do tại sao bạn lại đưa ra kết luận về tâm lý như trên.
+1.  **Xác định Tâm lý Thị trường:** Đọc qua các tiêu đề và đoạn tóm tắt. Quyết định xem tâm lý chung là "Positive", "Negative", hay "Neutral".
+    - **QUAN TRỌNG:** Giá trị của trường 'sentiment' PHẢI là một trong ba chuỗi tiếng Anh: "Positive", "Negative", hoặc "Neutral".
+    - Tích cực (Positive): Tin tức về việc áp dụng, nâng cấp công nghệ thành công, đầu tư lớn, quy định có lợi.
+    - Tiêu cực (Negative): Tin tức về các vụ tấn công, lừa đảo, quy định bất lợi, sự cố kỹ thuật, sự sụt giảm niềm tin.
+    - Trung lập (Neutral): Tin tức mang tính thông tin chung, không có tác động rõ rệt đến giá cả hoặc tâm lý.
+2.  **Tóm tắt các Điểm chính:** Viết một đoạn tóm tắt ngắn gọn (2-3 câu) bằng tiếng Việt, nêu bật những thông tin quan trọng nhất từ các bài báo đã phân tích.
+3.  **Giải thích Lý do:** Cung cấp một lời giải thích ngắn gọn (1-2 câu) bằng tiếng Việt về lý do tại sao bạn lại đưa ra kết luận về tâm lý như trên.
 4.  **Liệt kê các Bài báo:** Trả về danh sách các bài báo đã được sử dụng cho việc phân tích.
 
-Hãy đảm bảo kết quả trả về bằng tiếng Việt và tuân thủ đúng định dạng đầu ra.`,
+Hãy đảm bảo kết quả trả về tuân thủ đúng định dạng đầu ra.`,
 });
 
 const analyzeNewsSentimentFlow = ai.defineFlow(
