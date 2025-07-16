@@ -55,7 +55,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
           <div className="space-y-2">
              <h3 className="text-sm font-medium">Cấu hình Gemini AI</h3>
              <p className="text-xs text-muted-foreground">
-                Lưu ý: Do hạn chế về kiến trúc, khóa API này hiện chỉ được lưu trên trình duyệt của bạn và chưa được sử dụng cho các yêu cầu phía máy chủ.
+                Lưu ý: Khóa API này hiện chỉ được lưu trên trình duyệt của bạn và chưa được sử dụng cho các yêu cầu phía máy chủ.
              </p>
             <Label htmlFor="gemini-api-key" className="sr-only">
               Gemini API Key
@@ -66,7 +66,6 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               placeholder="Nhập Gemini API Key của bạn"
               value={geminiApiKey}
               onChange={(e) => setGeminiApiKey(e.target.value)}
-              disabled // Disable the input for now
             />
           </div>
           <Separator />
