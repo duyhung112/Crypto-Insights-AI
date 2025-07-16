@@ -1,5 +1,6 @@
 import { config } from 'dotenv';
 config();
 
-import '@/ai/flows/analyze-crypto-pair.ts';
-import '@/ai/flows/analyze-news-sentiment.ts';
+// The flows are now initialized dynamically within the actions that call them,
+// so we no longer need to import them here for the dev server.
+// This prevents the accidental initialization of a Genkit instance without an API key.

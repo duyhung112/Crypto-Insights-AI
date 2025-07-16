@@ -9,15 +9,13 @@
  * - AnalyzeCryptoPairOutput - The return type for the analyzeCryptoPair function.
  */
 
-import { ai } from '@/ai/genkit';
-import { AnalyzeCryptoPairInputSchema, type AnalyzeCryptoPairInput, AnalyzeCryptoPairOutputSchema, type AnalyzeCryptoPairOutput } from '@/lib/types';
 import type { Genkit } from 'genkit';
+import { AnalyzeCryptoPairInputSchema, type AnalyzeCryptoPairInput, AnalyzeCryptoPairOutputSchema, type AnalyzeCryptoPairOutput } from '@/lib/types';
 
 
-export async function analyzeCryptoPair(input: AnalyzeCryptoPairInput, dynamicAi?: Genkit): Promise<AnalyzeCryptoPairOutput> {
-  const currentAi = dynamicAi || ai;
+export async function analyzeCryptoPair(input: AnalyzeCryptoPairInput, dynamicAi: Genkit): Promise<AnalyzeCryptoPairOutput> {
 
-  const analyzeCryptoPairPrompt = currentAi.definePrompt({
+  const analyzeCryptoPairPrompt = dynamicAi.definePrompt({
     name: 'analyzeCryptoPairPrompt',
     input: {schema: AnalyzeCryptoPairInputSchema},
     output: {schema: AnalyzeCryptoPairOutputSchema},

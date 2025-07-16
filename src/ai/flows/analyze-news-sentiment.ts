@@ -9,20 +9,18 @@
  * - NewsAnalysisOutput - The return type for the analyzeNewsSentiment function.
  */
 
-import { ai } from '@/ai/genkit';
+import type { Genkit } from 'genkit';
 import {
   NewsAnalysisInputSchema,
   type NewsAnalysisInput,
   NewsAnalysisOutputSchema,
   type NewsAnalysisOutput,
 } from '@/lib/types';
-import type { Genkit } from 'genkit';
 
 
-export async function analyzeNewsSentiment(input: NewsAnalysisInput, dynamicAi?: Genkit): Promise<NewsAnalysisOutput> {
-  const currentAi = dynamicAi || ai;
+export async function analyzeNewsSentiment(input: NewsAnalysisInput, dynamicAi: Genkit): Promise<NewsAnalysisOutput> {
   
-  const analyzeNewsSentimentPrompt = currentAi.definePrompt({
+  const analyzeNewsSentimentPrompt = dynamicAi.definePrompt({
     name: 'newsSentimentAnalysisPrompt',
     input: { schema: NewsAnalysisInputSchema },
     output: { schema: NewsAnalysisOutputSchema },
