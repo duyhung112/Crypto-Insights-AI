@@ -26,6 +26,17 @@ const TradingViewChart = ({ pair, timeframe }: TradingViewChartProps) => {
         locale: "vi_VN",
         enable_publishing: false,
         allow_symbol_change: true,
+        studies: [
+            "RSI@tv-basicstudies",
+            "MACD@tv-basicstudies",
+            {
+                id: "MASimple@tv-basicstudies",
+                inputs: {
+                    length: 50
+                }
+            },
+            "PivotPointsStandard@tv-basicstudies"
+        ],
         container_id: "tradingview_container",
       };
   }
@@ -80,11 +91,7 @@ const TradingViewChart = ({ pair, timeframe }: TradingViewChartProps) => {
   // Effect to update symbol when pair or timeframe changes
   useEffect(() => {
     if ((window as any).tradingViewScriptLoaded && widgetRef.current?.ready) {
-      try {
-        widgetRef.current.setSymbol(`BYBIT:${pair}.P`, timeframe, () => {});
-      } catch (e) {
-        console.error("Error setting symbol on TradingView widget:", e);
-      }
+       createWidget();
     }
   }, [pair, timeframe]);
 
