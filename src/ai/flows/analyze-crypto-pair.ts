@@ -40,7 +40,7 @@ const analyzeCryptoPairPrompt = ai.definePrompt({
   name: 'analyzeCryptoPairPrompt',
   input: {schema: AnalyzeCryptoPairInputSchema},
   output: {schema: AnalyzeCryptoPairOutputSchema},
-  prompt: `Analyze the cryptocurrency pair {{{pair}}} with a timeframe of {{{timeframe}}}.\n\nHere are the technical indicators:\n- Price: {{{price}}}\n- RSI: {{{rsi}}}\n- MACD: {{{macd}}}\n- EMA: {{{ema}}}}\n\nProvide the following analysis in Vietnamese:\n- Overall market assessment\n- Explanations of each technical indicator\n- Buy or sell signal\n- Suggested entry point\n- Suggested stop-loss level\n- Suggested take-profit level\n\nMake sure that those indicators align with current price action.\n`,
+  prompt: `Analyze the cryptocurrency pair {{{pair}}} with a timeframe of {{{timeframe}}}.\n\nHere are the technical indicators:\n- Price: {{{price}}}\n- RSI: {{{rsi}}}\n- MACD: {{{macd}}}\n- EMA: {{{ema}}}\n\nProvide the following analysis in Vietnamese:\n- Overall market assessment\n- Explanations of each technical indicator\n- Buy or sell signal\n- Suggested entry point\n- Suggested stop-loss level\n- Suggested take-profit level\n\nMake sure that those indicators align with current price action.\n`,
 });
 
 const analyzeCryptoPairFlow = ai.defineFlow(
