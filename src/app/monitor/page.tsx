@@ -8,7 +8,7 @@ import { getAnalysis } from '@/app/actions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Loader, BellRing, ArrowLeft, CheckCircle, XCircle } from 'lucide-react';
+import { Loader, BellRing, ArrowLeft } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 
 const MONITORING_INTERVAL = 15 * 60 * 1000; // 15 minutes
