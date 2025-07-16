@@ -1,3 +1,4 @@
+
 // This is a new file.
 const BYBIT_API_URL = "https://api.bybit.com";
 
@@ -23,7 +24,14 @@ class BybitClient {
 
   public async getKline(symbol: string, interval: string, limit: number) {
     const url = `${BYBIT_API_URL}/v5/market/kline?category=linear&symbol=${symbol}&interval=${interval}&limit=${limit}`;
-    const response = await fetch(url, { cache: "no-store" });
+    
+    // Add a Referer header to prevent "Forbidden" errors on deployed environments.
+    const response = await fetch(url, {
+      cache: "no-store",
+      headers: {
+        'Referer': 'https://www.google.com/' // Using a generic, safe referer.
+      }
+    });
     
     if (!response.ok) {
       const errorBody = await response.text();
