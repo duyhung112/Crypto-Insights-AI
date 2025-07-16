@@ -29,7 +29,7 @@ import { TradingSignalsDisplay } from "@/components/trading-signals-display";
 
 const TradingViewChart = dynamic(() => import('@/components/tradingview-chart'), {
   ssr: false,
-  loading: () => <Skeleton className="w-full h-full min-h-[600px]" />,
+  loading: () => <Skeleton className="w-full h-full min-h-[500px]" />,
 });
 
 const pairs = [
@@ -83,120 +83,113 @@ export default function Home() {
       <div className="w-full max-w-7xl space-y-6">
         <header className="text-center relative">
           <h1 className="font-headline text-3xl md:text-4xl font-bold text-primary">
-            Crypto Insights AI
+            Market Trend Analysis
           </h1>
           <p className="text-muted-foreground mt-2 text-base">
-            AI-powered cryptocurrency technical analysis
+            AI-powered cryptocurrency technical analysis for Futures.
           </p>
            <div className="absolute top-0 right-0">
             <ThemeToggle />
           </div>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left Column */}
-            <div className="lg:col-span-1 flex flex-col gap-6">
-                 <Card>
-                    <CardHeader>
-                        <CardTitle className="font-headline">Control Panel</CardTitle>
-                        <CardDescription>
-                        Select a pair and timeframe for automatic analysis.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="pair-select">Pair</Label>
-                            <Select value={pair} onValueChange={setPair} disabled={loading}>
-                            <SelectTrigger id="pair-select">
-                                <SelectValue placeholder="Select a pair" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {pairs.map((p) => (
-                                <SelectItem key={p.value} value={p.value}>
-                                    {p.label}
-                                </SelectItem>
-                                ))}
-                            </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="timeframe-select">Timeframe</Label>
-                            <Select value={timeframe} onValueChange={setTimeframe} disabled={loading}>
-                            <SelectTrigger id="timeframe-select">
-                                <SelectValue placeholder="Select a timeframe" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {timeframes.map((t) => (
-                                <SelectItem key={t.value} value={t.value}>
-                                    {t.label}
-                                </SelectItem>
-                                ))}
-                            </SelectContent>
-                            </Select>
-                        </div>
-                         {loading && (
-                            <div className="flex items-center text-sm text-muted-foreground pt-2">
-                                <Loader className="mr-2 h-4 w-4 animate-spin" />
-                                <span>Analyzing...</span>
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
+        <Card>
+            <CardHeader>
+                <CardTitle className="font-headline text-xl">Chart</CardTitle>
+                <CardDescription className="text-sm">
+                    Price chart for {pair} on the {timeframes.find(t => t.value === timeframe)?.label} timeframe.
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="h-[500px]">
+                <TradingViewChart pair={pair} timeframe={timeframe}/>
+            </CardContent>
+        </Card>
 
-                {loading && !result && !error && (
-                    <div className="flex flex-col justify-center items-center p-16 space-y-4">
-                        <Loader className="h-12 w-12 animate-spin text-primary" />
-                        <p className="text-muted-foreground">Fetching data and analyzing...</p>
+        <Card>
+            <CardHeader>
+                <CardTitle className="font-headline text-xl">Control Panel</CardTitle>
+                <CardDescription className="text-sm">
+                Select a pair and timeframe for automatic analysis.
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="space-y-2">
+                    <Label htmlFor="pair-select">Pair</Label>
+                    <Select value={pair} onValueChange={setPair} disabled={loading}>
+                    <SelectTrigger id="pair-select" className="text-sm">
+                        <SelectValue placeholder="Select a pair" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {pairs.map((p) => (
+                        <SelectItem key={p.value} value={p.value} className="text-sm">
+                            {p.label}
+                        </SelectItem>
+                        ))}
+                    </SelectContent>
+                    </Select>
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="timeframe-select">Timeframe</Label>
+                    <Select value={timeframe} onValueChange={setTimeframe} disabled={loading}>
+                    <SelectTrigger id="timeframe-select" className="text-sm">
+                        <SelectValue placeholder="Select a timeframe" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {timeframes.map((t) => (
+                        <SelectItem key={t.value} value={t.value} className="text-sm">
+                            {t.label}
+                        </SelectItem>
+                        ))}
+                    </SelectContent>
+                    </Select>
+                </div>
+                {loading && (
+                    <div className="flex items-center text-sm text-muted-foreground pt-2 self-end">
+                        <Loader className="mr-2 h-4 w-4 animate-spin" />
+                        <span>Analyzing...</span>
                     </div>
                 )}
+            </CardContent>
+        </Card>
 
-                {error && (
-                    <Card className="border-destructive bg-destructive/10">
-                        <CardHeader className="flex flex-row items-center gap-4">
-                        <AlertTriangle className="h-8 w-8 text-destructive" />
-                        <div>
-                            <CardTitle className="text-destructive">An Error Occurred</CardTitle>
-                            <CardDescription className="text-destructive/80">
-                            {error}
-                            </CardDescription>
-                        </div>
-                        </CardHeader>
-                    </Card>
-                )}
-
-                {result && (
-                    <div className="animate-in fade-in duration-500">
-                        <Tabs defaultValue="analysis" className="w-full">
-                        <TabsList className="grid w-full grid-cols-2">
-                            <TabsTrigger value="analysis">AI Analysis</TabsTrigger>
-                            <TabsTrigger value="signals">Trading Signals</TabsTrigger>
-                        </TabsList>
-                        <TabsContent value="analysis">
-                            {result.aiAnalysis && <AnalysisDisplay analysis={result.aiAnalysis} />}
-                        </TabsContent>
-                        <TabsContent value="signals">
-                            {result.tradingSignals && <TradingSignalsDisplay signals={result.tradingSignals} />}
-                        </TabsContent>
-                        </Tabs>
-                    </div>
-                )}
+        {loading && !result && !error && (
+            <div className="flex flex-col justify-center items-center p-16 space-y-4">
+                <Loader className="h-12 w-12 animate-spin text-primary" />
+                <p className="text-muted-foreground">Fetching data and analyzing...</p>
             </div>
+        )}
 
-            {/* Right Column */}
-            <div className="lg:col-span-2">
-                <Card className="h-full">
-                     <CardHeader>
-                        <CardTitle className="font-headline">Chart</CardTitle>
-                        <CardDescription>
-                            Price chart for {pair} on the {timeframes.find(t => t.value === timeframe)?.label} timeframe.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="h-[700px]">
-                        <TradingViewChart pair={pair} timeframe={timeframe}/>
-                    </CardContent>
-                </Card>
+        {error && (
+            <Card className="border-destructive bg-destructive/10">
+                <CardHeader className="flex flex-row items-center gap-4">
+                <AlertTriangle className="h-8 w-8 text-destructive" />
+                <div>
+                    <CardTitle className="text-destructive text-lg">An Error Occurred</CardTitle>
+                    <CardDescription className="text-destructive/80 text-sm">
+                    {error}
+                    </CardDescription>
+                </div>
+                </CardHeader>
+            </Card>
+        )}
+
+        {result && (
+            <div className="animate-in fade-in duration-500">
+                <Tabs defaultValue="analysis" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="analysis">AI Analysis</TabsTrigger>
+                    <TabsTrigger value="signals">Trading Signals</TabsTrigger>
+                </TabsList>
+                <TabsContent value="analysis">
+                    {result.aiAnalysis && <AnalysisDisplay analysis={result.aiAnalysis} />}
+                </TabsContent>
+                <TabsContent value="signals">
+                    {result.tradingSignals && <TradingSignalsDisplay signals={result.tradingSignals} />}
+                </TabsContent>
+                </Tabs>
             </div>
-        </div>
+        )}
+
       </div>
     </main>
   );
