@@ -72,7 +72,7 @@ export type TradingSignalsOutput = z.infer<typeof TradingSignalsOutputSchema>;
 
 export const NewsArticleSchema = z.object({
     title: z.string().describe("The headline of the news article."),
-    url: z.string().url().describe("The URL to the full news article."),
+    url: z.string().describe("The URL to the full news article."),
     source: z.string().describe("The source of the news article (e.g., CoinTelegraph)."),
     snippet: z.string().describe("A short summary or snippet of the article."),
 });
