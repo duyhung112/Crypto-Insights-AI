@@ -12,11 +12,10 @@ import {
   CandlestickSeriesOptions,
   LineStyle,
 } from "lightweight-charts";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import type { KlineData } from "@/lib/types";
 
 const getCssVariable = (variable: string) => {
-  if (typeof window === "undefined") return "";
   const value = getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
   // lightweight-charts expects comma-separated HSL values
   return value.replace(/\s/g, ',');
@@ -31,14 +30,8 @@ const CryptoChart: React.FC<CryptoChartProps> = ({ data }) => {
   const chartRef = useRef<IChartApi | null>(null);
   const candlestickSeriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
 
-  const [isClient, setIsClient] = useState(false);
-
   useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  useEffect(() => {
-    if (!isClient || !chartContainerRef.current || data.length === 0) return;
+    if (!chartContainerRef.current || data.length === 0) return;
 
     const foreground = `hsl(${getCssVariable("--foreground")})`;
     const background = `hsl(${getCssVariable("--background")})`;
@@ -109,8 +102,12 @@ const CryptoChart: React.FC<CryptoChartProps> = ({ data }) => {
 
     return () => {
       window.removeEventListener("resize", handleResize);
+      if (chartRef.current) {
+        chartRef.current.remove();
+        chartRef.current = null;
+      }
     };
-  }, [data, isClient]);
+  }, [data]);
 
   return <div ref={chartContainerRef} className="w-full h-[400px] md:h-[500px]" />;
 };

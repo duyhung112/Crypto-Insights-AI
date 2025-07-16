@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useTransition } from "react";
+import dynamic from 'next/dynamic';
 import {
   Card,
   CardContent,
@@ -18,11 +19,16 @@ import {
 } from "@/components/ui/select";
 import { Loader, BarChart, AlertTriangle } from "lucide-react";
 import { getAnalysis, getKlineData } from "@/app/actions";
-import CryptoChart from "@/components/crypto-chart";
-import { AnalysisDisplay } from "@/components/analysis-display";
 import type { AnalysisResult, KlineData } from "@/lib/types";
 import { Label } from "@/components/ui/label";
 import { IndicatorCharts } from "@/components/indicator-charts";
+import { Skeleton } from "@/components/ui/skeleton";
+
+
+const CryptoChart = dynamic(() => import('@/components/crypto-chart'), {
+  ssr: false,
+  loading: () => <Skeleton className="w-full h-[400px] md:h-[500px]" />,
+});
 
 const pairs = [
   { value: "BTCUSDT", label: "BTC/USDT" },
@@ -149,9 +155,7 @@ export default function Home() {
             </div>
              <div className="pt-4">
                 {isChartLoading ? (
-                    <div className="flex justify-center items-center h-[400px] md:h-[500px]">
-                        <Loader className="h-8 w-8 animate-spin text-primary" />
-                    </div>
+                    <Skeleton className="w-full h-[400px] md:h-[500px]" />
                 ) : chartData.length > 0 ? (
                     <CryptoChart data={chartData} />
                 ) : (
