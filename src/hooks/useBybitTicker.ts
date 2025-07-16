@@ -58,13 +58,13 @@ export const useBybitTicker = (pair: string) => {
         setIsConnected(false);
       };
 
-      ws.current.onerror = (error) => {
-        console.error("WebSocket error:", error);
+      ws.current.onerror = (event) => {
+        console.error("Bybit WebSocket error. Event:", event);
         ws.current?.close();
       };
     };
 
-    // Close previous connection if it exists
+    // Close previous connection if it exists before creating a new one
     if (ws.current) {
         ws.current.close();
     }
@@ -75,10 +75,11 @@ export const useBybitTicker = (pair: string) => {
 
     // Cleanup on component unmount or pair change
     return () => {
-      if (ws.current) {
+      if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+        console.log("Closing WebSocket connection.");
         ws.current.close();
-        ws.current = null;
       }
+      ws.current = null;
     };
   }, [pair]); // Re-run effect when the pair changes
 
