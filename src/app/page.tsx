@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
 import {
   Card,
   CardContent,
@@ -27,7 +28,6 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { TradingSignalsDisplay } from "@/components/trading-signals-display";
 import { RealtimeTicker } from "@/components/RealtimeTicker";
 import { NewsAnalysisDisplay } from "@/components/news-analysis-display";
-import { SettingsDialog } from "@/components/settings-dialog";
 import { Button } from "@/components/ui/button";
 
 
@@ -58,7 +58,6 @@ export default function Home() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [mode, setMode] = useState<'swing' | 'scalping'>("swing");
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const handleAnalyze = useCallback(async (currentPair: string, currentTimeframe: string, currentMode: 'swing' | 'scalping') => {
     setLoading(true);
@@ -114,12 +113,12 @@ export default function Home() {
                     </Tabs>
                 </div>
                 <div className="flex items-center gap-2 pt-5">
-                    <SettingsDialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
-                      <Button variant="outline" size="icon" onClick={() => setIsSettingsOpen(true)}>
-                          <Settings className="h-4 w-4" />
-                          <span className="sr-only">Cài đặt</span>
-                      </Button>
-                    </SettingsDialog>
+                    <Link href="/settings">
+                        <Button variant="outline" size="icon">
+                            <Settings className="h-4 w-4" />
+                            <span className="sr-only">Cài đặt</span>
+                        </Button>
+                    </Link>
                     <ThemeToggle />
                 </div>
             </div>
