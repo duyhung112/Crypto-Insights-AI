@@ -30,7 +30,7 @@ const TradingViewChart = ({ pair, timeframe }: TradingViewChartProps) => {
             "RSI@tv-basicstudies",
             "MACD@tv-basicstudies",
             {
-                id: "MASimple@tv-basicstudies",
+                id: "MovingAverageExponential@tv-basicstudies",
                 inputs: {
                     length: 50
                 }
