@@ -2,9 +2,10 @@
 
 import { analyzeCryptoPair } from "@/ai/flows/analyze-crypto-pair";
 import { analyzeNewsSentiment } from "@/ai/flows/analyze-news-sentiment";
-import type { AnalyzeCryptoPairInput, KlineData, NewsAnalysisInput, AnalyzeCryptoPairOutput } from "@/lib/types";
+import type { AnalyzeCryptoPairInput, KlineData, NewsAnalysisInput, AnalyzeCryptoPairOutput, NewsArticle } from "@/lib/types";
 import { RSI, MACD, EMA } from "technicalindicators";
 import { sendDiscordNotificationTool } from "@/lib/tools/discord-tool";
+import { getNewsForCryptoTool } from "@/lib/tools";
 
 const BYBIT_API_URL = "https://api.bybit.com";
 
@@ -144,9 +145,16 @@ export async function getAnalysis(pair: string, timeframe: string, mode: 'swing'
     
     // Extract the base asset (e.g., "BTC" from "BTCUSDT")
     const cryptoSymbol = pair.replace(/USDT$/, '');
-    const newsInput: NewsAnalysisInput = { cryptoSymbol };
     
-    // Call AI Flows in parallel - reduced from 3 to 2 calls
+    // Fetch news first, then call AI flows
+    const newsArticles = await getNewsForCryptoTool({ cryptoSymbol });
+
+    const newsInput: NewsAnalysisInput = {
+      cryptoSymbol,
+      articles: newsArticles,
+    };
+
+    // Call AI Flows in parallel
     const [aiAnalysisResponse, newsAnalysisResponse] = await Promise.all([
         analyzeCryptoPair(aiInput),
         analyzeNewsSentiment(newsInput),

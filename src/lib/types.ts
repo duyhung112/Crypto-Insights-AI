@@ -70,18 +70,20 @@ export const TradingSignalsOutputSchema = z.object({
 });
 export type TradingSignalsOutput = z.infer<typeof TradingSignalsOutputSchema>;
 
+export const NewsArticleSchema = z.object({
+    title: z.string().describe("The headline of the news article."),
+    url: z.string().url().describe("The URL to the full news article."),
+    source: z.string().describe("The source of the news article (e.g., CoinTelegraph)."),
+    snippet: z.string().describe("A short summary or snippet of the article."),
+});
+export type NewsArticle = z.infer<typeof NewsArticleSchema>;
 
 // Schema for analyzeNewsSentiment flow
 export const NewsAnalysisInputSchema = z.object({
   cryptoSymbol: z.string().describe("The cryptocurrency symbol to search news for (e.g., BTC, ETH)."),
+  articles: z.array(NewsArticleSchema).describe("The list of news articles to be analyzed."),
 });
 export type NewsAnalysisInput = z.infer<typeof NewsAnalysisInputSchema>;
-
-const NewsArticleSchema = z.object({
-    title: z.string().describe("The headline of the news article."),
-    url: z.string().url().describe("The URL to the full news article."),
-    source: z.string().describe("The source of the news article (e.g., CoinTelegraph)."),
-});
 
 export const NewsAnalysisOutputSchema = z.object({
     sentiment: z.enum(["Positive", "Negative", "Neutral"]).describe("The overall market sentiment based on the news. MUST be one of the three English strings."),
