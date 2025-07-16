@@ -7,10 +7,24 @@ import type { AnalyzeCryptoPairInput, KlineData, NewsAnalysisInput, AnalyzeCrypt
 import { RSI, MACD, EMA } from "technicalindicators";
 import { sendDiscordNotificationTool } from "@/lib/tools/discord-tool";
 import { getNewsForCryptoTool } from "@/lib/tools";
-import { bybitClient } from "@/lib/bybit-client";
+import { GET as getBybitKline } from '@/app/api/bybit/kline/route';
+import { NextRequest } from "next/server";
 
 export async function getKlineData(pair: string, timeframe: string, limit: number = 200): Promise<KlineData[]> {
-    const result = await bybitClient.getKline(pair, timeframe, limit);
+    // Construct a mock request object that mimics NextRequest
+    // This allows us to call the API route handler directly without a real HTTP call.
+    const mockUrl = `http://localhost/api/bybit/kline?symbol=${pair}&interval=${timeframe}&limit=${limit}`;
+    const mockRequest = new NextRequest(mockUrl);
+
+    const response = await getBybitKline(mockRequest);
+    const data = await response.json();
+
+    if (!response.ok || data.error) {
+        console.error("Error from internal kline API call:", data);
+        throw new Error(`Failed to call internal kline API: ${data.error || 'Unknown error'}`);
+    }
+    
+    const result = data.result;
 
     if (!result.list || result.list.length === 0) {
       return [];
