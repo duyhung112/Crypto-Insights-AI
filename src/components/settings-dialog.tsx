@@ -66,6 +66,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               placeholder="Nhập Gemini API Key của bạn"
               value={geminiApiKey}
               onChange={(e) => setGeminiApiKey(e.target.value)}
+              disabled // Disable the input for now
             />
           </div>
           <Separator />
