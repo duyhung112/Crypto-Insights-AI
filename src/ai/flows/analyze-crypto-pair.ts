@@ -10,27 +10,8 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { AnalyzeCryptoPairInputSchema, type AnalyzeCryptoPairInput, AnalyzeCryptoPairOutputSchema, type AnalyzeCryptoPairOutput } from '@/lib/types';
 
-const AnalyzeCryptoPairInputSchema = z.object({
-  pair: z.string().describe('The cryptocurrency pair to analyze (e.g., ETH/USDT).'),
-  timeframe: z.string().describe('The timeframe for the analysis (e.g., 15m, 1h, 4h, 1d).'),
-  price: z.number().describe('Current price of the crypto pair'),
-  rsi: z.number().describe('Relative Strength Index value'),
-  macd: z.number().describe('Moving Average Convergence Divergence value'),
-  ema: z.number().describe('Exponential Moving Average value'),
-});
-export type AnalyzeCryptoPairInput = z.infer<typeof AnalyzeCryptoPairInputSchema>;
-
-const AnalyzeCryptoPairOutputSchema = z.object({
-  marketOverview: z.string().describe('Overall market assessment.'),
-  indicatorExplanations: z.string().describe('Explanations of each technical indicator.'),
-  buySellSignal: z.string().describe('Buy or sell signal based on the analysis.'),
-  entrySuggestion: z.string().describe('Suggested entry point.'),
-  stopLossSuggestion: z.string().describe('Suggested stop-loss level.'),
-  takeProfitSuggestion: z.string().describe('Suggested take-profit level.'),
-});
-export type AnalyzeCryptoPairOutput = z.infer<typeof AnalyzeCryptoPairOutputSchema>;
 
 export async function analyzeCryptoPair(input: AnalyzeCryptoPairInput): Promise<AnalyzeCryptoPairOutput> {
   return analyzeCryptoPairFlow(input);
@@ -40,7 +21,46 @@ const analyzeCryptoPairPrompt = ai.definePrompt({
   name: 'analyzeCryptoPairPrompt',
   input: {schema: AnalyzeCryptoPairInputSchema},
   output: {schema: AnalyzeCryptoPairOutputSchema},
-  prompt: `Analyze the cryptocurrency pair {{{pair}}} with a timeframe of {{{timeframe}}}.\n\nHere are the technical indicators:\n- Price: {{{price}}}\n- RSI: {{{rsi}}}\n- MACD: {{{macd}}}\n- EMA: {{{ema}}}\n\nProvide the following analysis in Vietnamese:\n- Overall market assessment\n- Explanations of each technical indicator\n- Buy or sell signal\n- Suggested entry point\n- Suggested stop-loss level\n- Suggested take-profit level\n\nMake sure that those indicators align with current price action.\n`,
+  prompt: `Bạn là một chuyên gia phân tích kỹ thuật thị trường tiền mã hóa. Dựa vào dữ liệu được cung cấp cho cặp {{{pair}}} trên khung thời gian {{{timeframe}}}, hãy phân tích chi tiết.
+
+**Dữ liệu đầu vào:**
+- Giá hiện tại: {{{price}}}
+- Giá cao nhất (High): {{{high}}}
+- Giá thấp nhất (Low): {{{low}}}
+- **RSI (14):** {{{rsi}}}
+- **MACD (12, 26, 9):**
+    - Đường MACD: {{{macd.line}}}
+    - Đường Signal: {{{macd.signal}}}
+- **EMA:**
+    - EMA 9: {{{ema.ema9}}}
+    - EMA 21: {{{ema.ema21}}}
+
+**Thực hiện phân tích theo các bước sau:**
+
+1.  **Đánh giá tổng quan xu hướng:**
+    - Xu hướng dựa trên vị trí của giá so với EMA 9 và EMA 21.
+    - Xu hướng dựa trên giao cắt của hai đường EMA.
+    - Xu hướng dựa trên MACD (vị trí so với mức 0, giao cắt giữa đường MACD và đường signal).
+    - Sức mạnh của xu hướng dựa trên RSI.
+    - Kết hợp tất cả để đưa ra nhận định chung (Tăng giá, Giảm giá, Đi ngang).
+
+2.  **Giải thích ý nghĩa từng chỉ báo:**
+    - 📈 **EMA:** Giá đang nằm trên hay dưới các đường EMA? Có giao cắt vàng (EMA ngắn cắt lên EMA dài) hay giao cắt tử thần (EMA ngắn cắt xuống EMA dài) không?
+    - 📊 **MACD:** Histogram dương hay âm? Đường MACD đang cắt lên hay cắt xuống đường signal? Tín hiệu này mạnh hay yếu?
+    - 📉 **RSI:** Chỉ số RSI đang ở vùng nào (quá mua > 70, quá bán < 30, hay trung tính)? Nó đang có xu hướng tăng hay giảm?
+
+3.  **Kết luận và Tín hiệu Giao dịch:**
+    - Dựa vào phân tích tổng hợp, đưa ra kết luận cuối cùng: **MUA (BUY)**, **BÁN (SELL)**, hoặc **GIỮ (HOLD)**.
+
+4.  **Đề xuất Kế hoạch Giao dịch:**
+    - **Giá vào lệnh (Entry):** Đề xuất một vùng giá hợp lý để vào lệnh.
+    - **Dừng lỗ (Stop-loss):** Đề xuất mức giá cắt lỗ để bảo vệ vốn, thường là dưới một vùng hỗ trợ gần nhất (cho lệnh Mua) hoặc trên một vùng kháng cự gần nhất (cho lệnh Bán).
+    - **Chốt lời (Take-profit):** Đề xuất các mức giá chốt lời tiềm năng, thường là các vùng kháng cự (cho lệnh Mua) hoặc hỗ trợ (cho lệnh Bán) tiếp theo.
+
+5.  **Quản lý rủi ro:**
+    - Đưa ra một lời khuyên ngắn gọn, súc tích về quản lý rủi ro cho giao dịch này.
+
+**Yêu cầu:** Trả về kết quả bằng tiếng Việt, trình bày rõ ràng, dễ hiểu. Sử dụng bullet points hoặc emoji để làm nổi bật các ý chính.`,
 });
 
 const analyzeCryptoPairFlow = ai.defineFlow(

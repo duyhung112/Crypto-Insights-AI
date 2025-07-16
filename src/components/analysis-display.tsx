@@ -7,7 +7,8 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowUp, ArrowDown, Minus } from "lucide-react";
+import { ArrowUp, ArrowDown, Minus, ShieldCheck } from "lucide-react";
+import { Separator } from "./ui/separator";
 
 interface AnalysisDisplayProps {
   analysis: AnalyzeCryptoPairOutput;
@@ -36,7 +37,7 @@ export function AnalysisDisplay({ analysis }: AnalysisDisplayProps) {
     <Card className="w-full">
       <CardHeader>
         <CardTitle className="font-headline text-2xl flex flex-wrap items-center gap-4">
-          Phân tích từ AI
+          Phân tích từ Chuyên gia AI
           <Badge
             variant={getSignalBadgeVariant(analysis.buySellSignal)}
             className="text-lg px-4 py-1"
@@ -48,7 +49,7 @@ export function AnalysisDisplay({ analysis }: AnalysisDisplayProps) {
           </Badge>
         </CardTitle>
         <CardDescription>
-          Dưới đây là phân tích chi tiết được cung cấp bởi Gemini AI.
+          Dưới đây là phân tích chi tiết được cung cấp bởi Gemini AI dựa trên các chỉ báo kỹ thuật.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6 text-base">
@@ -56,7 +57,7 @@ export function AnalysisDisplay({ analysis }: AnalysisDisplayProps) {
           <h3 className="font-headline text-xl font-semibold">
             Tổng quan thị trường
           </h3>
-          <p className="text-muted-foreground whitespace-pre-wrap">
+          <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
             {analysis.marketOverview}
           </p>
         </div>
@@ -64,48 +65,71 @@ export function AnalysisDisplay({ analysis }: AnalysisDisplayProps) {
           <h3 className="font-headline text-xl font-semibold">
             Diễn giải chỉ báo
           </h3>
-          <p className="text-muted-foreground whitespace-pre-wrap">
+          <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
             {analysis.indicatorExplanations}
           </p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg font-medium">
-                Giá vào lệnh (Entry)
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold text-primary">
-                {analysis.entrySuggestion}
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg font-medium">
-                Dừng lỗ (Stop-loss)
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold text-destructive">
-                {analysis.stopLossSuggestion}
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg font-medium">
-                Chốt lời (Take-profit)
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold text-chart-2">
-                {analysis.takeProfitSuggestion}
-              </p>
-            </CardContent>
-          </Card>
+
+        <Separator />
+        
+        <div className="space-y-4">
+            <h3 className="font-headline text-xl font-semibold">
+                Kế hoạch Giao dịch Đề xuất
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+            <Card>
+                <CardHeader>
+                <CardTitle className="text-lg font-medium">
+                    Giá vào lệnh (Entry)
+                </CardTitle>
+                </CardHeader>
+                <CardContent>
+                <p className="text-2xl font-bold text-primary">
+                    {analysis.entrySuggestion}
+                </p>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader>
+                <CardTitle className="text-lg font-medium">
+                    Dừng lỗ (Stop-loss)
+                </CardTitle>
+                </CardHeader>
+                <CardContent>
+                <p className="text-2xl font-bold text-destructive">
+                    {analysis.stopLossSuggestion}
+                </p>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader>
+                <CardTitle className="text-lg font-medium">
+                    Chốt lời (Take-profit)
+                </CardTitle>
+                </CardHeader>
+                <CardContent>
+                <p className="text-2xl font-bold text-chart-2">
+                    {analysis.takeProfitSuggestion}
+                </p>
+                </CardContent>
+            </Card>
+            </div>
         </div>
+
+         <Card className="bg-muted/50 border-primary/50">
+            <CardHeader className="flex flex-row items-start gap-4">
+                <ShieldCheck className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
+                <div>
+                    <CardTitle className="text-lg font-semibold font-headline text-primary">
+                        Lời khuyên Quản lý Rủi ro
+                    </CardTitle>
+                    <CardDescription className="text-muted-foreground/90 whitespace-pre-wrap pt-2">
+                        {analysis.riskManagementAdvice}
+                    </CardDescription>
+                </div>
+            </CardHeader>
+        </Card>
+
       </CardContent>
     </Card>
   );

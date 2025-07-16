@@ -18,7 +18,12 @@ import {
 
 
 export async function generateTradingSignals(input: TradingSignalsInput): Promise<TradingSignalsOutput> {
-  return generateTradingSignalsFlow(input);
+  const simplifiedInput = {
+    ...input,
+    ema: input.ema.ema21, // Use EMA21 for the older prompt compatibility
+    macd: input.macd.line, // Use MACD line for older prompt
+  };
+  return generateTradingSignalsFlow(simplifiedInput);
 }
 
 const generateTradingSignalsPrompt = ai.definePrompt({
@@ -31,12 +36,12 @@ Analyze the following technical indicator values and generate a list of trading 
 Current Price: {{{price}}}
 - RSI (14): {{{rsi}}}
 - MACD (12, 26, 9): {{{macd}}}
-- EMA (50): {{{ema}}}
+- EMA (21): {{{ema}}}
 
 Generate signals for the following:
 1.  **RSI**: Is the asset overbought (>70), oversold (<30), or neutral?
-2.  **MACD**: Is the MACD line crossing above the signal line (bullish), below (bearish), or is there no clear crossover?
-3.  **EMA vs Price**: Is the current price above the 50-period EMA (bullish trend) or below it (bearish trend)?
+2.  **MACD**: Is the MACD line crossing above the signal line (bullish), below (bearish), or is there no clear crossover? Consider its position relative to zero.
+3.  **EMA vs Price**: Is the current price above the 21-period EMA (bullish trend) or below it (bearish trend)?
 `,
 });
 
@@ -46,7 +51,7 @@ const generateTradingSignalsFlow = ai.defineFlow(
     inputSchema: TradingSignalsInputSchema,
     outputSchema: TradingSignalsOutputSchema,
   },
-  async input => {
+  async (input) => {
     const {output} = await generateTradingSignalsPrompt(input);
     return output!;
   }
