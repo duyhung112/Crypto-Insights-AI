@@ -5,48 +5,44 @@ import { analyzeNewsSentiment } from "@/ai/flows/analyze-news-sentiment";
 import { initGenkit } from "@/ai/genkit";
 import type { AnalyzeCryptoPairInput, KlineData, NewsAnalysisInput, AnalyzeCryptoPairOutput, NewsArticle } from "@/lib/types";
 import { RSI, MACD, EMA } from "technicalindicators";
-import { sendDiscordNotificationTool } from "@/lib/tools/discord-tool";
-import { getNewsForCryptoTool } from "@/lib/tools";
-import { GET as getBybitKline } from '@/app/api/bybit/kline/route';
-import { NextRequest } from "next/server";
+import { sendDiscordNotification, getNewsForCrypto } from "@/lib/tools";
 
 export async function getKlineData(pair: string, timeframe: string, limit: number = 200): Promise<KlineData[]> {
-    // Construct a mock request object that mimics NextRequest
-    // This allows us to call the API route handler directly without a real HTTP call.
-    const mockUrl = `http://localhost/api/bybit/kline?symbol=${pair}&interval=${timeframe}&limit=${limit}`;
-    const mockRequest = new NextRequest(mockUrl);
+    const url = `https://api.bybit.com/v5/market/kline?category=linear&symbol=${pair}&interval=${timeframe}&limit=${limit}`;
+    try {
+        const response = await fetch(url, { cache: 'no-store' });
+        if (!response.ok) {
+            const errorBody = await response.text();
+            console.error("Bybit API error:", errorBody);
+            throw new Error(`Bybit API Error: ${response.statusText}`);
+        }
+        const data = await response.json();
+        if (data.retCode !== 0) {
+            throw new Error(`Bybit API Error: ${data.retMsg}`);
+        }
 
-    const response = await getBybitKline(mockRequest);
-    const data = await response.json();
+        const klineData: KlineData[] = data.result.list
+            .map((d: string[]) => ({
+                time: parseInt(d[0]),
+                open: parseFloat(d[1]),
+                high: parseFloat(d[2]),
+                low: parseFloat(d[3]),
+                close: parseFloat(d[4]),
+            }))
+            .reverse(); // Bybit returns newest first, so reverse
 
-    if (!response.ok || data.error) {
-        console.error("Error from internal kline API call:", data);
-        throw new Error(`Failed to call internal kline API: ${data.error || 'Unknown error'}`);
+        return klineData;
+    } catch (error) {
+        console.error("Failed to fetch kline data from Bybit:", error);
+        throw new Error("Không thể tải dữ liệu biểu đồ từ Bybit.");
     }
-    
-    const result = data.result;
-
-    if (!result.list || result.list.length === 0) {
-      return [];
-    }
-
-    const klineData: KlineData[] = result.list
-      .map((d: string[]) => ({
-        time: parseInt(d[0]),
-        open: parseFloat(d[1]),
-        high: parseFloat(d[2]),
-        low: parseFloat(d[3]),
-        close: parseFloat(d[4]),
-      }))
-      .reverse(); // Bybit returns newest first, so reverse
-    
-    return klineData;
 }
+
 
 async function handleDiscordNotification(message: string, webhookUrl: string) {
     if (!webhookUrl) return;
     try {
-        await sendDiscordNotificationTool({ message, webhookUrl });
+        await sendDiscordNotification({ message, webhookUrl });
     } catch (error) {
         console.error("Failed to send Discord notification from action:", error);
     }
@@ -120,7 +116,7 @@ export async function getAnalysis(pair: string, timeframe: string, mode: 'swing'
     
     const cryptoSymbol = pair.replace(/USDT$/, '');
     
-    const newsArticles = await getNewsForCryptoTool({ cryptoSymbol });
+    const newsArticles = await getNewsForCrypto({ cryptoSymbol });
 
     const newsInput: NewsAnalysisInput = {
       cryptoSymbol,
@@ -156,8 +152,6 @@ Giá hiện tại: ${aiInput.price}
         newsAnalysis: newsAnalysisResponse,
      };
   } catch (error) {
-    console.error("Error in getAnalysis:", error);
-
     if (discordWebhookUrl) {
         const errorMessage = error instanceof Error ? error.message : "An unknown error occurred during analysis.";
         const notificationMessage = `**LỖI PHÂN TÍCH**

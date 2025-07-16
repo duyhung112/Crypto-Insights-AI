@@ -88,7 +88,7 @@ const fetchMockNews = (cryptoSymbol: string) => {
 };
 
 
-export const getNewsForCryptoTool = ai.defineTool(
+export const getNewsForCrypto = ai.defineTool(
   {
     name: "getNewsForCrypto",
     description: "Fetches the latest news articles for a given cryptocurrency symbol.",
@@ -98,9 +98,50 @@ export const getNewsForCryptoTool = ai.defineTool(
     outputSchema: z.array(NewsArticleSchema),
   },
   async (input) => {
-    console.log(`[Tool] Fetching news for ${input.cryptoSymbol}`);
     // In a real app, you would make an API call here.
     // We are returning mock data for demonstration purposes.
     return fetchMockNews(input.cryptoSymbol);
+  }
+);
+
+
+export const sendDiscordNotification = ai.defineTool(
+  {
+    name: 'sendDiscordNotification',
+    description: 'Sends a notification message to a configured Discord webhook.',
+    inputSchema: z.object({
+      message: z.string().describe('The content of the message to send.'),
+      webhookUrl: z.string().url().describe('The Discord webhook URL to send the message to.'),
+    }),
+    outputSchema: z.object({
+        success: z.boolean(),
+    }),
+  },
+  async (input) => {
+    if (!input.webhookUrl) {
+        return { success: false };
+    }
+    
+    try {
+        const response = await fetch(input.webhookUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                content: input.message,
+                username: "Trading Expert AI",
+            }),
+        });
+
+        if (!response.ok) {
+            return { success: false };
+        }
+        
+        return { success: true };
+
+    } catch (error) {
+        return { success: false };
+    }
   }
 );
