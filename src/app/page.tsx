@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useTransition } from "react";
+import { useState } from "react";
 import dynamic from 'next/dynamic';
 import {
   Card,
@@ -23,6 +23,7 @@ import type { AnalysisResult } from "@/lib/types";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AnalysisDisplay } from "@/components/analysis-display";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 
 const TradingViewChart = dynamic(() => import('@/components/tradingview-chart'), {
@@ -62,8 +63,6 @@ export default function Home() {
     if (response.error) {
       setError(response.error);
     } else {
-      // The analysis result no longer contains chart data
-      // as the TradingView widget handles its own data.
       setResult({ aiAnalysis: response.aiAnalysis });
     }
 
@@ -73,13 +72,16 @@ export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center p-4 sm:p-8 md:p-12 bg-background transition-colors duration-300">
       <div className="w-full max-w-6xl space-y-8">
-        <header className="text-center">
+        <header className="text-center relative">
           <h1 className="font-headline text-4xl md:text-5xl font-bold text-primary">
             Crypto Insights AI
           </h1>
           <p className="text-muted-foreground mt-2 text-lg">
             Phân tích kỹ thuật tiền mã hóa bằng trí tuệ nhân tạo
           </p>
+           <div className="absolute top-0 right-0">
+            <ThemeToggle />
+          </div>
         </header>
 
         <Card>
