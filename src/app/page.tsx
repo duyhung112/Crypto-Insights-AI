@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import dynamic from 'next/dynamic';
 import {
   Card,
@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader, BarChart, AlertTriangle } from "lucide-react";
 import { getAnalysis } from "@/app/actions";
 import type { AnalysisResult } from "@/lib/types";
@@ -24,6 +25,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AnalysisDisplay } from "@/components/analysis-display";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { TradingSignalsDisplay } from "@/components/trading-signals-display";
 
 
 const TradingViewChart = dynamic(() => import('@/components/tradingview-chart'), {
@@ -63,7 +65,10 @@ export default function Home() {
     if (response.error) {
       setError(response.error);
     } else {
-      setResult({ aiAnalysis: response.aiAnalysis });
+      setResult({ 
+        aiAnalysis: response.aiAnalysis,
+        tradingSignals: response.tradingSignals,
+      });
     }
 
     setLoading(false);
@@ -163,9 +168,20 @@ export default function Home() {
           </Card>
         )}
 
-        {result && result.aiAnalysis && (
+        {result && (
           <div className="space-y-8 animate-in fade-in duration-500">
-            <AnalysisDisplay analysis={result.aiAnalysis} />
+             <Tabs defaultValue="analysis" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="analysis">Phân tích AI</TabsTrigger>
+                <TabsTrigger value="signals">Tín hiệu Giao dịch</TabsTrigger>
+              </TabsList>
+              <TabsContent value="analysis">
+                {result.aiAnalysis && <AnalysisDisplay analysis={result.aiAnalysis} />}
+              </TabsContent>
+              <TabsContent value="signals">
+                {result.tradingSignals && <TradingSignalsDisplay signals={result.tradingSignals} />}
+              </TabsContent>
+            </Tabs>
           </div>
         )}
       </div>

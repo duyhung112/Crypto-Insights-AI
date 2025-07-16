@@ -1,7 +1,8 @@
 "use server";
 
 import { analyzeCryptoPair } from "@/ai/flows/analyze-crypto-pair";
-import type { KlineData } from "@/lib/types";
+import { generateTradingSignals } from "@/ai/flows/generate-trading-signals";
+import type { KlineData, TradingSignalsInput } from "@/lib/types";
 import { RSI, MACD, EMA } from "technicalindicators";
 
 const BYBIT_API_URL = "https://api.bybit.com";
@@ -18,7 +19,7 @@ interface BybitKlineResponse {
   time: number;
 }
 
-async function fetchKlineData(pair: string, timeframe: string, limit: number = 200): Promise<KlineData[]> {
+export async function getKlineData(pair: string, timeframe: string, limit: number = 200): Promise<KlineData[]> {
     const url = `${BYBIT_API_URL}/v5/market/kline?category=linear&symbol=${pair}&interval=${timeframe}&limit=${limit}`;
 
     const response = await fetch(url, { cache: "no-store" });
@@ -35,7 +36,7 @@ async function fetchKlineData(pair: string, timeframe: string, limit: number = 2
     }
 
     if (!data.result.list || data.result.list.length === 0) {
-      throw new Error("Không có dữ liệu trả về từ API Bybit cho cặp tiền này.");
+      return [];
     }
 
     const klineData: KlineData[] = data.result.list
@@ -53,7 +54,11 @@ async function fetchKlineData(pair: string, timeframe: string, limit: number = 2
 
 export async function getAnalysis(pair: string, timeframe: string) {
   try {
-    const klineData = await fetchKlineData(pair, timeframe, 200);
+    const klineData = await getKlineData(pair, timeframe, 200);
+
+    if (klineData.length === 0) {
+      throw new Error("Không có dữ liệu trả về từ API Bybit cho cặp tiền này.");
+    }
 
     const closePrices = klineData.map((k) => k.close);
     const latestPrice = closePrices[closePrices.length - 1];
@@ -85,17 +90,25 @@ export async function getAnalysis(pair: string, timeframe: string) {
       throw new Error("Không thể tính toán các chỉ báo kỹ thuật. Cần nhiều dữ liệu hơn.");
     }
 
-    // Call AI Flow
-    const aiAnalysis = await analyzeCryptoPair({
+    const aiInput: TradingSignalsInput = {
       pair,
       timeframe,
       price: latestPrice,
       rsi: latestRsi,
       macd: latestMacd,
       ema: latestEma,
-    });
+    };
+
+    // Call AI Flows in parallel
+    const [aiAnalysisResponse, tradingSignalsResponse] = await Promise.all([
+        analyzeCryptoPair(aiInput),
+        generateTradingSignals(aiInput)
+    ]);
     
-    return { aiAnalysis };
+    return { 
+        aiAnalysis: aiAnalysisResponse,
+        tradingSignals: tradingSignalsResponse,
+     };
   } catch (error) {
     console.error("Error in getAnalysis:", error);
     if (error instanceof Error) {
