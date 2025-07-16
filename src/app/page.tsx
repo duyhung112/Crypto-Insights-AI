@@ -26,6 +26,7 @@ import { AnalysisDisplay } from "@/components/analysis-display";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { TradingSignalsDisplay } from "@/components/trading-signals-display";
 import { RealtimeTicker } from "@/components/RealtimeTicker";
+import { NewsAnalysisDisplay } from "@/components/news-analysis-display";
 
 
 const TradingViewChart = dynamic(() => import('@/components/tradingview-chart'), {
@@ -68,6 +69,7 @@ export default function Home() {
       setResult({ 
         aiAnalysis: response.aiAnalysis,
         tradingSignals: response.tradingSignals,
+        newsAnalysis: response.newsAnalysis,
       });
     }
 
@@ -181,15 +183,19 @@ export default function Home() {
         {result && (
             <div className="animate-in fade-in duration-500">
                 <Tabs defaultValue="analysis" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
+                <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="analysis">Phân tích AI</TabsTrigger>
                     <TabsTrigger value="signals">Tín hiệu Giao dịch</TabsTrigger>
+                    <TabsTrigger value="news">Tin tức &amp; Tâm lý</TabsTrigger>
                 </TabsList>
                 <TabsContent value="analysis">
                     {result.aiAnalysis && <AnalysisDisplay analysis={result.aiAnalysis} />}
                 </TabsContent>
                 <TabsContent value="signals">
                     {result.tradingSignals && <TradingSignalsDisplay signals={result.tradingSignals} />}
+                </TabsContent>
+                <TabsContent value="news">
+                    {result.newsAnalysis && <NewsAnalysisDisplay analysis={result.newsAnalysis} />}
                 </TabsContent>
                 </Tabs>
             </div>

@@ -2,7 +2,8 @@
 
 import { analyzeCryptoPair } from "@/ai/flows/analyze-crypto-pair";
 import { generateTradingSignals } from "@/ai/flows/generate-trading-signals";
-import type { AnalyzeCryptoPairInput, KlineData, TradingSignalsInput } from "@/lib/types";
+import { analyzeNewsSentiment } from "@/ai/flows/analyze-news-sentiment";
+import type { AnalyzeCryptoPairInput, KlineData, TradingSignalsInput, NewsAnalysisInput } from "@/lib/types";
 import { RSI, MACD, EMA } from "technicalindicators";
 
 const BYBIT_API_URL = "https://api.bybit.com";
@@ -112,15 +113,21 @@ export async function getAnalysis(pair: string, timeframe: string) {
       low: klineData[klineData.length - 1].low,
     };
     
+    // Extract the base asset (e.g., "BTC" from "BTCUSDT")
+    const cryptoSymbol = pair.replace(/USDT$/, '');
+    const newsInput: NewsAnalysisInput = { cryptoSymbol };
+    
     // Call AI Flows in parallel
-    const [aiAnalysisResponse, tradingSignalsResponse] = await Promise.all([
+    const [aiAnalysisResponse, tradingSignalsResponse, newsAnalysisResponse] = await Promise.all([
         analyzeCryptoPair(aiInput),
-        generateTradingSignals(aiInput as TradingSignalsInput) // TradingSignalsInput is a subset of AnalyzeCryptoPairInput
+        generateTradingSignals(aiInput as TradingSignalsInput), // TradingSignalsInput is a subset of AnalyzeCryptoPairInput
+        analyzeNewsSentiment(newsInput),
     ]);
     
     return { 
         aiAnalysis: aiAnalysisResponse,
         tradingSignals: tradingSignalsResponse,
+        newsAnalysis: newsAnalysisResponse,
      };
   } catch (error) {
     console.error("Error in getAnalysis:", error);

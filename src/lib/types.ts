@@ -11,6 +11,7 @@ export interface KlineData {
 export interface AnalysisResult {
   aiAnalysis?: AnalyzeCryptoPairOutput;
   tradingSignals?: TradingSignalsOutput;
+  newsAnalysis?: NewsAnalysisOutput;
 }
 
 const MACDSchema = z.object({
@@ -71,3 +72,23 @@ export const TradingSignalsOutputSchema = z.object({
   signals: z.array(SignalSchema).describe('Một mảng các tín hiệu giao dịch.'),
 });
 export type TradingSignalsOutput = z.infer<typeof TradingSignalsOutputSchema>;
+
+// Schema for analyzeNewsSentiment flow
+export const NewsAnalysisInputSchema = z.object({
+  cryptoSymbol: z.string().describe("The cryptocurrency symbol to search news for (e.g., BTC, ETH)."),
+});
+export type NewsAnalysisInput = z.infer<typeof NewsAnalysisInputSchema>;
+
+const NewsArticleSchema = z.object({
+    title: z.string().describe("The headline of the news article."),
+    url: z.string().url().describe("The URL to the full news article."),
+    source: z.string().describe("The source of the news article (e.g., CoinTelegraph)."),
+});
+
+export const NewsAnalysisOutputSchema = z.object({
+    sentiment: z.enum(["Positive", "Negative", "Neutral"]).describe("The overall market sentiment based on the news."),
+    summary: z.string().describe("A summary of the key news affecting the cryptocurrency."),
+    reasoning: z.string().describe("An explanation for why the sentiment was determined."),
+    articles: z.array(NewsArticleSchema).describe("A list of the news articles that were analyzed."),
+});
+export type NewsAnalysisOutput = z.infer<typeof NewsAnalysisOutputSchema>;
