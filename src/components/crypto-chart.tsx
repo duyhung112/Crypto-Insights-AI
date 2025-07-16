@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -16,7 +17,9 @@ import type { KlineData } from "@/lib/types";
 
 const getCssVariable = (variable: string) => {
   if (typeof window === "undefined") return "";
-  return getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
+  const value = getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
+  // lightweight-charts expects comma-separated HSL values
+  return value.replace(/\s/g, ',');
 };
 
 interface CryptoChartProps {
