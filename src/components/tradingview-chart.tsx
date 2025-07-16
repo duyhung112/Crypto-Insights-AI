@@ -1,4 +1,4 @@
-// components/TradingViewWidget.tsx
+// components/tradingview-chart.tsx
 "use client";
 
 import React, { useEffect, useRef, memo } from 'react';
@@ -8,75 +8,66 @@ interface TradingViewChartProps {
     timeframe: string;
 }
 
-function TradingViewChart({ pair, timeframe }: TradingViewChartProps) {
-  const container = useRef<HTMLDivElement>(null);
-  const isWidgetCreated = useRef(false);
+const TradingViewChart = ({ pair, timeframe }: TradingViewChartProps) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const widgetRef = useRef<any>(null);
 
   useEffect(() => {
-    if (!container.current || isWidgetCreated.current) return;
-
-    const script = document.createElement("script");
-    script.src = "https://s3.tradingview.com/tv.js";
-    script.type = "text/javascript";
-    script.async = true;
-    script.onload = () => {
-      if (typeof (window as any).TradingView !== 'undefined') {
-        new (window as any).TradingView.widget({
-            autosize: true,
-            symbol: `BYBIT:${pair}`,
-            interval: timeframe,
-            timezone: "Etc/UTC",
-            theme: "light",
-            style: "1",
-            locale: "vi_VN",
-            toolbar_bg: "#f1f3f6",
-            enable_publishing: false,
-            allow_symbol_change: true,
-            container_id: container.current?.id
-        });
-        isWidgetCreated.current = true;
+    const createWidget = () => {
+      if (containerRef.current && !widgetRef.current && (window as any).TradingView) {
+        const widgetOptions = {
+          autosize: true,
+          symbol: `BYBIT:${pair}`,
+          interval: timeframe,
+          timezone: "Etc/UTC",
+          theme: "light",
+          style: "1",
+          locale: "vi_VN",
+          toolbar_bg: "#f1f3f6",
+          enable_publishing: false,
+          allow_symbol_change: true,
+          container_id: containerRef.current.id,
+        };
+        const tvWidget = new (window as any).TradingView.widget(widgetOptions);
+        widgetRef.current = tvWidget;
       }
     };
-    
-    document.body.appendChild(script);
+
+    if (!(window as any).TradingView) {
+      const script = document.createElement('script');
+      script.src = 'https://s3.tradingview.com/tv.js';
+      script.async = true;
+      script.onload = createWidget;
+      document.body.appendChild(script);
+    } else {
+      createWidget();
+    }
 
     return () => {
-        // Clean up the script when the component unmounts
-        if(document.body.contains(script)){
-            document.body.removeChild(script);
+      if (widgetRef.current) {
+        try {
+            widgetRef.current.remove();
+        } catch(e) {
+            console.error("Error removing trading view widget", e)
         }
-    }
-
-  }, []); // Run only once
+        widgetRef.current = null;
+      }
+    };
+  }, []);
 
   useEffect(() => {
-    if (container.current?.querySelector('iframe')) {
-        const widget = new (window as any).TradingView.widget({
-            autosize: true,
-            symbol: `BYBIT:${pair}`,
-            interval: timeframe,
-            timezone: "Etc/UTC",
-            theme: "light",
-            style: "1",
-            locale: "vi_VN",
-            toolbar_bg: "#f1f3f6",
-            enable_publishing: false,
-            allow_symbol_change: true,
-            container_id: container.current?.id
-        });
+    if (widgetRef.current && widgetRef.current.ready) {
+      widgetRef.current.setSymbol(`BYBIT:${pair}`, timeframe, () => {
+        // console.log("Symbol changed");
+      });
     }
-  }, [pair, timeframe])
+  }, [pair, timeframe]);
 
   return (
-    <div className="tradingview-widget-container" ref={container} style={{ height: "100%", width: "100%" }}>
-      <div id={`tradingview_widget_${pair}_${timeframe}`} style={{ height: "calc(100% - 32px)", width: "100%" }} />
-      <div className="tradingview-widget-copyright">
-        <a href="https://vn.tradingview.com/" rel="noopener nofollow" target="_blank">
-            <span className="blue-text">Theo dõi tất cả các thị trường trên TradingView</span>
-        </a>
-      </div>
+    <div id="tradingview_container" ref={containerRef} className="w-full h-full">
+      {/* The widget will be injected here */}
     </div>
   );
-}
+};
 
 export default memo(TradingViewChart);
