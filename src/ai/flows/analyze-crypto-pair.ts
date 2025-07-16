@@ -11,18 +11,19 @@
 
 import {ai} from '@/ai/genkit';
 import { AnalyzeCryptoPairInputSchema, type AnalyzeCryptoPairInput, AnalyzeCryptoPairOutputSchema, type AnalyzeCryptoPairOutput } from '@/lib/types';
-import { sendDiscordNotificationTool } from '@/lib/tools/discord-tool';
-
 
 export async function analyzeCryptoPair(input: AnalyzeCryptoPairInput): Promise<AnalyzeCryptoPairOutput> {
-  return analyzeCryptoPairFlow(input);
+  const result = await analyzeCryptoPairFlow(input);
+  if (!result) {
+    throw new Error("AI analysis returned an empty result.");
+  }
+  return result;
 }
 
 const analyzeCryptoPairPrompt = ai.definePrompt({
   name: 'analyzeCryptoPairPrompt',
   input: {schema: AnalyzeCryptoPairInputSchema},
   output: {schema: AnalyzeCryptoPairOutputSchema},
-  tools: [sendDiscordNotificationTool],
   prompt: `Bạn là một chuyên gia phân tích kỹ thuật thị trường tiền mã hóa, đưa ra lời khuyên cho chế độ giao dịch: {{{mode}}}.
 Dựa vào dữ liệu đầu vào cho cặp {{{pair}}} trên khung thời gian {{{timeframe}}}, hãy thực hiện một phân tích chi tiết.
 
@@ -62,12 +63,7 @@ Dựa vào dữ liệu đầu vào cho cặp {{{pair}}} trên khung thời gian 
 5.  **Quản lý rủi ro:**
     - Cung cấp một lời khuyên ngắn gọn, súc tích về quản lý rủi ro, phù hợp với chế độ giao dịch đã chọn.
 
-**Hành động cuối cùng:**
-- **QUAN TRỌNG**: Nếu có Discord Webhook URL được cung cấp ({{{discordWebhookUrl}}}) VÀ tín hiệu cuối cùng là "MUA" hoặc "BÁN", hãy sử dụng công cụ 'sendDiscordNotification'.
-- Tin nhắn thông báo phải bao gồm cặp tiền, tín hiệu, chế độ và giá hiện tại. Ví dụ: "**Tín hiệu Mới: MUA {{{pair}}}**\nChế độ: {{{mode}}}\nGiá: {{{price}}}".
-- Nếu tín hiệu là "GIỮ" hoặc không có URL, bỏ qua bước gửi thông báo.
-
-**Yêu cầu:** Trả về kết quả bằng tiếng Việt, trình bày rõ ràng, dễ hiểu.`,
+**Yêu cầu:** Trả về kết quả bằng tiếng Việt, trình bày rõ ràng, dễ hiểu, và tuân thủ nghiêm ngặt định dạng JSON đầu ra.`,
 });
 
 const analyzeCryptoPairFlow = ai.defineFlow(
@@ -78,6 +74,6 @@ const analyzeCryptoPairFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await analyzeCryptoPairPrompt(input);
-    return output!;
+    return output;
   }
 );

@@ -3,8 +3,9 @@
 import { analyzeCryptoPair } from "@/ai/flows/analyze-crypto-pair";
 import { generateTradingSignals } from "@/ai/flows/generate-trading-signals";
 import { analyzeNewsSentiment } from "@/ai/flows/analyze-news-sentiment";
-import type { AnalyzeCryptoPairInput, KlineData, TradingSignalsInput, NewsAnalysisInput } from "@/lib/types";
+import type { AnalyzeCryptoPairInput, KlineData, TradingSignalsInput, NewsAnalysisInput, AnalyzeCryptoPairOutput } from "@/lib/types";
 import { RSI, MACD, EMA } from "technicalindicators";
+import { sendDiscordNotificationTool } from "@/lib/tools/discord-tool";
 
 const BYBIT_API_URL = "https://api.bybit.com";
 
@@ -51,6 +52,25 @@ export async function getKlineData(pair: string, timeframe: string, limit: numbe
       .reverse(); // Bybit returns newest first, so reverse
     
     return klineData;
+}
+
+// Function to handle sending Discord notification
+async function handleDiscordNotification(
+  analysis: AnalyzeCryptoPairOutput,
+  input: AnalyzeCryptoPairInput
+) {
+  const signal = analysis.buySellSignal.toUpperCase();
+  if ((signal.includes('MUA') || signal.includes('BUY') || signal.includes('BÁN') || signal.includes('SELL')) && input.discordWebhookUrl) {
+    try {
+      const message = `**Tín hiệu Mới: ${analysis.buySellSignal} ${input.pair}**\nChế độ: ${input.mode}\nGiá: ${input.price}`;
+      await sendDiscordNotificationTool({
+        message,
+        webhookUrl: input.discordWebhookUrl,
+      });
+    } catch (error) {
+      console.error("Failed to send Discord notification from action:", error);
+    }
+  }
 }
 
 export async function getAnalysis(pair: string, timeframe: string, mode: 'swing' | 'scalping', discordWebhookUrl?: string) {
@@ -125,6 +145,11 @@ export async function getAnalysis(pair: string, timeframe: string, mode: 'swing'
         generateTradingSignals(aiInput as TradingSignalsInput), // TradingSignalsInput is a subset of AnalyzeCryptoPairInput
         analyzeNewsSentiment(newsInput),
     ]);
+
+    // After getting the analysis, handle the notification
+    if (aiAnalysisResponse) {
+        await handleDiscordNotification(aiAnalysisResponse, aiInput);
+    }
     
     return { 
         aiAnalysis: aiAnalysisResponse,
