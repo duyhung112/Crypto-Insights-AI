@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback, useTransition } from "react";
 import {
   Card,
   CardContent,
@@ -17,10 +17,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Loader, BarChart, AlertTriangle } from "lucide-react";
-import { getAnalysis } from "@/app/actions";
+import { getAnalysis, getKlineData } from "@/app/actions";
 import CryptoChart from "@/components/crypto-chart";
 import { AnalysisDisplay } from "@/components/analysis-display";
-import type { AnalysisResult } from "@/lib/types";
+import type { AnalysisResult, KlineData } from "@/lib/types";
 import { Label } from "@/components/ui/label";
 import { IndicatorCharts } from "@/components/indicator-charts";
 
@@ -45,6 +45,27 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const [chartData, setChartData] = useState<KlineData[]>([]);
+  const [isChartLoading, startChartTransition] = useTransition();
+
+  const fetchChartData = useCallback(() => {
+    startChartTransition(async () => {
+      const response = await getKlineData(pair, timeframe);
+      if (response.klineData) {
+        setChartData(response.klineData);
+      } else {
+        // Optionally handle chart loading error
+        console.error("Failed to load chart data:", response.error);
+        setChartData([]);
+      }
+    });
+  }, [pair, timeframe]);
+
+  useEffect(() => {
+    fetchChartData();
+  }, [fetchChartData]);
+
 
   const handleAnalyze = async () => {
     setLoading(true);
@@ -78,10 +99,10 @@ export default function Home() {
           <CardHeader>
             <CardTitle className="font-headline">Bảng điều khiển</CardTitle>
             <CardDescription>
-              Chọn cặp tiền mã hóa và khung thời gian để bắt đầu phân tích.
+              Chọn cặp tiền mã hóa và khung thời gian để xem biểu đồ và bắt đầu phân tích.
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
               <div className="space-y-2">
                 <Label htmlFor="pair-select">Cặp tiền</Label>
@@ -126,6 +147,19 @@ export default function Home() {
                 {loading ? "Đang phân tích..." : "Phân tích"}
               </Button>
             </div>
+             <div className="pt-4">
+                {isChartLoading ? (
+                    <div className="flex justify-center items-center h-[400px] md:h-[500px]">
+                        <Loader className="h-8 w-8 animate-spin text-primary" />
+                    </div>
+                ) : chartData.length > 0 ? (
+                    <CryptoChart data={chartData} />
+                ) : (
+                   <div className="flex justify-center items-center h-[400px] md:h-[500px]">
+                        <p className="text-muted-foreground">Không thể tải dữ liệu biểu đồ.</p>
+                    </div>
+                )}
+            </div>
           </CardContent>
         </Card>
 
@@ -155,10 +189,10 @@ export default function Home() {
             <Card>
               <CardHeader>
                 <CardTitle className="font-headline">
-                  {pairs.find((p) => p.value === pair)?.label} -{" "}
+                  Kết quả phân tích cho {pairs.find((p) => p.value === pair)?.label} -{" "}
                   {timeframes.find((t) => t.value === timeframe)?.label}
                 </CardTitle>
-                <CardDescription>Biểu đồ nến</CardDescription>
+                <CardDescription>Biểu đồ nến tại thời điểm phân tích</CardDescription>
               </CardHeader>
               <CardContent>
                 <CryptoChart data={result.klineData} />

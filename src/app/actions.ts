@@ -18,9 +18,7 @@ interface BybitKlineResponse {
   time: number;
 }
 
-export async function getAnalysis(pair: string, timeframe: string) {
-  try {
-    const limit = 200; // Number of data points to fetch
+async function fetchKlineData(pair: string, timeframe: string, limit: number = 200): Promise<KlineData[]> {
     const url = `${BYBIT_API_URL}/v5/market/kline?category=spot&symbol=${pair}&interval=${timeframe}&limit=${limit}`;
 
     const response = await fetch(url, { cache: "no-store" });
@@ -49,6 +47,26 @@ export async function getAnalysis(pair: string, timeframe: string) {
         close: parseFloat(d[4]),
       }))
       .reverse(); // Bybit returns newest first, so reverse
+    
+    return klineData;
+}
+
+export async function getKlineData(pair: string, timeframe: string) {
+    try {
+        return { klineData: await fetchKlineData(pair, timeframe) };
+    } catch (error) {
+        console.error("Error in getKlineData:", error);
+        if (error instanceof Error) {
+        return { error: error.message };
+        }
+        return { error: "Một lỗi không xác định đã xảy ra." };
+    }
+}
+
+
+export async function getAnalysis(pair: string, timeframe: string) {
+  try {
+    const klineData = await fetchKlineData(pair, timeframe, 200);
 
     const closePrices = klineData.map((k) => k.close);
     const latestPrice = closePrices[closePrices.length - 1];
