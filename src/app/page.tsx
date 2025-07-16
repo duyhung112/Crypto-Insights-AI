@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader, AlertTriangle } from "lucide-react";
+import { Loader, AlertTriangle, AreaChart, Zap } from "lucide-react";
 import { getAnalysis } from "@/app/actions";
 import type { AnalysisResult } from "@/lib/types";
 import { Label } from "@/components/ui/label";
@@ -43,10 +43,10 @@ const pairs = [
 ];
 
 const timeframes = [
-  { value: "15", label: "15 phút" },
-  { value: "60", label: "1 giờ" },
-  { value: "240", label: "4 giờ" },
-  { value: "D", label: "1 ngày" },
+  { value: "15", label: "15 min" },
+  { value: "60", label: "1 hour" },
+  { value: "240", label: "4 hours" },
+  { value: "D", label: "1 day" },
 ];
 
 export default function Home() {
@@ -55,6 +55,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true); // Set initial loading to true
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [mode, setMode] = useState("swing");
 
   const handleAnalyze = useCallback(async (currentPair: string, currentTimeframe: string) => {
     setLoading(true);
@@ -78,20 +79,32 @@ export default function Home() {
 
   // Effect to run analysis on initial load and when selections change
   useEffect(() => {
-    handleAnalyze(pair, timeframe);
-  }, [pair, timeframe, handleAnalyze]);
+    const effectiveTimeframe = mode === 'scalping' ? '5' : timeframe;
+    handleAnalyze(pair, effectiveTimeframe);
+  }, [pair, timeframe, handleAnalyze, mode]);
 
   return (
     <main className="flex min-h-screen flex-col items-center p-4 sm:p-6 md:p-8 bg-background transition-colors duration-300">
       <div className="w-full max-w-7xl space-y-6">
-        <header className="text-center relative">
-          <h1 className="font-headline text-2xl md:text-3xl font-bold text-primary">
-            Phân tích Xu hướng Thị trường
-          </h1>
-          <p className="text-muted-foreground mt-2 text-sm">
-            Phân tích kỹ thuật tiền mã hóa bằng AI cho thị trường Tương lai.
-          </p>
-           <div className="absolute top-0 right-0">
+        <header className="flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div className="flex items-center gap-3">
+                 <h1 className="font-headline text-xl font-bold text-primary">
+                    🤖 Trading AI
+                </h1>
+            </div>
+          <Tabs value={mode} onValueChange={setMode} className="w-full sm:w-auto">
+              <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="swing" className="flex items-center gap-2">
+                      <AreaChart className="h-4 w-4"/>
+                      Swing (5m+)
+                  </TabsTrigger>
+                  <TabsTrigger value="scalping" className="flex items-center gap-2">
+                       <Zap className="h-4 w-4"/>
+                      Scalping (1m)
+                  </TabsTrigger>
+              </TabsList>
+          </Tabs>
+           <div className="absolute top-4 right-4 sm:static">
             <ThemeToggle />
           </div>
         </header>
@@ -106,7 +119,7 @@ export default function Home() {
             <CardContent>
                 <RealtimeTicker pair={pair} />
                 <div className="h-[600px] mt-4">
-                    <TradingViewChart pair={pair} timeframe={timeframe}/>
+                    <TradingViewChart pair={pair} timeframe={mode === 'scalping' ? '1' : timeframe}/>
                 </div>
             </CardContent>
         </Card>
@@ -136,7 +149,7 @@ export default function Home() {
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="timeframe-select" className="text-xs">Khung thời gian</Label>
-                    <Select value={timeframe} onValueChange={setTimeframe} disabled={loading}>
+                    <Select value={timeframe} onValueChange={setTimeframe} disabled={loading || mode === 'scalping'}>
                     <SelectTrigger id="timeframe-select" className="text-xs">
                         <SelectValue placeholder="Chọn một khung thời gian" />
                     </SelectTrigger>
