@@ -63,9 +63,9 @@ Dựa vào dữ liệu đầu vào cho cặp {{{pair}}} trên khung thời gian 
     - Cung cấp một lời khuyên ngắn gọn, súc tích về quản lý rủi ro, phù hợp với chế độ giao dịch đã chọn.
 
 **Hành động cuối cùng:**
-- Nếu có Discord Webhook URL được cung cấp ({{{discordWebhookUrl}}}), hãy sử dụng công cụ 'sendDiscordNotification' để gửi một thông báo tóm tắt.
-- Ví dụ tin nhắn: "Tín hiệu mới cho {{{pair}}}: [Tín hiệu MUA/BÁN/GIỮ]. Chế độ: {{{mode}}}."
-- Nếu không có URL, bỏ qua bước này.
+- **QUAN TRỌNG**: Nếu có Discord Webhook URL được cung cấp ({{{discordWebhookUrl}}}) VÀ tín hiệu cuối cùng là "MUA" hoặc "BÁN", hãy sử dụng công cụ 'sendDiscordNotification'.
+- Tin nhắn thông báo phải bao gồm cặp tiền, tín hiệu, chế độ và giá hiện tại. Ví dụ: "**Tín hiệu Mới: MUA {{{pair}}}**\nChế độ: {{{mode}}}\nGiá: {{{price}}}".
+- Nếu tín hiệu là "GIỮ" hoặc không có URL, bỏ qua bước gửi thông báo.
 
 **Yêu cầu:** Trả về kết quả bằng tiếng Việt, trình bày rõ ràng, dễ hiểu.`,
 });
