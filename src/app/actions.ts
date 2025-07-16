@@ -62,7 +62,15 @@ async function handleDiscordNotification(
   const signal = analysis.buySellSignal.toUpperCase();
   if ((signal.includes('MUA') || signal.includes('BUY') || signal.includes('BÁN') || signal.includes('SELL')) && input.discordWebhookUrl) {
     try {
-      const message = `**Tín hiệu Mới: ${analysis.buySellSignal} ${input.pair}**\nChế độ: ${input.mode}\nGiá: ${input.price}`;
+      const message = `**Tín hiệu Mới: ${analysis.buySellSignal.toUpperCase()} ${input.pair}**
+Chế độ: ${input.mode}
+Giá hiện tại: ${input.price}
+---
+**Kế hoạch Giao dịch Đề xuất:**
+- **Vào lệnh:** ${analysis.entrySuggestion}
+- **Dừng lỗ (SL):** ${analysis.stopLossSuggestion}
+- **Chốt lời (TP):** ${analysis.takeProfitSuggestion}`;
+      
       await sendDiscordNotificationTool({
         message,
         webhookUrl: input.discordWebhookUrl,
