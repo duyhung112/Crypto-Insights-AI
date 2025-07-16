@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { getAnalysis } from '@/app/actions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 import { Loader, BellRing, ArrowLeft, CheckCircle, XCircle } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 
@@ -27,6 +28,7 @@ function MonitorPageContent() {
   const [lastSignal, setLastSignal] = useState('Chưa có');
 
   useEffect(() => {
+    let isMounted = true;
     const discordWebhookUrl = localStorage.getItem('discordWebhookUrl') || '';
     if (!discordWebhookUrl) {
       router.push('/settings?error=Discord_Webhook_URL_is_required_for_monitoring');
@@ -34,10 +36,13 @@ function MonitorPageContent() {
     }
 
     const runCheck = async () => {
+      if (!isMounted) return;
       setStatus(`Đang kiểm tra tín hiệu cho ${pair}...`);
       setLastSignal('Đang phân tích...');
       
       const response = await getAnalysis(pair, timeframe, mode, discordWebhookUrl);
+      
+      if (!isMounted) return;
 
       if (response.error) {
         setStatus(`Lỗi: ${response.error}`);
@@ -55,13 +60,36 @@ function MonitorPageContent() {
 
     const intervalId = setInterval(runCheck, MONITORING_INTERVAL);
     
-    const progressInterval = setInterval(() => {
-        setNextCheck(new Date(Date.now() + MONITORING_INTERVAL).toLocaleTimeString());
-        setProgress(prev => (prev >= 100 ? 0 : prev + 100 / (MONITORING_INTERVAL / 1000)));
-    }, 1000)
+    // Timer for progress bar
+    let progressInterval: NodeJS.Timeout;
 
+    const startProgressTimer = () => {
+        setProgress(0);
+        if (progressInterval) clearInterval(progressInterval);
+        
+        const startTime = Date.now();
+        progressInterval = setInterval(() => {
+            if (!isMounted) return;
+            const elapsedTime = Date.now() - startTime;
+            const currentProgress = Math.min(100, (elapsedTime / MONITORING_INTERVAL) * 100);
+            setProgress(currentProgress);
+            setNextCheck(new Date(startTime + MONITORING_INTERVAL).toLocaleTimeString());
+
+            if (currentProgress >= 100) {
+                 // The main interval will fire soon, this just resets the visual
+                setTimeout(() => {
+                    if (isMounted) {
+                        startProgressTimer();
+                    }
+                }, 1000);
+            }
+        }, 1000);
+    }
+    
+    startProgressTimer();
 
     return () => {
+        isMounted = false;
         clearInterval(intervalId);
         clearInterval(progressInterval);
     };
