@@ -39,6 +39,7 @@ const BaseAnalysisInputSchema = z.object({
 export const AnalyzeCryptoPairInputSchema = BaseAnalysisInputSchema.extend({
   high: z.number().describe("The high price of the current candle."),
   low: z.number().describe("The low price of the current candle."),
+  discordWebhookUrl: z.string().optional().describe("The Discord Webhook URL to send a notification to."),
 });
 export type AnalyzeCryptoPairInput = z.infer<typeof AnalyzeCryptoPairInputSchema>;
 

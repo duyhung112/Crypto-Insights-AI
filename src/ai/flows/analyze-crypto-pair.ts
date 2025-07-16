@@ -11,6 +11,7 @@
 
 import {ai} from '@/ai/genkit';
 import { AnalyzeCryptoPairInputSchema, type AnalyzeCryptoPairInput, AnalyzeCryptoPairOutputSchema, type AnalyzeCryptoPairOutput } from '@/lib/types';
+import { sendDiscordNotificationTool } from '@/lib/tools/discord-tool';
 
 
 export async function analyzeCryptoPair(input: AnalyzeCryptoPairInput): Promise<AnalyzeCryptoPairOutput> {
@@ -21,6 +22,7 @@ const analyzeCryptoPairPrompt = ai.definePrompt({
   name: 'analyzeCryptoPairPrompt',
   input: {schema: AnalyzeCryptoPairInputSchema},
   output: {schema: AnalyzeCryptoPairOutputSchema},
+  tools: [sendDiscordNotificationTool],
   prompt: `Bạn là một chuyên gia phân tích kỹ thuật thị trường tiền mã hóa, đưa ra lời khuyên cho chế độ giao dịch: {{{mode}}}.
 Dựa vào dữ liệu đầu vào cho cặp {{{pair}}} trên khung thời gian {{{timeframe}}}, hãy thực hiện một phân tích chi tiết.
 
@@ -59,6 +61,11 @@ Dựa vào dữ liệu đầu vào cho cặp {{{pair}}} trên khung thời gian 
 
 5.  **Quản lý rủi ro:**
     - Cung cấp một lời khuyên ngắn gọn, súc tích về quản lý rủi ro, phù hợp với chế độ giao dịch đã chọn.
+
+**Hành động cuối cùng:**
+- Nếu có Discord Webhook URL được cung cấp ({{{discordWebhookUrl}}}), hãy sử dụng công cụ 'sendDiscordNotification' để gửi một thông báo tóm tắt.
+- Ví dụ tin nhắn: "Tín hiệu mới cho {{{pair}}}: [Tín hiệu MUA/BÁN/GIỮ]. Chế độ: {{{mode}}}."
+- Nếu không có URL, bỏ qua bước này.
 
 **Yêu cầu:** Trả về kết quả bằng tiếng Việt, trình bày rõ ràng, dễ hiểu.`,
 });

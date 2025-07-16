@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader, AlertTriangle, AreaChart, Zap } from "lucide-react";
+import { Loader, AlertTriangle, AreaChart, Zap, Settings } from "lucide-react";
 import { getAnalysis } from "@/app/actions";
 import type { AnalysisResult } from "@/lib/types";
 import { Label } from "@/components/ui/label";
@@ -27,6 +27,8 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { TradingSignalsDisplay } from "@/components/trading-signals-display";
 import { RealtimeTicker } from "@/components/RealtimeTicker";
 import { NewsAnalysisDisplay } from "@/components/news-analysis-display";
+import { SettingsDialog } from "@/components/settings-dialog";
+import { Button } from "@/components/ui/button";
 
 
 const TradingViewChart = dynamic(() => import('@/components/tradingview-chart'), {
@@ -56,13 +58,15 @@ export default function Home() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [mode, setMode] = useState<'swing' | 'scalping'>("swing");
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const handleAnalyze = useCallback(async (currentPair: string, currentTimeframe: string, currentMode: 'swing' | 'scalping') => {
     setLoading(true);
     setError(null);
     setResult(null);
 
-    const response = await getAnalysis(currentPair, currentTimeframe, currentMode);
+    const discordWebhookUrl = localStorage.getItem('discordWebhookUrl') || '';
+    const response = await getAnalysis(currentPair, currentTimeframe, currentMode, discordWebhookUrl);
 
     if (response.error) {
       setError(response.error);
@@ -93,7 +97,7 @@ export default function Home() {
                     Trading Expert AI
                 </h1>
             </div>
-             <div className="flex w-full sm:w-auto items-center gap-4 justify-between">
+             <div className="flex w-full sm:w-auto items-center gap-4 justify-between sm:justify-end">
                 <div className="flex flex-col items-start sm:items-end">
                     <Label className="text-xs text-muted-foreground mb-1">Chế độ</Label>
                     <Tabs value={mode} onValueChange={(value) => setMode(value as 'swing' | 'scalping')} className="w-full sm:w-auto">
@@ -109,7 +113,13 @@ export default function Home() {
                         </TabsList>
                     </Tabs>
                 </div>
-                <div className="pt-5">
+                <div className="flex items-center gap-2 pt-5">
+                    <SettingsDialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+                      <Button variant="outline" size="icon" onClick={() => setIsSettingsOpen(true)}>
+                          <Settings className="h-4 w-4" />
+                          <span className="sr-only">Cài đặt</span>
+                      </Button>
+                    </SettingsDialog>
                     <ThemeToggle />
                 </div>
             </div>

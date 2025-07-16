@@ -53,7 +53,7 @@ export async function getKlineData(pair: string, timeframe: string, limit: numbe
     return klineData;
 }
 
-export async function getAnalysis(pair: string, timeframe: string, mode: 'swing' | 'scalping') {
+export async function getAnalysis(pair: string, timeframe: string, mode: 'swing' | 'scalping', discordWebhookUrl?: string) {
   try {
     const klineData = await getKlineData(pair, timeframe, 200);
 
@@ -112,6 +112,7 @@ export async function getAnalysis(pair: string, timeframe: string, mode: 'swing'
       // Pass OHLC for context, though indicators are primary
       high: klineData[klineData.length - 1].high,
       low: klineData[klineData.length - 1].low,
+      discordWebhookUrl: discordWebhookUrl || '',
     };
     
     // Extract the base asset (e.g., "BTC" from "BTCUSDT")
