@@ -54,31 +54,13 @@ export async function getKlineData(pair: string, timeframe: string, limit: numbe
     return klineData;
 }
 
-// Function to handle sending Discord notification
-async function handleDiscordNotification(
-  analysis: AnalyzeCryptoPairOutput,
-  input: AnalyzeCryptoPairInput
-) {
-  const signal = analysis.buySellSignal.toUpperCase();
-  if ((signal.includes('MUA') || signal.includes('BUY') || signal.includes('BÁN') || signal.includes('SELL')) && input.discordWebhookUrl) {
+async function sendDiscordNotification(message: string, webhookUrl: string) {
+    if (!webhookUrl) return;
     try {
-      const message = `**Tín hiệu Mới: ${analysis.buySellSignal.toUpperCase()} ${input.pair}**
-Chế độ: ${input.mode}
-Giá hiện tại: ${input.price}
----
-**Kế hoạch Giao dịch Đề xuất:**
-- **Vào lệnh:** ${analysis.entrySuggestion}
-- **Dừng lỗ (SL):** ${analysis.stopLossSuggestion}
-- **Chốt lời (TP):** ${analysis.takeProfitSuggestion}`;
-      
-      await sendDiscordNotificationTool({
-        message,
-        webhookUrl: input.discordWebhookUrl,
-      });
+        await sendDiscordNotificationTool({ message, webhookUrl });
     } catch (error) {
-      console.error("Failed to send Discord notification from action:", error);
+        console.error("Failed to send Discord notification from action:", error);
     }
-  }
 }
 
 export async function getAnalysis(pair: string, timeframe: string, mode: 'swing' | 'scalping', discordWebhookUrl?: string) {
@@ -137,16 +119,13 @@ export async function getAnalysis(pair: string, timeframe: string, mode: 'swing'
         ema9: latestEma9,
         ema21: latestEma21,
       },
-      // Pass OHLC for context, though indicators are primary
       high: klineData[klineData.length - 1].high,
       low: klineData[klineData.length - 1].low,
       discordWebhookUrl: discordWebhookUrl || '',
     };
     
-    // Extract the base asset (e.g., "BTC" from "BTCUSDT")
     const cryptoSymbol = pair.replace(/USDT$/, '');
     
-    // Fetch news first, then call AI flows
     const newsArticles = await getNewsForCryptoTool({ cryptoSymbol });
 
     const newsInput: NewsAnalysisInput = {
@@ -154,7 +133,6 @@ export async function getAnalysis(pair: string, timeframe: string, mode: 'swing'
       articles: newsArticles,
     };
 
-    // Call AI Flows in parallel
     const [aiAnalysisResponse, newsAnalysisResponse] = await Promise.all([
         analyzeCryptoPair(aiInput),
         analyzeNewsSentiment(newsInput),
@@ -162,9 +140,19 @@ export async function getAnalysis(pair: string, timeframe: string, mode: 'swing'
     
     const tradingSignalsResponse = { signals: aiAnalysisResponse.signals };
 
-    // After getting the analysis, handle the notification
-    if (aiAnalysisResponse) {
-        await handleDiscordNotification(aiAnalysisResponse, aiInput);
+    if (aiAnalysisResponse && discordWebhookUrl) {
+        const signal = aiAnalysisResponse.buySellSignal.toUpperCase();
+        if (signal.includes('MUA') || signal.includes('BUY') || signal.includes('BÁN') || signal.includes('SELL')) {
+            const message = `**Tín hiệu Mới: ${aiAnalysisResponse.buySellSignal.toUpperCase()} ${aiInput.pair}**
+Chế độ: ${aiInput.mode}
+Giá hiện tại: ${aiInput.price}
+---
+**Kế hoạch Giao dịch Đề xuất:**
+- **Vào lệnh:** ${aiAnalysisResponse.entrySuggestion}
+- **Dừng lỗ (SL):** ${aiAnalysisResponse.stopLossSuggestion}
+- **Chốt lời (TP):** ${aiAnalysisResponse.takeProfitSuggestion}`;
+            await sendDiscordNotification(message, discordWebhookUrl);
+        }
     }
     
     return { 
@@ -174,6 +162,15 @@ export async function getAnalysis(pair: string, timeframe: string, mode: 'swing'
      };
   } catch (error) {
     console.error("Error in getAnalysis:", error);
+
+    if (discordWebhookUrl) {
+        const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+        const notificationMessage = `**Lỗi Phân tích**
+Cặp: ${pair}
+Lỗi: \`\`\`${errorMessage}\`\`\``;
+        await sendDiscordNotification(notificationMessage, discordWebhookUrl);
+    }
+    
     if (error instanceof Error) {
       return { error: error.message };
     }
