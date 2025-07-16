@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader, AlertTriangle, AreaChart, Zap, Settings, Monitor } from "lucide-react";
+import { Loader, AlertTriangle, AreaChart, Zap, Settings, Monitor, RefreshCw } from "lucide-react";
 import { getAnalysis } from "@/app/actions";
 import type { AnalysisResult } from "@/lib/types";
 import { Label } from "@/components/ui/label";
@@ -55,7 +55,7 @@ const timeframes = [
 export default function Home() {
   const [pair, setPair] = useState("ETHUSDT");
   const [timeframe, setTimeframe] = useState("60");
-  const [loading, setLoading] = useState(true); // Set initial loading to true
+  const [loading, setLoading] = useState(true);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [mode, setMode] = useState<'swing' | 'scalping'>("swing");
@@ -68,7 +68,9 @@ export default function Home() {
     setResult(null);
 
     const discordWebhookUrl = localStorage.getItem('discordWebhookUrl') || '';
-    const response = await getAnalysis(currentPair, currentTimeframe, currentMode, discordWebhookUrl);
+    // For scalping, always use a 5m timeframe for analysis, but the chart can show other things
+    const analysisTimeframe = currentMode === 'scalping' ? '5' : currentTimeframe;
+    const response = await getAnalysis(currentPair, analysisTimeframe, currentMode, discordWebhookUrl);
 
     if (response.error) {
       setError(response.error);
@@ -96,14 +98,18 @@ export default function Home() {
     const analysisTimeframe = mode === 'scalping' ? '5' : timeframe; 
     router.push(`/monitor?pair=${pair}&timeframe=${analysisTimeframe}&mode=${mode}`);
   };
-  
 
   // Effect to run analysis on initial load and when selections change
   useEffect(() => {
-    // For scalping, always use a 5m timeframe for analysis, but the chart can show other things
-    const analysisTimeframe = mode === 'scalping' ? '5' : timeframe; 
-    handleAnalyze(pair, analysisTimeframe, mode);
-  }, [pair, timeframe, handleAnalyze, mode]);
+    handleAnalyze(pair, timeframe, mode);
+  // We only want this to run when the pair or mode changes, not timeframe.
+  // Timeframe changes will be handled by the manual refresh button.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pair, mode]);
+
+  const onRefreshClick = () => {
+    handleAnalyze(pair, timeframe, mode);
+  }
 
   return (
     <main className="flex min-h-screen flex-col items-center p-4 sm:p-6 md:p-8 bg-background transition-colors duration-300">
@@ -168,7 +174,7 @@ export default function Home() {
                 Chọn một cặp tiền và khung thời gian để phân tích tự động.
                 </CardDescription>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-end">
                 <div className="space-y-2">
                     <Label htmlFor="pair-select" className="text-xs">Cặp tiền</Label>
                     <Select value={pair} onValueChange={setPair} disabled={loading}>
@@ -199,13 +205,12 @@ export default function Home() {
                     </SelectContent>
                     </Select>
                 </div>
-                {loading && (
-                    <div className="flex items-center text-xs text-muted-foreground pt-2 self-end">
-                        <Loader className="mr-2 h-4 w-4 animate-spin" />
-                        <span>Đang phân tích...</span>
-                    </div>
-
-                )}
+                <div className="flex items-center gap-2">
+                    <Button onClick={onRefreshClick} disabled={loading} className="w-full">
+                        <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                        Làm mới Phân tích
+                    </Button>
+                </div>
             </CardContent>
         </Card>
 
