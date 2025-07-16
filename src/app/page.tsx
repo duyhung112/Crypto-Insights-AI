@@ -82,10 +82,10 @@ export default function Home() {
     <main className="flex min-h-screen flex-col items-center p-4 sm:p-6 md:p-8 bg-background transition-colors duration-300">
       <div className="w-full max-w-7xl space-y-6">
         <header className="text-center relative">
-          <h1 className="font-headline text-4xl md:text-5xl font-bold text-primary">
+          <h1 className="font-headline text-3xl md:text-4xl font-bold text-primary">
             Crypto Insights AI
           </h1>
-          <p className="text-muted-foreground mt-2 text-lg">
+          <p className="text-muted-foreground mt-2 text-base">
             AI-powered cryptocurrency technical analysis
           </p>
            <div className="absolute top-0 right-0">

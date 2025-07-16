@@ -47,7 +47,7 @@ export function TradingSignalsDisplay({ signals }: TradingSignalsDisplayProps) {
   return (
     <Card className="w-full">
        <CardHeader>
-        <CardTitle className="font-headline text-2xl">Trading Signals</CardTitle>
+        <CardTitle className="font-headline text-xl">Trading Signals</CardTitle>
         <CardDescription>
           Automated signals based on common technical indicators.
         </CardDescription>
@@ -67,12 +67,12 @@ export function TradingSignalsDisplay({ signals }: TradingSignalsDisplayProps) {
               <TableRow key={index}>
                 <TableCell className="font-medium">{signal.indicator}</TableCell>
                 <TableCell className="text-center">
-                  <Badge variant="outline" className={cn("text-sm", getSignalBadgeClass(signal.signal))}>
+                  <Badge variant="outline" className={cn("text-xs", getSignalBadgeClass(signal.signal))}>
                     {signal.signal}
                   </Badge>
                 </TableCell>
                  <TableCell className="text-center">
-                  <Badge variant="outline" className={cn(getConfidenceBadgeClass(signal.confidence))}>
+                  <Badge variant="outline" className={cn("text-xs", getConfidenceBadgeClass(signal.confidence))}>
                     {signal.confidence}
                   </Badge>
                 </TableCell>

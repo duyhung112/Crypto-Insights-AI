@@ -36,11 +36,11 @@ export function AnalysisDisplay({ analysis }: AnalysisDisplayProps) {
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle className="font-headline text-2xl flex flex-wrap items-center gap-4">
+        <CardTitle className="font-headline text-xl flex flex-wrap items-center gap-4">
           AI Expert Analysis
           <Badge
             variant={getSignalBadgeVariant(analysis.buySellSignal)}
-            className="text-lg px-4 py-1"
+            className="text-base px-3 py-1"
           >
             <span className="flex items-center gap-2">
               {getSignalIcon(analysis.buySellSignal)}
@@ -52,9 +52,9 @@ export function AnalysisDisplay({ analysis }: AnalysisDisplayProps) {
           Below is a detailed analysis provided by Gemini AI based on technical indicators.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6 text-base">
+      <CardContent className="space-y-6 text-sm">
         <div className="space-y-2">
-          <h3 className="font-headline text-xl font-semibold">
+          <h3 className="font-headline text-lg font-semibold">
             Market Overview
           </h3>
           <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
@@ -62,7 +62,7 @@ export function AnalysisDisplay({ analysis }: AnalysisDisplayProps) {
           </p>
         </div>
         <div className="space-y-2">
-          <h3 className="font-headline text-xl font-semibold">
+          <h3 className="font-headline text-lg font-semibold">
             Indicator Explanations
           </h3>
           <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
@@ -73,7 +73,7 @@ export function AnalysisDisplay({ analysis }: AnalysisDisplayProps) {
         <Separator />
         
         <div className="space-y-4">
-            <h3 className="font-headline text-xl font-semibold">
+            <h3 className="font-headline text-lg font-semibold">
                 Proposed Trading Plan
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
@@ -82,7 +82,7 @@ export function AnalysisDisplay({ analysis }: AnalysisDisplayProps) {
                     <CardDescription>Entry Price</CardDescription>
                 </CardHeader>
                 <CardContent className="p-4 pt-0">
-                    <p className="text-2xl font-bold text-primary">
+                    <p className="text-xl font-bold text-primary">
                         {analysis.entrySuggestion}
                     </p>
                 </CardContent>
@@ -92,7 +92,7 @@ export function AnalysisDisplay({ analysis }: AnalysisDisplayProps) {
                     <CardDescription>Stop-loss</CardDescription>
                 </CardHeader>
                 <CardContent className="p-4 pt-0">
-                    <p className="text-2xl font-bold text-destructive">
+                    <p className="text-xl font-bold text-destructive">
                         {analysis.stopLossSuggestion}
                     </p>
                 </CardContent>
@@ -102,7 +102,7 @@ export function AnalysisDisplay({ analysis }: AnalysisDisplayProps) {
                     <CardDescription>Take-profit</CardDescription>
                 </CardHeader>
                 <CardContent className="p-4 pt-0">
-                    <p className="text-2xl font-bold text-chart-2">
+                    <p className="text-xl font-bold text-chart-2">
                         {analysis.takeProfitSuggestion}
                     </p>
                 </CardContent>
@@ -114,7 +114,7 @@ export function AnalysisDisplay({ analysis }: AnalysisDisplayProps) {
             <CardHeader className="flex flex-row items-start gap-4">
                 <ShieldCheck className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
                 <div>
-                    <CardTitle className="text-lg font-semibold font-headline text-primary">
+                    <CardTitle className="text-base font-semibold font-headline text-primary">
                         Risk Management Advice
                     </CardTitle>
                     <CardDescription className="text-muted-foreground/90 whitespace-pre-wrap pt-2">
