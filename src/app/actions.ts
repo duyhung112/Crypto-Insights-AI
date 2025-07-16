@@ -95,7 +95,6 @@ export async function getAnalysis(pair: string, timeframe: string, mode: 'swing'
       },
       high: klineData[klineData.length - 1].high,
       low: klineData[klineData.length - 1].low,
-      discordWebhookUrl: discordWebhookUrl || '',
     };
     
     const cryptoSymbol = pair.replace(/USDT$/, '');
