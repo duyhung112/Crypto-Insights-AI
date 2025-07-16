@@ -1,16 +1,6 @@
 // This is a new file.
 const BYBIT_API_URL = "https://api.bybit.com";
 
-// Function to get the base URL of the app
-function getBaseUrl() {
-  // Vercel-provided variable for the deployment URL
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`;
-  }
-  // Fallback for other environments or local development
-  return process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:9002';
-}
-
 class BybitClient {
   private apiKey: string;
   private apiSecret: string;
@@ -32,31 +22,35 @@ class BybitClient {
   }
 
   public async getKline(symbol: string, interval: string, limit: number) {
-    const baseUrl = getBaseUrl();
-    const internalApiUrl = `${baseUrl}/api/bybit/kline?symbol=${symbol}&interval=${interval}&limit=${limit}`;
+    const bybitUrl = `${BYBIT_API_URL}/v5/market/kline?category=linear&symbol=${symbol}&interval=${interval}&limit=${limit}`;
 
     try {
-        const response = await fetch(internalApiUrl, {
-          cache: 'no-store',
+        const response = await fetch(bybitUrl, {
+          cache: 'no-store', // Ensure fresh data is fetched
+          headers: {
+            'Accept': 'application/json',
+            // Adding a common User-Agent can sometimes help bypass simple bot detection
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+          }
         });
 
         if (!response.ok) {
             const errorBody = await response.text();
-            console.error("Internal API error response:", errorBody);
-            throw new Error(`API Route Error: ${response.statusText} - ${errorBody}`);
+            console.error("Bybit API error response:", errorBody);
+            throw new Error(`Bybit API Error: ${response.statusText} - ${errorBody}`);
         }
 
         const data = await response.json();
 
-        if (data.error) {
-            throw new Error(`Bybit API Error: ${data.error}`);
+        if (data.retCode !== 0) {
+            throw new Error(`Bybit API Error: ${data.retMsg || 'Bybit API returned an error'}`);
         }
 
         return data.result;
     } catch (error) {
-        console.error(`Failed to fetch from internal API route: ${internalApiUrl}`, error);
+        console.error(`Failed to fetch from Bybit API: ${bybitUrl}`, error);
         if (error instanceof Error) {
-            throw new Error(`Failed to call internal kline API: ${error.message}`);
+            throw new Error(`Failed to call Bybit API: ${error.message}`);
         }
         throw new Error('An unknown error occurred while fetching kline data.');
     }
