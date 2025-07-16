@@ -22,32 +22,27 @@ class BybitClient {
   }
 
   public async getKline(symbol: string, interval: string, limit: number) {
-    const bybitUrl = `${BYBIT_API_URL}/v5/market/kline?category=linear&symbol=${symbol}&interval=${interval}&limit=${limit}`;
-    
-    // Use a proxy to bypass CORS/Forbidden issues on deployed environments.
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(bybitUrl)}`;
+    // Construct the URL to our internal API route
+    // This assumes the app is running on the same domain.
+    const internalApiUrl = `/api/bybit/kline?symbol=${symbol}&interval=${interval}&limit=${limit}`;
 
-    const response = await fetch(proxyUrl, {
-      cache: "no-store",
+    const response = await fetch(internalApiUrl, {
+      cache: 'no-store',
     });
-    
+
     if (!response.ok) {
-      const errorBody = await response.text();
-      console.error("Proxy API error response:", errorBody);
-      throw new Error(`Proxy API Error: ${response.statusText}`);
+        const errorBody = await response.text();
+        console.error("Internal API error response:", errorBody);
+        throw new Error(`API Route Error: ${response.statusText}`);
     }
 
-    const proxyData = await response.json();
-    
-    // The actual Bybit data is nested in the 'contents' field of the proxy response
-    const bybitData = JSON.parse(proxyData.contents);
+    const data = await response.json();
 
-    if (bybitData.retCode !== 0) {
-      console.error("Bybit API error details:", bybitData);
-      throw new Error(`Bybit API Error: ${bybitData.retMsg}`);
+    if (data.error) {
+        throw new Error(`Bybit API Error: ${data.error}`);
     }
 
-    return bybitData.result;
+    return data.result;
   }
   
   // You can add other authenticated methods here in the future
