@@ -53,7 +53,18 @@ const TradingViewChart = ({ pair, timeframe }: TradingViewChartProps) => {
                     }
                 }
             },
-            "PivotPointsStandard@tv-basicstudies"
+            {
+              id: "PivotPointsStandard@tv-basicstudies",
+              styles: {
+                // P, R1, R2, S1, S2 are visible by default
+                "R3": { visible: false },
+                "R4": { visible: false },
+                "R5": { visible: false },
+                "S3": { visible: false },
+                "S4": { visible: false },
+                "S5": { visible: false },
+              }
+            }
         ],
         container_id: "tradingview_container",
       };
