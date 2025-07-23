@@ -58,29 +58,22 @@ export async function getOnusKlineData(pair: string, timeframe: string, limit: n
     const onusSymbol = pair; 
     const onusTimeframe = convertTimeframeToOnus(timeframe);
     
-    // ONUS uses 'from' and 'to' timestamps. Let's calculate a rough 'from'.
-    // This is an approximation. A more robust solution might need pagination.
     const to = Date.now();
     let from;
-    const now = new Date();
 
-    // A very rough mapping to calculate the 'from' timestamp
+    const getFromTimestamp = (minutes: number) => to - (limit * minutes * 60 * 1000);
+
     switch(onusTimeframe) {
-        case '15m': from = to - (limit * 15 * 60 * 1000); break;
-        case '1h': from = to - (limit * 60 * 60 * 1000); break;
-        case '4h': from = to - (limit * 4 * 60 * 60 * 1000); break;
-        case '1d': from = to - (limit * 24 * 60 * 60 * 1000); break;
-        case '1w': from = to - (limit * 7 * 24 * 60 * 60 * 1000); break;
-        case '1M':
-            // Approximate a month as 30 days for this calculation
-            const fromDate = new Date(now.setMonth(now.getMonth() - (limit / 30)));
-            from = fromDate.getTime();
-            break;
-        default: from = to - (limit * 60 * 60 * 1000); // Default to 1h calculation
+        case '15m': from = getFromTimestamp(15); break;
+        case '1h': from = getFromTimestamp(60); break;
+        case '4h': from = getFromTimestamp(4 * 60); break;
+        case '1d': from = getFromTimestamp(24 * 60); break;
+        case '1w': from = getFromTimestamp(7 * 24 * 60); break;
+        case '1M': from = getFromTimestamp(30 * 24 * 60); break; // Approximation
+        default: from = getFromTimestamp(60); 
     }
 
-
-    const url = `${ONUS_API_URL}?symbol_name=${onusSymbol}&interval=${onusTimeframe}&from=${Math.floor(from)}&to=${Math.floor(to)}`;
+    const url = `${ONUS_API_URL}?symbol_name=${onusSymbol}&interval=${onusTimeframe}&from=${from}&to=${to}`;
 
     try {
         const response = await fetch(url, { cache: 'no-store' });
