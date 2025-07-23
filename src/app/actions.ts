@@ -53,7 +53,11 @@ export async function getNamiKlineData(pair: string, timeframe: string, limit: n
     const resolution = convertTimeframeToNami(timeframe);
     const now = Math.floor(Date.now() / 1000);
     const from = now - (60 * 60 * 24 * 90); // 90 days of data
-    const url = `/api/nami/history?symbol=${pair}&resolution=${resolution}&from=${from}&to=${now}`;
+    
+    // Nami API uses '/' in pairs like 'BTC/VNDC'
+    const symbol = pair.includes('/') ? pair : `${pair.replace('USDT', '')}/USDT`;
+
+    const url = `/api/nami/history?symbol=${symbol}&resolution=${resolution}&from=${from}&to=${now}`;
 
     try {
         // We call our own API route to bypass CORS
@@ -154,7 +158,7 @@ export async function getAnalysis(pair: string, timeframe: string, mode: 'swing'
       low: klineData[klineData.length - 1].low,
     };
     
-    const cryptoSymbol = pair.replace(/USDT$/, '').replace(/_USDT$/, '').replace(/_VNDC$/, '');
+    const cryptoSymbol = pair.replace(/USDT$/, '').replace(/_USDT$/, '').replace(/_VNDC$/, '').replace(/\/.*/, '');
     const newsArticles = await getNewsForCrypto({ cryptoSymbol });
     const newsInput: NewsAnalysisInput = { cryptoSymbol, articles: newsArticles };
 
@@ -201,3 +205,5 @@ Lỗi: \`\`\`${errorMessage}\`\`\``;
     return { error: "Đã xảy ra lỗi không xác định." };
   }
 }
+
+    

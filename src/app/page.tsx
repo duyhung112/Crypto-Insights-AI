@@ -55,7 +55,7 @@ const bybitPairs = [
 const namiPairs = [
     { value: "BTC/VNDC", label: "BTC/VNDC" },
     { value: "ETH/VNDC", label: "ETH/VNDC" },
-    { value: "ETH/USDT", label: "ETH/USDT" },
+    { value: "USDT/VNDC", label: "USDT/VNDC"},
     { value: "NAMI/VNDC", label: "NAMI/VNDC" },
     { value: "BNB/VNDC", label: "BNB/VNDC" },
     { value: "XRP/VNDC", label: "XRP/VNDC" },
@@ -72,7 +72,7 @@ const MONITORING_INTERVAL = 15 * 60 * 1000; // 15 minutes
 
 export default function Home() {
   const [exchange, setExchange] = useState<'bybit' | 'nami'>('bybit');
-  const [pair, setPair] = useState("ETHUSDT");
+  const [pair, setPair] = useState("BTCUSDT");
   const [timeframe, setTimeframe] = useState("60");
   const [loading, setLoading] = useState(true);
   const [result, setResult] = useState<AnalysisResult | null>(null);
@@ -86,13 +86,12 @@ export default function Home() {
   const availablePairs = exchange === 'bybit' ? bybitPairs : namiPairs;
 
   useEffect(() => {
-    const newPair = exchange === 'bybit' ? 'ETHUSDT' : 'BTC/VNDC';
+    const newPair = exchange === 'bybit' ? 'BTCUSDT' : 'BTC/VNDC';
     setPair(newPair);
-    handleAnalyze(newPair, timeframe, mode, exchange);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [exchange]);
 
-  const fetchNamiDataForChart = useCallback(async (currentPair: string, currentTimeframe: string) => {
+  const fetchNamiChartData = useCallback(async (currentPair: string, currentTimeframe: string) => {
       try {
         const data = await getNamiKlineData(currentPair, currentTimeframe, 500);
         setNamiChartData(data);
@@ -112,7 +111,7 @@ export default function Home() {
     }
     
     if (currentExchange === 'nami') {
-        fetchNamiDataForChart(currentPair, currentTimeframe);
+        fetchNamiChartData(currentPair, currentTimeframe);
     }
 
     const geminiApiKey = localStorage.getItem('geminiApiKey');
@@ -134,10 +133,8 @@ export default function Home() {
 
     if (response.error) {
         setError(response.error);
-        if (!response.aiAnalysis && !isSilent) {
-            setResult(null);
-        }
-    } else {
+        // Don't clear results if there's a refresh error, just show the error
+    } else if (response.aiAnalysis) {
       setResult({ 
         aiAnalysis: response.aiAnalysis,
         tradingSignals: response.tradingSignals,
@@ -149,7 +146,7 @@ export default function Home() {
     if (!isSilent) {
         setLoading(false);
     }
-  }, [toast, fetchNamiDataForChart]);
+  }, [toast, fetchNamiChartData]);
 
   const handleMonitoringChange = (checked: boolean) => {
     setIsMonitoring(checked);
@@ -178,7 +175,8 @@ export default function Home() {
   useEffect(() => {
     handleAnalyze(pair, timeframe, mode, exchange);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pair, timeframe, mode]);
+  }, [pair, timeframe, mode, exchange]);
+
 
   useEffect(() => {
       if (isMonitoring) {
@@ -207,7 +205,8 @@ export default function Home() {
   const renderExchangeContent = (currentExchange: 'bybit' | 'nami') => {
     const isBybit = currentExchange === 'bybit';
     const currentPairLabel = availablePairs.find(p => p.value === pair)?.label || pair;
-    const chartPair = pair.replace(/[\/_]/g, '');
+    // Bybit pairs don't have '/', Nami pairs do. TradingView needs the '/' removed.
+    const chartPair = pair.replace(/\//g, ''); 
 
     return (
         <div className="mt-6 space-y-6">
@@ -397,3 +396,5 @@ export default function Home() {
     </main>
   );
 }
+
+    
