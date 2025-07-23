@@ -53,12 +53,12 @@ const bybitPairs = [
 ];
 
 const namiPairs = [
-    { value: "BTC/VNDC", label: "BTC/VNDC" },
-    { value: "ETH/VNDC", label: "ETH/VNDC" },
-    { value: "USDT/VNDC", label: "USDT/VNDC"},
-    { value: "NAMI/VNDC", label: "NAMI/VNDC" },
-    { value: "BNB/VNDC", label: "BNB/VNDC" },
-    { value: "XRP/VNDC", label: "XRP/VNDC" },
+    { value: "BTCVNDC", label: "BTC/VNDC" },
+    { value: "ETHVNDC", label: "ETH/VNDC" },
+    { value: "USDT_VNDC", label: "USDT/VNDC"},
+    { value: "NAMIVNDC", label: "NAMI/VNDC" },
+    { value: "BNBVNDC", label: "BNB/VNDC" },
+    { value: "XRPVNDC", label: "XRP/VNDC" },
 ];
 
 const timeframes = [
@@ -86,7 +86,7 @@ export default function Home() {
   const availablePairs = exchange === 'bybit' ? bybitPairs : namiPairs;
 
   useEffect(() => {
-    const newPair = exchange === 'bybit' ? 'BTCUSDT' : 'BTC/VNDC';
+    const newPair = exchange === 'bybit' ? 'BTCUSDT' : 'BTCVNDC';
     setPair(newPair);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [exchange]);

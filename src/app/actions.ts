@@ -47,24 +47,25 @@ export async function getBybitKlineData(pair: string, timeframe: string, limit: 
     }
 }
 
-const convertTimeframeToNami = (timeframe: string) => {
+const convertTimeframeToNami = (timeframe: string): string => {
     const mapping: { [key: string]: string } = {
-        '15': '15',
-        '60': '60',
-        '240': '240',
-        'D': 'D',
-        'W': 'W',
+        '15': '15m',
+        '60': '1h',
+        '240': '4h',
+        'D': '1D',
+        'W': '1W',
     };
-    return mapping[timeframe] || '60'; 
+    return mapping[timeframe] || '1h'; 
 }
 
 export async function getNamiKlineData(pair: string, timeframe: string, limit: number = 500): Promise<KlineData[]> {
     const resolution = convertTimeframeToNami(timeframe);
     const now = Math.floor(Date.now() / 1000);
+    // Fetch a reasonable amount of data based on timeframe
     const from = now - (60 * 60 * 24 * 90); // 90 days of data
     
     const params = new URLSearchParams({
-        symbol: pair,
+        symbol: pair.replace('/', ''), // Nami uses format like 'BTCVNDC'
         resolution: resolution,
         from: String(from),
         to: String(now),
@@ -79,22 +80,25 @@ export async function getNamiKlineData(pair: string, timeframe: string, limit: n
             const errorBody = await response.text();
             throw new Error(`Nami API Error: ${response.statusText} - ${errorBody}`);
         }
+        
         const data = await response.json();
         
-        if (data.s !== 'ok') {
-            throw new Error(`Nami API returned an error: ${data.errmsg || 'Unknown error'}`);
+        if (!Array.isArray(data)) {
+           // Handle cases where Nami returns an error object, e.g., { s: 'error', errmsg: '...' }
+           if (data.s && data.s !== 'ok') {
+               throw new Error(`Nami API returned an error: ${data.errmsg || 'Unknown error'}`);
+           }
+           // Handle other unexpected non-array responses
+           throw new Error(`Nami API returned an unexpected data format.`);
         }
 
-        const klineData: KlineData[] = [];
-        for (let i = 0; i < data.t.length; i++) {
-            klineData.push({
-                time: data.t[i] * 1000,
-                open: data.o[i],
-                high: data.h[i],
-                low: data.l[i],
-                close: data.c[i],
-            });
-        }
+        const klineData: KlineData[] = data.map((d: number[]) => ({
+            time: d[0] * 1000, // Convert seconds to milliseconds
+            open: d[1],
+            high: d[2],
+            low: d[3],
+            close: d[4],
+        }));
         
         return klineData;
 
