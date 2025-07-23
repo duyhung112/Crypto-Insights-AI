@@ -26,6 +26,7 @@ export const useBybitTicker = (pair: string) => {
     
     // Reset data for the new pair
     setTickerData(null);
+    setIsConnected(false);
 
     ws.current = new WebSocket(WEBSOCKET_URL);
     const currentWs = ws.current;
@@ -33,13 +34,15 @@ export const useBybitTicker = (pair: string) => {
     currentWs.onopen = () => {
       console.log(`WebSocket connected for ${pair}`);
       setIsConnected(true);
-      // Subscribe to the ticker topic for the current pair
-      currentWs.send(
-        JSON.stringify({
-          op: "subscribe",
-          args: [`tickers.${pair}`],
-        })
-      );
+      // Ensure we only send the message when the connection is truly open
+      if (currentWs.readyState === WebSocket.OPEN) {
+          currentWs.send(
+            JSON.stringify({
+              op: "subscribe",
+              args: [`tickers.${pair}`],
+            })
+          );
+      }
     };
 
     currentWs.onmessage = (event) => {
@@ -51,7 +54,7 @@ export const useBybitTicker = (pair: string) => {
                   lastPrice: data.lastPrice,
                   highPrice24h: data.highPrice24h,
                   lowPrice24h: data.lowPrice24h,
-                  openPrice24h: data.markPrice, // No open price, using mark price as a proxy
+                  openPrice24h: data.markPrice, // No open price, a proxy
                   price24hPcnt: data.price24hPcnt,
                   turnover24h: data.turnover24h,
                   volume24h: data.volume24h
@@ -68,21 +71,21 @@ export const useBybitTicker = (pair: string) => {
 
     currentWs.onerror = (event) => {
       console.error("Bybit WebSocket error. Event:", event);
-      currentWs.close();
+      // The onclose event will usually fire after an error
     };
 
     // Cleanup on component unmount or pair change
     return () => {
-      if (currentWs) {
+      if (ws.current) {
         console.log("Closing WebSocket connection.");
-        currentWs.close();
+        // Unsubscribe before closing
+        if(ws.current.readyState === WebSocket.OPEN){
+             ws.current.send(JSON.stringify({ op: "unsubscribe", args: [`tickers.${pair}`] }));
+        }
+        ws.current.close();
       }
     };
   }, [pair]); // Re-run effect when the pair changes
 
   return { tickerData, isConnected };
 };
-
-    
-
-    

@@ -74,7 +74,7 @@ export default function Home() {
   const [exchange, setExchange] = useState<'bybit' | 'nami'>('bybit');
   const [pair, setPair] = useState("BTCUSDT");
   const [timeframe, setTimeframe] = useState("60");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [mode, setMode] = useState<'swing' | 'scalping'>("swing");
@@ -85,14 +85,19 @@ export default function Home() {
   
   const availablePairs = exchange === 'bybit' ? bybitPairs : namiPairs;
 
+  // Effect to switch the default pair when exchange changes
   useEffect(() => {
     const newPair = exchange === 'bybit' ? 'BTCUSDT' : 'BTCVNDC';
     setPair(newPair);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    setResult(null); // Clear previous results
+    setError(null);
   }, [exchange]);
 
+  // Effect to fetch chart data when pair or timeframe changes for Nami
   const fetchNamiChartData = useCallback(async (currentPair: string, currentTimeframe: string) => {
       if (exchange !== 'nami') return;
+      setLoading(true);
+      setError(null);
       try {
         const data = await getNamiKlineData(currentPair, currentTimeframe, 500);
         setNamiChartData(data);
@@ -100,22 +105,30 @@ export default function Home() {
         console.error("Failed to fetch Nami data for chart", e);
         if (e instanceof Error) {
             setError(`Không thể tải dữ liệu biểu đồ Nami: ${e.message}`);
+        } else {
+            setError('Đã có lỗi không xác định khi tải dữ liệu biểu đồ Nami.');
         }
         setNamiChartData([]); 
+      } finally {
+        setLoading(false);
       }
   }, [exchange]);
+  
+  useEffect(() => {
+    if (exchange === 'nami') {
+      fetchNamiChartData(pair, timeframe);
+    }
+  }, [pair, timeframe, exchange, fetchNamiChartData]);
 
-  const handleAnalyze = useCallback(async (currentPair: string, currentTimeframe: string, currentMode: 'swing' | 'scalping', currentExchange: 'bybit' | 'nami', isSilent = false) => {
+
+  // Function to perform AI analysis, called on-demand
+  const handleAnalyze = useCallback(async (isSilent = false) => {
     if (!isSilent) {
         setLoading(true);
         setError(null);
+        setResult(null);
     }
     
-    // Fetch chart data specifically for Nami, as it uses a custom chart
-    if (currentExchange === 'nami') {
-        fetchNamiChartData(currentPair, currentTimeframe);
-    }
-
     const geminiApiKey = localStorage.getItem('geminiApiKey');
     if (!geminiApiKey) {
         if (!isSilent) {
@@ -130,8 +143,9 @@ export default function Home() {
     }
 
     const discordWebhookUrl = localStorage.getItem('discordWebhookUrl') || undefined;
-    const analysisTimeframe = currentMode === 'scalping' ? '15' : currentTimeframe;
-    const response = await getAnalysis(currentPair, analysisTimeframe, currentMode, currentExchange, discordWebhookUrl, geminiApiKey);
+    const analysisTimeframe = mode === 'scalping' ? '15' : timeframe;
+    
+    const response = await getAnalysis(pair, analysisTimeframe, mode, exchange, discordWebhookUrl, geminiApiKey);
 
     if (response.error) {
         if (!isSilent) setError(response.error);
@@ -147,7 +161,17 @@ export default function Home() {
     if (!isSilent) {
         setLoading(false);
     }
-  }, [toast, fetchNamiChartData]);
+  }, [pair, timeframe, mode, exchange, toast]);
+  
+  // Initial analysis fetch for Bybit
+  useEffect(() => {
+    if (exchange === 'bybit') {
+        handleAnalyze();
+    }
+    // For Nami, analysis is triggered by the refresh button, not automatically
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pair, timeframe, mode, exchange]);
+
 
   const handleMonitoringChange = (checked: boolean) => {
     setIsMonitoring(checked);
@@ -164,7 +188,7 @@ export default function Home() {
         }
         toast({
             title: "Đã bật Giám sát Tự động",
-            description: `Hệ thống sẽ kiểm tra tín hiệu cho ${pair.replace('/', '/')} mỗi 15 phút.`,
+            description: `Hệ thống sẽ kiểm tra tín hiệu cho ${pair} mỗi 15 phút.`,
         });
     } else {
         toast({
@@ -173,21 +197,13 @@ export default function Home() {
     }
   }
 
-  // Main effect to trigger analysis
-  useEffect(() => {
-    handleAnalyze(pair, timeframe, mode, exchange);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pair, timeframe, mode, exchange]);
-
-
   // Effect for auto-monitoring
   useEffect(() => {
       if (isMonitoring) {
           if (monitoringIntervalRef.current) clearInterval(monitoringIntervalRef.current);
           monitoringIntervalRef.current = setInterval(() => {
               console.log(`[Monitoring] Checking for signals for ${pair} on ${exchange}...`);
-              const analysisTimeframe = mode === 'scalping' ? '15' : timeframe;
-              handleAnalyze(pair, analysisTimeframe, mode, exchange, true);
+              handleAnalyze(true);
           }, MONITORING_INTERVAL);
       } else {
           if (monitoringIntervalRef.current) {
@@ -198,11 +214,15 @@ export default function Home() {
       return () => {
           if (monitoringIntervalRef.current) clearInterval(monitoringIntervalRef.current);
       }
-  }, [isMonitoring, pair, timeframe, mode, exchange, handleAnalyze]);
+  }, [isMonitoring, pair, exchange, handleAnalyze]);
 
 
   const onRefreshClick = () => {
-    handleAnalyze(pair, timeframe, mode, exchange);
+    if (exchange === 'nami') {
+        // For Nami, fetch both chart data and analysis
+        fetchNamiChartData(pair, timeframe);
+    }
+    handleAnalyze();
   }
 
   const renderExchangeContent = (currentExchange: 'bybit' | 'nami') => {
@@ -235,7 +255,7 @@ export default function Home() {
                             exchange={"BYBIT"}
                         />
                        ) : (
-                         <NamiChart data={namiChartData} pair={pair} />
+                         <NamiChart data={namiChartData} pair={pair.replace('/', '')} />
                        )}
                     </div>
                 </CardContent>
@@ -399,7 +419,3 @@ export default function Home() {
     </main>
   );
 }
-
-    
-
-    
