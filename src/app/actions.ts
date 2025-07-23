@@ -38,51 +38,56 @@ export async function getBybitKlineData(pair: string, timeframe: string, limit: 
     }
 }
 
-const ONUS_API_URL = "https://spot-markets-dev.goonus.io/candlesticks";
-
-const convertTimeframeToOnus = (timeframe: string) => {
+const convertTimeframeToNami = (timeframe: string) => {
     const mapping: { [key: string]: string } = {
-        '15': '15m',
-        '60': '1h',
-        '240': '4h',
-        'D': '1d',
-        'W': '1w',
-        'M': '1M'
+        '15': '15',
+        '60': '60',
+        '240': '240',
+        'D': 'D',
+        'W': 'W',
     };
-    return mapping[timeframe] || '1h'; 
+    return mapping[timeframe] || '60'; 
 }
 
-export async function getOnusKlineData(pair: string, timeframe: string, limit: number = 500): Promise<KlineData[]> {
-    // Hardcoded known working URL to isolate the problem
-    const url = "https://spot-markets-dev.goonus.io/candlesticks?symbol_name=ONX_USDT&interval=5m&from=1725937488000&to=1837403913011";
+export async function getNamiKlineData(pair: string, timeframe: string, limit: number = 500): Promise<KlineData[]> {
+    const resolution = convertTimeframeToNami(timeframe);
+    const now = Math.floor(Date.now() / 1000);
+    const from = now - (60 * 60 * 24 * 90); // 90 days of data
+    const url = `/api/nami/history?symbol=${pair}&resolution=${resolution}&from=${from}&to=${now}`;
 
     try {
-        const response = await fetch(url, { cache: 'no-store' });
+        // We call our own API route to bypass CORS
+        const response = await fetch(new URL(url, process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:9002'), { cache: 'no-store' });
+
         if (!response.ok) {
             const errorBody = await response.text();
-            throw new Error(`ONUS API Error: ${response.statusText} - ${errorBody}`);
+            throw new Error(`Nami API Error: ${response.statusText} - ${errorBody}`);
         }
         const data = await response.json();
-         if (!Array.isArray(data)) {
-            console.error("ONUS API did not return an array:", data);
-            throw new Error(`API của ONUS không trả về dữ liệu hợp lệ cho cặp ${pair}. Vui lòng kiểm tra lại cặp tiền.`);
+        
+        if (data.s !== 'ok') {
+            throw new Error(`Nami API returned an error: ${data.errmsg || 'Unknown error'}`);
         }
 
-        const klineData: KlineData[] = data.map((d: any) => ({
-            time: parseInt(d.t, 10),
-            open: parseFloat(d.o),
-            high: parseFloat(d.h),
-            low: parseFloat(d.l),
-            close: parseFloat(d.c),
-        }));
-
+        const klineData: KlineData[] = [];
+        for (let i = 0; i < data.t.length; i++) {
+            klineData.push({
+                time: data.t[i] * 1000, // Nami returns seconds, convert to ms
+                open: data.o[i],
+                high: data.h[i],
+                low: data.l[i],
+                close: data.c[i],
+            });
+        }
+        
         return klineData;
+
     } catch (error) {
-        console.error("Failed to fetch kline data from ONUS:", error);
+        console.error("Failed to fetch kline data from Nami:", error);
         if (error instanceof Error) {
-            throw new Error(`Không thể tải dữ liệu từ ONUS: ${error.message}`);
+            throw new Error(`Không thể tải dữ liệu từ Nami: ${error.message}`);
         }
-        throw new Error("Không thể tải dữ liệu biểu đồ từ ONUS.");
+        throw new Error("Không thể tải dữ liệu biểu đồ từ Nami.");
     }
 }
 
@@ -96,7 +101,7 @@ async function handleDiscordNotification(message: string, webhookUrl: string) {
     }
 }
 
-export async function getAnalysis(pair: string, timeframe: string, mode: 'swing' | 'scalping', exchange: 'bybit' | 'onus', discordWebhookUrl?: string, geminiApiKey?: string) {
+export async function getAnalysis(pair: string, timeframe: string, mode: 'swing' | 'scalping', exchange: 'bybit' | 'nami', discordWebhookUrl?: string, geminiApiKey?: string) {
   try {
     if (!geminiApiKey) {
       throw new Error("Vui lòng cung cấp Gemini API Key trong phần Cài đặt để sử dụng tính năng phân tích.");
@@ -109,8 +114,8 @@ export async function getAnalysis(pair: string, timeframe: string, mode: 'swing'
 
     if (exchange === 'bybit') {
         klineData = await getBybitKlineData(pair, timeframe, 200);
-    } else if (exchange === 'onus') {
-        klineData = await getOnusKlineData(pair, timeframe, 500);
+    } else if (exchange === 'nami') {
+        klineData = await getNamiKlineData(pair, timeframe, 500);
     } else {
         throw new Error("Sàn giao dịch không được hỗ trợ.");
     }
@@ -196,5 +201,3 @@ Lỗi: \`\`\`${errorMessage}\`\`\``;
     return { error: "Đã xảy ra lỗi không xác định." };
   }
 }
-
-    

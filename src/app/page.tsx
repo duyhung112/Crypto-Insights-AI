@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader, AlertTriangle, AreaChart, Zap, Settings, RefreshCw, Bell, Construction } from "lucide-react";
-import { getAnalysis, getOnusKlineData } from "@/app/actions";
+import { getAnalysis, getNamiKlineData } from "@/app/actions";
 import type { AnalysisResult, KlineData } from "@/lib/types";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -38,7 +38,7 @@ const TradingViewChart = dynamic(() => import('@/components/tradingview-chart'),
   loading: () => <Skeleton className="w-full h-full min-h-[500px]" />,
 });
 
-const OnusChart = dynamic(() => import('@/components/onus-chart'), {
+const NamiChart = dynamic(() => import('@/components/onus-chart'), {
   ssr: false,
   loading: () => <Skeleton className="w-full h-full min-h-[500px]" />,
 });
@@ -51,14 +51,13 @@ const bybitPairs = [
   { value: "XRPUSDT", label: "XRP/USDT" },
 ];
 
-const onusPairs = [
-  { value: "BTC_USDT", label: "BTC/USDT" },
-  { value: "ETH_USDT", label: "ETH/USDT" },
-  { value: "SOL_USDT", label: "SOL/USDT" },
-  { value: "BNB_USDT", label: "BNB/USDT" },
-  { value: "XRP_USDT", label: "XRP/USDT" },
-  { value: "ONUS_USDT", label: "ONUS/USDT" },
-  { value: "BTC_VNDC", label: "BTC/VNDC" },
+const namiPairs = [
+  { value: "BTC/VNDC", label: "BTC/VNDC" },
+  { value: "ETH/VNDC", label: "ETH/VNDC" },
+  { value: "ETH/USDT", label: "ETH/USDT" },
+  { value: "NAMI/VNDC", label: "NAMI/VNDC" },
+  { value: "BNB/VNDC", label: "BNB/VNDC" },
+  { value: "XRP/VNDC", label: "XRP/VNDC" },
 ];
 
 const timeframes = [
@@ -71,7 +70,7 @@ const timeframes = [
 const MONITORING_INTERVAL = 15 * 60 * 1000; // 15 minutes
 
 export default function Home() {
-  const [exchange, setExchange] = useState<'bybit' | 'onus'>('bybit');
+  const [exchange, setExchange] = useState<'bybit' | 'nami'>('bybit');
   const [pair, setPair] = useState("ETHUSDT");
   const [timeframe, setTimeframe] = useState("60");
   const [loading, setLoading] = useState(true);
@@ -81,37 +80,36 @@ export default function Home() {
   const [isMonitoring, setIsMonitoring] = useState(false);
   const { toast } = useToast();
   const monitoringIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const [onusChartData, setOnusChartData] = useState<KlineData[]>([]);
+  const [namiChartData, setNamiChartData] = useState<KlineData[]>([]);
   
-  const availablePairs = exchange === 'bybit' ? bybitPairs : onusPairs;
+  const availablePairs = exchange === 'bybit' ? bybitPairs : namiPairs;
 
   useEffect(() => {
     // Reset pair to a default when exchange changes, and trigger analysis
-    const newPair = exchange === 'bybit' ? 'ETHUSDT' : 'ETH_USDT';
+    const newPair = exchange === 'bybit' ? 'ETHUSDT' : 'BTC/VNDC';
     setPair(newPair);
     handleAnalyze(newPair, timeframe, mode, exchange);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [exchange]);
 
-  const fetchOnusDataForChart = useCallback(async (currentPair: string, currentTimeframe: string) => {
+  const fetchNamiDataForChart = useCallback(async (currentPair: string, currentTimeframe: string) => {
       try {
-        const data = await getOnusKlineData(currentPair, currentTimeframe, 500);
-        setOnusChartData(data);
+        const data = await getNamiKlineData(currentPair, currentTimeframe, 500);
+        setNamiChartData(data);
       } catch (e) {
-        console.error("Failed to fetch ONUS data for chart", e);
-        setOnusChartData([]); // Clear data on error
+        console.error("Failed to fetch Nami data for chart", e);
+        setNamiChartData([]); // Clear data on error
       }
   }, []);
 
-  const handleAnalyze = useCallback(async (currentPair: string, currentTimeframe: string, currentMode: 'swing' | 'scalping', currentExchange: 'bybit' | 'onus', isSilent = false) => {
+  const handleAnalyze = useCallback(async (currentPair: string, currentTimeframe: string, currentMode: 'swing' | 'scalping', currentExchange: 'bybit' | 'nami', isSilent = false) => {
     if (!isSilent) {
         setLoading(true);
         setError(null);
     }
     
-    // Fetch data for ONUS chart regardless of silent mode
-    if (currentExchange === 'onus') {
-        fetchOnusDataForChart(currentPair, currentTimeframe);
+    if (currentExchange === 'nami') {
+        fetchNamiDataForChart(currentPair, currentTimeframe);
     }
 
     const geminiApiKey = localStorage.getItem('geminiApiKey');
@@ -146,7 +144,7 @@ export default function Home() {
     if (!isSilent) {
         setLoading(false);
     }
-  }, [toast, fetchOnusDataForChart]);
+  }, [toast, fetchNamiDataForChart]);
 
   const handleMonitoringChange = (checked: boolean) => {
     setIsMonitoring(checked);
@@ -163,7 +161,7 @@ export default function Home() {
         }
         toast({
             title: "Đã bật Giám sát Tự động",
-            description: `Hệ thống sẽ kiểm tra tín hiệu cho ${pair.replace('_', '/')} mỗi 15 phút.`,
+            description: `Hệ thống sẽ kiểm tra tín hiệu cho ${pair.replace('/', '/')} mỗi 15 phút.`,
         });
     } else {
         toast({
@@ -203,7 +201,7 @@ export default function Home() {
     handleAnalyze(pair, timeframe, mode, exchange);
   }
 
-  const renderExchangeContent = (currentExchange: 'bybit' | 'onus') => {
+  const renderExchangeContent = (currentExchange: 'bybit' | 'nami') => {
     const isBybit = currentExchange === 'bybit';
     const currentPairLabel = availablePairs.find(p => p.value === pair)?.label || pair;
     // TradingView needs symbols without underscores, e.g. BTCUSDT, not BTC_USDT
@@ -213,7 +211,7 @@ export default function Home() {
         <div className="mt-6 space-y-6">
             <Card>
                 <CardHeader>
-                    <CardTitle className="font-headline text-lg">Thông tin và Biểu đồ {currentPairLabel} ({isBybit ? "Bybit" : "ONUS"})</CardTitle>
+                    <CardTitle className="font-headline text-lg">Thông tin và Biểu đồ {currentPairLabel} ({isBybit ? "Bybit" : "Nami"})</CardTitle>
                     <CardDescription className="text-xs">
                         Khung thời gian: {mode === 'scalping' ? '15 phút' : timeframes.find(t => t.value === timeframe)?.label}.
                     </CardDescription>
@@ -222,7 +220,7 @@ export default function Home() {
                     {isBybit && <RealtimeTicker pair={pair} />}
                     {!isBybit && (
                         <div className="text-center py-4 text-sm text-muted-foreground">
-                            Dữ liệu Ticker real-time cho ONUS đang được phát triển.
+                            Dữ liệu Ticker real-time cho Nami đang được phát triển.
                         </div>
                     )}
                     <div className="h-[600px] mt-4">
@@ -233,7 +231,7 @@ export default function Home() {
                             exchange={"BYBIT"}
                         />
                        ) : (
-                         <OnusChart data={onusChartData} />
+                         <NamiChart data={namiChartData} />
                        )}
                     </div>
                 </CardContent>
@@ -338,16 +336,16 @@ export default function Home() {
             </div>
         </header>
 
-        <Tabs value={exchange} onValueChange={(value) => setExchange(value as 'bybit' | 'onus')} className="w-full">
+        <Tabs value={exchange} onValueChange={(value) => setExchange(value as 'bybit' | 'nami')} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="bybit">Bybit</TabsTrigger>
-                <TabsTrigger value="onus">ONUS</TabsTrigger>
+                <TabsTrigger value="nami">Nami</TabsTrigger>
             </TabsList>
             <TabsContent value="bybit">
                 {renderExchangeContent('bybit')}
             </TabsContent>
-            <TabsContent value="onus">
-                {renderExchangeContent('onus')}
+            <TabsContent value="nami">
+                {renderExchangeContent('nami')}
             </TabsContent>
         </Tabs>
 
@@ -397,5 +395,3 @@ export default function Home() {
     </main>
   );
 }
-
-    

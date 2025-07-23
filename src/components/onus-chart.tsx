@@ -6,11 +6,11 @@ import { createChart, type IChartApi, type ISeriesApi, type CandlestickData, typ
 import { useTheme } from 'next-themes';
 import type { KlineData } from '@/lib/types';
 
-interface OnusChartProps {
+interface NamiChartProps {
   data: KlineData[];
 }
 
-const OnusChart: React.FC<OnusChartProps> = ({ data }) => {
+const NamiChart: React.FC<NamiChartProps> = ({ data }) => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const candlestickSeriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
@@ -95,4 +95,4 @@ const OnusChart: React.FC<OnusChartProps> = ({ data }) => {
   return <div ref={chartContainerRef} className="w-full h-full" />;
 };
 
-export default OnusChart;
+export default NamiChart;
