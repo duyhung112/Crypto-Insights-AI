@@ -36,12 +36,25 @@ export async function analyzeCryptoPair(input: AnalyzeCryptoPairInput, dynamicAi
 
 **CÁC KHÁI NIỆM VÀ CHIẾN LƯỢC GIAO DỊCH CẦN ÁP DỤNG:**
 
-*   **Chiến lược Giao dịch Mua theo Sóng Điều Chỉnh (Pullback Entry):**
-    *   **Mô tả:** Đây là chiến lược tìm kiếm cơ hội mua trong một xu hướng tăng đang diễn ra. Thay vì mua ở đỉnh, nhà giao dịch sẽ chờ đợi một đợt giá "điều chỉnh" (pullback) hoặc "giảm tạm thời" về một vùng hỗ trợ quan trọng.
+*   **1. Chiến lược Giao dịch Mua theo Sóng Điều Chỉnh (Pullback Entry):**
+    *   **Mô tả:** Tìm kiếm cơ hội mua trong một xu hướng tăng đang diễn ra. Thay vì mua ở đỉnh, chờ đợi một đợt giá "điều chỉnh" (pullback) về một vùng hỗ trợ động quan trọng.
     *   **Cách xác định:**
-        1.  **Xu hướng tăng rõ ràng:** Giá phải đang giao dịch phía trên các đường EMA (ví dụ: EMA9 > EMA21).
-        2.  **Sóng điều chỉnh:** Giá giảm nhẹ và tiệm cận về các vùng hỗ trợ động như đường EMA 9 hoặc EMA 21.
-        3.  **Điểm vào lệnh:** Khi giá chạm vào vùng hỗ trợ và có dấu hiệu đảo chiều (ví dụ: nến rút chân, RSI bật lên từ vùng 40-50), đó là tín hiệu để vào lệnh MUA.
+        1.  **Xu hướng tăng rõ ràng:** Giá giao dịch phía trên các đường EMA (ví dụ: EMA9 > EMA21).
+        2.  **Sóng điều chỉnh:** Giá giảm nhẹ và tiệm cận về các vùng hỗ trợ động như đường EMA 21.
+        3.  **Điểm vào lệnh:** Khi giá chạm vào vùng hỗ trợ và có dấu hiệu đảo chiều (ví dụ: nến rút chân, RSI bật lên từ vùng 40-50).
+
+*   **2. Chiến lược Giao dịch Phá vỡ (Breakout Trading):**
+    *   **Mô tả:** Tìm kiếm cơ hội vào lệnh khi giá phá vỡ một mức kháng cự (để mua) hoặc hỗ trợ (để bán) quan trọng.
+    *   **Cách xác định:**
+        1.  **Vùng giá tích lũy:** Giá di chuyển trong một phạm vi hẹp (đi ngang) trong một thời gian.
+        2.  **Phá vỡ:** Giá đóng cửa một cách dứt khoát phía trên vùng kháng cự hoặc phía dưới vùng hỗ trợ.
+        3.  **Xác nhận:** Sự phá vỡ thường được xác nhận bởi khối lượng giao dịch (Volume) tăng đột biến.
+
+*   **3. Chiến lược Giao dịch theo Xu hướng (Trend Following):**
+    *   **Mô tả:** Đi theo xu hướng chính của thị trường.
+    *   **Cách xác định:**
+        1.  **Giao cắt EMA (EMA Cross):** Trong xu hướng tăng, đường EMA ngắn hạn (EMA9) cắt lên trên đường EMA dài hạn (EMA21). Ngược lại cho xu hướng giảm.
+        2.  **Xác nhận xu hướng:** Giá liên tục tạo các đỉnh cao hơn và đáy cao hơn (xu hướng tăng) hoặc đỉnh thấp hơn và đáy thấp hơn (xu hướng giảm).
 
 ---
 
@@ -60,7 +73,7 @@ Tạo ra một danh sách các tín hiệu giao dịch chi tiết. Mỗi tín hi
     - Tín hiệu: Có sự giao cắt (bullish/bearish cross) không? Histogram đang dương hay âm và có đang mạnh lên hay yếu đi không?
     - Độ tin cậy: Tín hiệu mạnh hơn khi có sự giao cắt rõ ràng và histogram đồng thuận với xu hướng.
 3.  **EMA (Exponential Moving Averages):**
-    - Tín hiệu: Giá đang nằm trên hay dưới các đường EMA? Các đường EMA có đang dốc lên không? Chúng có đang hoạt động như các mức hỗ trợ/kháng cự động không?
+    - Tín hiệu: Giá đang nằm trên hay dưới các đường EMA? Các đường EMA có đang dốc lên không? Chúng có đang hoạt động như các mức hỗ trợ/kháng cự động không? Có tín hiệu giao cắt EMA không?
     - Độ tin cậy: Cao khi giá tôn trọng các đường EMA.
 4.  **Volume (Khối lượng giao dịch):**
     - Tín hiệu: Khối lượng giao dịch có đang tăng đột biến không? Nó đang xác nhận cho xu hướng hiện tại hay báo hiệu sự suy yếu? (ví dụ: giá tăng nhưng volume giảm là tín hiệu xấu; giá điều chỉnh với volume thấp là tín hiệu tốt cho phe mua).
@@ -72,7 +85,7 @@ Tạo ra một danh sách các tín hiệu giao dịch chi tiết. Mỗi tín hi
 3.  **Tín hiệu giao dịch cuối cùng:** Dựa trên tất cả phân tích, đưa ra một tín hiệu cuối cùng: **MUA**, **BÁN**, hoặc **CHỜ ĐỢI**.
 
 **Bước 4: Xây dựng kế hoạch giao dịch (Actionable Trading Plan)**
-1.  **Chiến lược vào lệnh:** Đề xuất một chiến lược cụ thể. **QUAN TRỌNG:** Nếu thị trường đang trong xu hướng tăng, hãy ưu tiên xem xét và đề xuất "Chiến lược Mua theo Sóng Điều Chỉnh". Ví dụ: "Chờ giá điều chỉnh về vùng EMA 21 quanh [giá] rồi vào lệnh" hoặc "Mua khi giá phá vỡ và đóng cửa trên ngưỡng kháng cự [giá]".
+1.  **Chiến lược vào lệnh:** Đề xuất một chiến lược cụ thể dựa trên các chiến lược đã nêu ở trên. **QUAN TRỌNG:** Phải nêu rõ tên chiến lược đang áp dụng (ví dụ: "Áp dụng Chiến lược Mua theo Sóng Điều Chỉnh..."). Ví dụ: "Chờ giá điều chỉnh về vùng EMA 21 quanh [giá] rồi vào lệnh" hoặc "Mua khi giá phá vỡ và đóng cửa trên ngưỡng kháng cự [giá] với khối lượng lớn".
 2.  **Vùng giá vào lệnh (Entry Zone):** Cung cấp một khoảng giá hợp lý để thực hiện chiến lược trên.
 3.  **Dừng lỗ (Stop-loss):** Đề xuất mức dừng lỗ cụ thể. Mức này phải được đặt dựa trên một cơ sở kỹ thuật (ví dụ: dưới mức đáy gần nhất, dưới đường EMA quan trọng).
 4.  **Chốt lời (Take-profit):** Đề xuất 1-2 mức chốt lời tiềm năng, dựa trên các mức kháng cự/hỗ trợ hoặc các mục tiêu giá hợp lý.
