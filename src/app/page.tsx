@@ -92,6 +92,7 @@ export default function Home() {
   }, [exchange]);
 
   const fetchNamiChartData = useCallback(async (currentPair: string, currentTimeframe: string) => {
+      if (exchange !== 'nami') return;
       try {
         const data = await getNamiKlineData(currentPair, currentTimeframe, 500);
         setNamiChartData(data);
@@ -102,7 +103,7 @@ export default function Home() {
         }
         setNamiChartData([]); 
       }
-  }, []);
+  }, [exchange]);
 
   const handleAnalyze = useCallback(async (currentPair: string, currentTimeframe: string, currentMode: 'swing' | 'scalping', currentExchange: 'bybit' | 'nami', isSilent = false) => {
     if (!isSilent) {
@@ -110,6 +111,7 @@ export default function Home() {
         setError(null);
     }
     
+    // Fetch chart data specifically for Nami, as it uses a custom chart
     if (currentExchange === 'nami') {
         fetchNamiChartData(currentPair, currentTimeframe);
     }
@@ -132,15 +134,14 @@ export default function Home() {
     const response = await getAnalysis(currentPair, analysisTimeframe, currentMode, currentExchange, discordWebhookUrl, geminiApiKey);
 
     if (response.error) {
-        setError(response.error);
-        // Don't clear results if there's a refresh error, just show the error
+        if (!isSilent) setError(response.error);
     } else if (response.aiAnalysis) {
       setResult({ 
         aiAnalysis: response.aiAnalysis,
         tradingSignals: response.tradingSignals,
         newsAnalysis: response.newsAnalysis,
       });
-      setError(null);
+      if (!isSilent) setError(null);
     }
 
     if (!isSilent) {
@@ -172,12 +173,14 @@ export default function Home() {
     }
   }
 
+  // Main effect to trigger analysis
   useEffect(() => {
     handleAnalyze(pair, timeframe, mode, exchange);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pair, timeframe, mode, exchange]);
 
 
+  // Effect for auto-monitoring
   useEffect(() => {
       if (isMonitoring) {
           if (monitoringIntervalRef.current) clearInterval(monitoringIntervalRef.current);
@@ -396,5 +399,7 @@ export default function Home() {
     </main>
   );
 }
+
+    
 
     

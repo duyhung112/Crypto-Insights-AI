@@ -52,11 +52,11 @@ const convertTimeframeToNami = (timeframe: string): string => {
         '15': '15m',
         '60': '1h',
         '240': '4h',
-        'D': '1D',
-        'W': '1W',
+        'D': '1d',
     };
     return mapping[timeframe] || '1h'; 
 }
+
 
 export async function getNamiKlineData(pair: string, timeframe: string, limit: number = 500): Promise<KlineData[]> {
     const resolution = convertTimeframeToNami(timeframe);
@@ -221,5 +221,7 @@ Lỗi: \`\`\`${errorMessage}\`\`\``;
     return { error: "Đã xảy ra lỗi không xác định." };
   }
 }
+
+    
 
     
