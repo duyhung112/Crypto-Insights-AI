@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useRef } from 'react';
@@ -114,19 +115,30 @@ const NamiChart: React.FC<NamiChartProps> = ({ data, pair }) => {
     });
 
     socket.on("spot:recent_trade:add", (trade) => {
-       const lastCandle = data.length > 0 ? data[data.length - 1] : null;
-       // Data validation before processing
-       if (candlestickSeriesRef.current && trade && typeof trade.p !== 'undefined' && !isNaN(parseFloat(trade.p)) && lastCandle) {
-            const tradePrice = parseFloat(trade.p);
+      try {
+        const lastCandle = data.length > 0 ? data[data.length - 1] : null;
+        
+        const price = Number(trade.p);
+        const timestamp = Number(trade.t);
+
+        if (isNaN(price) || isNaN(timestamp) || !lastCandle) {
+          console.warn("❌ Skipping invalid trade data:", trade);
+          return;
+        }
+
+        if (candlestickSeriesRef.current) {
             const newCandle: CandlestickData<Time> = {
                 time: lastCandle.time / 1000 as UTCTimestamp,
                 open: lastCandle.open,
-                high: Math.max(lastCandle.high, tradePrice),
-                low: Math.min(lastCandle.low, tradePrice),
-                close: tradePrice,
+                high: Math.max(lastCandle.high, price),
+                low: Math.min(lastCandle.low, price),
+                close: price,
             };
             candlestickSeriesRef.current.update(newCandle);
         }
+      } catch (error) {
+        console.error("❌ Error processing trade data:", error, trade);
+      }
     });
     
     return () => {
