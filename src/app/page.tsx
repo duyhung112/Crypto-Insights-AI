@@ -39,7 +39,7 @@ const TradingViewChart = dynamic(() => import('@/components/tradingview-chart'),
   loading: () => <Skeleton className="w-full h-full min-h-[500px]" />,
 });
 
-const NamiChart = dynamic(() => import('@/components/onus-chart'), {
+const NamiChart = dynamic(() => import('@/components/nami-chart'), {
   ssr: false,
   loading: () => <Skeleton className="w-full h-full min-h-[500px]" />,
 });
@@ -86,7 +86,6 @@ export default function Home() {
   const availablePairs = exchange === 'bybit' ? bybitPairs : namiPairs;
 
   useEffect(() => {
-    // Reset pair to a default when exchange changes, and trigger analysis
     const newPair = exchange === 'bybit' ? 'ETHUSDT' : 'BTC/VNDC';
     setPair(newPair);
     handleAnalyze(newPair, timeframe, mode, exchange);
@@ -102,7 +101,7 @@ export default function Home() {
         if (e instanceof Error) {
             setError(`Không thể tải dữ liệu biểu đồ Nami: ${e.message}`);
         }
-        setNamiChartData([]); // Clear data on error
+        setNamiChartData([]); 
       }
   }, []);
 
@@ -133,12 +132,12 @@ export default function Home() {
     const analysisTimeframe = currentMode === 'scalping' ? '15' : currentTimeframe;
     const response = await getAnalysis(currentPair, analysisTimeframe, currentMode, currentExchange, discordWebhookUrl, geminiApiKey);
 
-    if (response.error && !isSilent) {
-      setError(response.error);
-      if(!response.aiAnalysis) {
-        setResult(null);
-      }
-    } else if (!response.error) {
+    if (response.error) {
+        setError(response.error);
+        if (!response.aiAnalysis && !isSilent) {
+            setResult(null);
+        }
+    } else {
       setResult({ 
         aiAnalysis: response.aiAnalysis,
         tradingSignals: response.tradingSignals,
@@ -176,13 +175,11 @@ export default function Home() {
     }
   }
 
-  // Effect for initial load and when parameters change
   useEffect(() => {
     handleAnalyze(pair, timeframe, mode, exchange);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pair, timeframe, mode]); // Removed `exchange` because it's handled in its own effect
+  }, [pair, timeframe, mode]);
 
-  // Effect for monitoring
   useEffect(() => {
       if (isMonitoring) {
           if (monitoringIntervalRef.current) clearInterval(monitoringIntervalRef.current);
@@ -210,7 +207,6 @@ export default function Home() {
   const renderExchangeContent = (currentExchange: 'bybit' | 'nami') => {
     const isBybit = currentExchange === 'bybit';
     const currentPairLabel = availablePairs.find(p => p.value === pair)?.label || pair;
-    // TradingView needs symbols without underscores, e.g. BTCUSDT, not BTC_USDT
     const chartPair = pair.replace(/[\/_]/g, '');
 
     return (
@@ -237,7 +233,7 @@ export default function Home() {
                             exchange={"BYBIT"}
                         />
                        ) : (
-                         <NamiChart data={namiChartData} />
+                         <NamiChart data={namiChartData} pair={pair} />
                        )}
                     </div>
                 </CardContent>
