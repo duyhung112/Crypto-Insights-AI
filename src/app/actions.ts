@@ -90,13 +90,13 @@ export async function getOnusKlineData(pair: string, timeframe: string, limit: n
             throw new Error(`API của ONUS không trả về dữ liệu hợp lệ cho cặp ${onusSymbol}. Vui lòng kiểm tra lại cặp tiền.`);
         }
 
-        // ONUS returns data in a different structure
+        // ONUS returns data in a different structure with string values
         const klineData: KlineData[] = data.map((d: any) => ({
-            time: d.close_time, // Assuming close_time is the timestamp for the candle
-            open: d.open,
-            high: d.high,
-            low: d.low,
-            close: d.close,
+            time: parseInt(d.t, 10),
+            open: parseFloat(d.o),
+            high: parseFloat(d.h),
+            low: parseFloat(d.l),
+            close: parseFloat(d.c),
         }));
 
         return klineData;
@@ -219,4 +219,5 @@ Lỗi: \`\`\`${errorMessage}\`\`\``;
     return { error: "Đã xảy ra lỗi không xác định." };
   }
 }
+
 
