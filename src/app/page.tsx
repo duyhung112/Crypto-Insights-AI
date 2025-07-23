@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader, AlertTriangle, AreaChart, Zap, Settings, RefreshCw, Bell, Construction } from "lucide-react";
+import { Loader, AlertTriangle, AreaChart, Zap, Settings, RefreshCw, Bell } from "lucide-react";
 import { getAnalysis, getNamiKlineData } from "@/app/actions";
 import type { AnalysisResult, KlineData } from "@/lib/types";
 import { Label } from "@/components/ui/label";
@@ -32,6 +32,7 @@ import { NewsAnalysisDisplay } from "@/components/news-analysis-display";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
+import { NamiRecentTrades } from "@/components/NamiRecentTrades";
 
 const TradingViewChart = dynamic(() => import('@/components/tradingview-chart'), {
   ssr: false,
@@ -52,12 +53,12 @@ const bybitPairs = [
 ];
 
 const namiPairs = [
-  { value: "BTC/VNDC", label: "BTC/VNDC" },
-  { value: "ETH/VNDC", label: "ETH/VNDC" },
-  { value: "ETH/USDT", label: "ETH/USDT" },
-  { value: "NAMI/VNDC", label: "NAMI/VNDC" },
-  { value: "BNB/VNDC", label: "BNB/VNDC" },
-  { value: "XRP/VNDC", label: "XRP/VNDC" },
+    { value: "BTC/VNDC", label: "BTC/VNDC" },
+    { value: "ETH/VNDC", label: "ETH/VNDC" },
+    { value: "ETH/USDT", label: "ETH/USDT" },
+    { value: "NAMI/VNDC", label: "NAMI/VNDC" },
+    { value: "BNB/VNDC", label: "BNB/VNDC" },
+    { value: "XRP/VNDC", label: "XRP/VNDC" },
 ];
 
 const timeframes = [
@@ -98,6 +99,9 @@ export default function Home() {
         setNamiChartData(data);
       } catch (e) {
         console.error("Failed to fetch Nami data for chart", e);
+        if (e instanceof Error) {
+            setError(`Không thể tải dữ liệu biểu đồ Nami: ${e.message}`);
+        }
         setNamiChartData([]); // Clear data on error
       }
   }, []);
@@ -131,7 +135,9 @@ export default function Home() {
 
     if (response.error && !isSilent) {
       setError(response.error);
-      // Keep old result if there is an error
+      if(!response.aiAnalysis) {
+        setResult(null);
+      }
     } else if (!response.error) {
       setResult({ 
         aiAnalysis: response.aiAnalysis,
@@ -205,7 +211,7 @@ export default function Home() {
     const isBybit = currentExchange === 'bybit';
     const currentPairLabel = availablePairs.find(p => p.value === pair)?.label || pair;
     // TradingView needs symbols without underscores, e.g. BTCUSDT, not BTC_USDT
-    const chartPair = pair.replace('_', '');
+    const chartPair = pair.replace(/[\/_]/g, '');
 
     return (
         <div className="mt-6 space-y-6">
@@ -219,8 +225,8 @@ export default function Home() {
                 <CardContent>
                     {isBybit && <RealtimeTicker pair={pair} />}
                     {!isBybit && (
-                        <div className="text-center py-4 text-sm text-muted-foreground">
-                            Dữ liệu Ticker real-time cho Nami đang được phát triển.
+                        <div className="mb-4">
+                            <NamiRecentTrades />
                         </div>
                     )}
                     <div className="h-[600px] mt-4">
