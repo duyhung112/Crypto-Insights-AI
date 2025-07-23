@@ -9,12 +9,18 @@ import { RSI, MACD, EMA } from "technicalindicators";
 import { sendDiscordNotification, getNewsForCrypto } from "@/lib/tools";
 
 export async function getBybitKlineData(pair: string, timeframe: string, limit: number = 200): Promise<KlineData[]> {
-    const url = `https://api.bybit.com/v5/market/kline?category=linear&symbol=${pair}&interval=${timeframe}&limit=${limit}`;
+    const params = new URLSearchParams({
+        symbol: pair,
+        interval: timeframe,
+        limit: String(limit),
+    });
+    const url = `/api/bybit/kline?${params.toString()}`;
+    
     try {
-        const response = await fetch(url, { cache: 'no-store' });
+        const response = await fetch(new URL(url, process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:9002'), { cache: 'no-store' });
         if (!response.ok) {
-            const errorBody = await response.text();
-            throw new Error(`Bybit API Error: ${response.statusText} - ${errorBody}`);
+            const errorBody = await response.json();
+            throw new Error(`Bybit API Error: ${errorBody.error || response.statusText}`);
         }
         const data = await response.json();
         if (data.retCode !== 0) {
@@ -34,6 +40,9 @@ export async function getBybitKlineData(pair: string, timeframe: string, limit: 
         return klineData;
     } catch (error) {
         console.error("Failed to fetch kline data from Bybit:", error);
+        if (error instanceof Error) {
+            throw new Error(`Không thể tải dữ liệu từ Bybit: ${error.message}`);
+        }
         throw new Error("Không thể tải dữ liệu biểu đồ từ Bybit.");
     }
 }
@@ -54,13 +63,16 @@ export async function getNamiKlineData(pair: string, timeframe: string, limit: n
     const now = Math.floor(Date.now() / 1000);
     const from = now - (60 * 60 * 24 * 90); // 90 days of data
     
-    // Nami API uses '/' in pairs like 'BTC/VNDC'
-    const symbol = pair.includes('/') ? pair : `${pair.replace('USDT', '')}/USDT`;
+    const params = new URLSearchParams({
+        symbol: pair,
+        resolution: resolution,
+        from: String(from),
+        to: String(now),
+    });
 
-    const url = `/api/nami/history?symbol=${symbol}&resolution=${resolution}&from=${from}&to=${now}`;
+    const url = `/api/nami/history?${params.toString()}`;
 
     try {
-        // We call our own API route to bypass CORS
         const response = await fetch(new URL(url, process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:9002'), { cache: 'no-store' });
 
         if (!response.ok) {
@@ -76,7 +88,7 @@ export async function getNamiKlineData(pair: string, timeframe: string, limit: n
         const klineData: KlineData[] = [];
         for (let i = 0; i < data.t.length; i++) {
             klineData.push({
-                time: data.t[i] * 1000, // Nami returns seconds, convert to ms
+                time: data.t[i] * 1000,
                 open: data.o[i],
                 high: data.h[i],
                 low: data.l[i],
