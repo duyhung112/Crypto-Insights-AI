@@ -7,18 +7,24 @@ import { useTheme } from 'next-themes';
 interface TradingViewChartProps {
     pair: string;
     timeframe: string;
+    exchange?: 'BYBIT' | 'ONUS';
 }
 
-const TradingViewChart = ({ pair, timeframe }: TradingViewChartProps) => {
+const TradingViewChart = ({ pair, timeframe, exchange = 'BYBIT' }: TradingViewChartProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetRef = useRef<any>(null);
   const { theme: appTheme, resolvedTheme } = useTheme();
 
   const getWidgetOptions = () => {
     const currentTheme = resolvedTheme || appTheme;
+    
+    // ONUS pairs might have underscores, TradingView usually doesn't like them.
+    // Bybit symbols have .P for perpetuals
+    const symbol = exchange === 'BYBIT' ? `BYBIT:${pair}.P` : `${exchange}:${pair}`;
+
      return {
         autosize: true,
-        symbol: `BYBIT:${pair}.P`,
+        symbol: symbol,
         interval: timeframe,
         timezone: "Etc/UTC",
         theme: currentTheme === 'dark' ? 'dark' : 'light',
@@ -26,7 +32,7 @@ const TradingViewChart = ({ pair, timeframe }: TradingViewChartProps) => {
         locale: "vi",
         enable_publishing: false,
         allow_symbol_change: true,
-        details: false, // Tắt thông tin chi tiết mặc định
+        details: false, 
         studies: [
             "RSI@tv-basicstudies",
             "MACD@tv-basicstudies",
@@ -56,7 +62,6 @@ const TradingViewChart = ({ pair, timeframe }: TradingViewChartProps) => {
             {
               id: "PivotPointsStandard@tv-basicstudies",
               styles: {
-                // P, R1, R2, S1, S2 are visible by default
                 "R3": { visible: false },
                 "R4": { visible: false },
                 "R5": { visible: false },
@@ -73,7 +78,6 @@ const TradingViewChart = ({ pair, timeframe }: TradingViewChartProps) => {
   const createWidget = () => {
     if (!containerRef.current || !(window as any).TradingView) return;
 
-    // Clean up previous widget if it exists
     if (widgetRef.current) {
         try {
             widgetRef.current.remove();
@@ -83,13 +87,15 @@ const TradingViewChart = ({ pair, timeframe }: TradingViewChartProps) => {
         widgetRef.current = null;
     }
     
-    // Create new widget
     const widgetOptions = getWidgetOptions();
-    const tvWidget = new (window as any).TradingView.widget(widgetOptions);
-    widgetRef.current = tvWidget;
+    try {
+        const tvWidget = new (window as any).TradingView.widget(widgetOptions);
+        widgetRef.current = tvWidget;
+    } catch (error) {
+        console.error("Error creating TradingView widget:", error, "with options", widgetOptions);
+    }
   };
 
-  // Effect to load script and create initial widget
   useEffect(() => {
     if (!(window as any).tradingViewScriptLoaded) {
       const script = document.createElement('script');
@@ -115,20 +121,21 @@ const TradingViewChart = ({ pair, timeframe }: TradingViewChartProps) => {
             widgetRef.current = null;
         }
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); 
 
-  // Effect to update symbol when pair or timeframe changes
   useEffect(() => {
     if ((window as any).tradingViewScriptLoaded && widgetRef.current?.ready) {
        createWidget();
     }
-  }, [pair, timeframe]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pair, timeframe, exchange]);
 
-  // Effect to update theme
   useEffect(() => {
     if ((window as any).tradingViewScriptLoaded) {
-        createWidget(); // Recreate widget with the new theme
+        createWidget(); 
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resolvedTheme, appTheme]);
 
 

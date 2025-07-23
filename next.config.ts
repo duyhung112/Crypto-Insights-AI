@@ -16,6 +16,10 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+       {
+        protocol: 'https',
+        hostname: 'spot-markets-dev.goonus.io',
+      },
     ],
   },
    env: {

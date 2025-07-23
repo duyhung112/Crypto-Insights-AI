@@ -8,14 +8,13 @@ import type { AnalyzeCryptoPairInput, KlineData, NewsAnalysisInput, AnalyzeCrypt
 import { RSI, MACD, EMA } from "technicalindicators";
 import { sendDiscordNotification, getNewsForCrypto } from "@/lib/tools";
 
-export async function getKlineData(pair: string, timeframe: string, limit: number = 200): Promise<KlineData[]> {
+export async function getBybitKlineData(pair: string, timeframe: string, limit: number = 200): Promise<KlineData[]> {
     const url = `https://api.bybit.com/v5/market/kline?category=linear&symbol=${pair}&interval=${timeframe}&limit=${limit}`;
     try {
         const response = await fetch(url, { cache: 'no-store' });
         if (!response.ok) {
             const errorBody = await response.text();
-            console.error("Bybit API error:", errorBody);
-            throw new Error(`Bybit API Error: ${response.statusText}`);
+            throw new Error(`Bybit API Error: ${response.statusText} - ${errorBody}`);
         }
         const data = await response.json();
         if (data.retCode !== 0) {
@@ -39,6 +38,57 @@ export async function getKlineData(pair: string, timeframe: string, limit: numbe
     }
 }
 
+const ONUS_API_URL = "https://spot-markets-dev.goonus.io/candlesticks";
+
+const convertTimeframeToOnus = (timeframe: string) => {
+    // Bybit: 1, 3, 5, 15, 30, 60, 120, 240, 360, 720, D, M, W
+    // ONUS: 1m, 5m, 15m, 30m, 1h, 2h, 4h, 6h, 12h, 1d, 1w, 1M
+    const mapping: { [key: string]: string } = {
+        '15': '15m',
+        '60': '1h',
+        '240': '4h',
+        'D': '1d',
+        'W': '1w',
+        'M': '1M'
+    };
+    return mapping[timeframe] || '1h'; // Default to 1 hour
+}
+
+export async function getOnusKlineData(pair: string, timeframe: string, limit: number = 500): Promise<KlineData[]> {
+    const onusSymbol = pair.replace('USDT', '_USDT');
+    const onusTimeframe = convertTimeframeToOnus(timeframe);
+    
+    // ONUS uses 'from' and 'to' timestamps
+    const to = Date.now();
+    // A rough estimation for 'from' based on limit. This might not be precise.
+    const from = to - (limit * parseInt(timeframe, 10) * 60 * 1000);
+
+    const url = `${ONUS_API_URL}?symbol_name=${onusSymbol}&interval=${onusTimeframe}&from=${from}&to=${to}`;
+
+    try {
+        const response = await fetch(url, { cache: 'no-store' });
+        if (!response.ok) {
+            const errorBody = await response.text();
+            throw new Error(`ONUS API Error: ${response.statusText} - ${errorBody}`);
+        }
+        const data = await response.json();
+
+        // ONUS returns data in a different structure
+        const klineData: KlineData[] = data.map((d: any) => ({
+            time: d.close_time, // Assuming close_time is the timestamp for the candle
+            open: d.open,
+            high: d.high,
+            low: d.low,
+            close: d.close,
+        }));
+
+        return klineData;
+    } catch (error) {
+        console.error("Failed to fetch kline data from ONUS:", error);
+        throw new Error("Không thể tải dữ liệu biểu đồ từ ONUS.");
+    }
+}
+
 
 async function handleDiscordNotification(message: string, webhookUrl: string) {
     if (!webhookUrl) return;
@@ -49,55 +99,44 @@ async function handleDiscordNotification(message: string, webhookUrl: string) {
     }
 }
 
-export async function getAnalysis(pair: string, timeframe: string, mode: 'swing' | 'scalping', exchange: string, discordWebhookUrl?: string, geminiApiKey?: string) {
-  if (exchange !== 'bybit') {
-    return { error: "Sàn giao dịch này chưa được hỗ trợ để phân tích." };
-  }
-    
+export async function getAnalysis(pair: string, timeframe: string, mode: 'swing' | 'scalping', exchange: 'bybit' | 'onus', discordWebhookUrl?: string, geminiApiKey?: string) {
   try {
     if (!geminiApiKey) {
       throw new Error("Vui lòng cung cấp Gemini API Key trong phần Cài đặt để sử dụng tính năng phân tích.");
     }
     
-    // Initialize Genkit dynamically with the user's API key
     const userAi = initGenkit(geminiApiKey);
 
-    const klineData = await getKlineData(pair, timeframe, 200);
+    let klineData: KlineData[];
+    const exchangeName = exchange.toUpperCase();
 
-    if (klineData.length < 50) { // Need enough data for indicators
+    if (exchange === 'bybit') {
+        klineData = await getBybitKlineData(pair, timeframe, 200);
+    } else if (exchange === 'onus') {
+        klineData = await getOnusKlineData(pair, timeframe, 500);
+    } else {
+        throw new Error("Sàn giao dịch không được hỗ trợ.");
+    }
+
+    if (klineData.length < 50) {
       throw new Error("Không đủ dữ liệu lịch sử để phân tích cặp tiền này.");
     }
 
     const closePrices = klineData.map((k) => k.close);
     const latestPrice = closePrices[closePrices.length - 1];
 
-    // Calculate indicators
     const rsiResult = RSI.calculate({ values: closePrices, period: 14 });
-    const macdInput = {
-      values: closePrices,
-      fastPeriod: 12,
-      slowPeriod: 26,
-      signalPeriod: 9,
-      SimpleMA: false,
-    };
-    const macdResult = MACD.calculate(macdInput);
+    const macdResult = MACD.calculate({ values: closePrices, fastPeriod: 12, slowPeriod: 26, signalPeriod: 9, SimpleMA: false });
     const ema9Result = EMA.calculate({ values: closePrices, period: 9 });
     const ema21Result = EMA.calculate({ values: closePrices, period: 21 });
 
-    // Get the latest values
     const latestRsi = rsiResult[rsiResult.length - 1];
     const latestMacdLine = macdResult[macdResult.length - 1]?.MACD;
     const latestMacdSignal = macdResult[macdResult.length - 1]?.signal;
     const latestEma9 = ema9Result[ema9Result.length - 1];
     const latestEma21 = ema21Result[ema21Result.length - 1];
     
-    if (
-      latestRsi === undefined ||
-      latestMacdLine === undefined ||
-      latestMacdSignal === undefined ||
-      latestEma9 === undefined ||
-      latestEma21 === undefined
-    ) {
+    if (latestRsi === undefined || latestMacdLine === undefined || latestMacdSignal === undefined || latestEma9 === undefined || latestEma21 === undefined) {
       throw new Error("Không thể tính toán các chỉ báo kỹ thuật. Cần thêm dữ liệu.");
     }
 
@@ -107,28 +146,16 @@ export async function getAnalysis(pair: string, timeframe: string, mode: 'swing'
       price: latestPrice,
       mode,
       rsi: latestRsi,
-      macd: {
-        line: latestMacdLine,
-        signal: latestMacdSignal,
-      },
-      ema: {
-        ema9: latestEma9,
-        ema21: latestEma21,
-      },
+      macd: { line: latestMacdLine, signal: latestMacdSignal },
+      ema: { ema9: latestEma9, ema21: latestEma21 },
       high: klineData[klineData.length - 1].high,
       low: klineData[klineData.length - 1].low,
     };
     
     const cryptoSymbol = pair.replace(/USDT$/, '');
-    
     const newsArticles = await getNewsForCrypto({ cryptoSymbol });
+    const newsInput: NewsAnalysisInput = { cryptoSymbol, articles: newsArticles };
 
-    const newsInput: NewsAnalysisInput = {
-      cryptoSymbol,
-      articles: newsArticles,
-    };
-
-    // Use the dynamically created Genkit instance to call the flows
     const [aiAnalysisResponse, newsAnalysisResponse] = await Promise.all([
         analyzeCryptoPair(aiInput, userAi),
         analyzeNewsSentiment(newsInput, userAi),
@@ -139,7 +166,7 @@ export async function getAnalysis(pair: string, timeframe: string, mode: 'swing'
     if (aiAnalysisResponse && discordWebhookUrl) {
         const signal = aiAnalysisResponse.buySellSignal.toUpperCase();
         if (signal.includes('MUA') || signal.includes('BUY') || signal.includes('BÁN') || signal.includes('SELL')) {
-            const message = `**Tín hiệu Mới: ${aiAnalysisResponse.buySellSignal.toUpperCase()} ${aiInput.pair} (Bybit)**
+            const message = `**Tín hiệu Mới: ${aiAnalysisResponse.buySellSignal.toUpperCase()} ${aiInput.pair} (${exchangeName})**
 Chế độ: ${aiInput.mode} | Khung: ${aiInput.timeframe}
 Giá hiện tại: ${aiInput.price}
 ---
@@ -157,9 +184,10 @@ Giá hiện tại: ${aiInput.price}
         newsAnalysis: newsAnalysisResponse,
      };
   } catch (error) {
+    const exchangeName = exchange.toUpperCase();
     if (discordWebhookUrl) {
         const errorMessage = error instanceof Error ? error.message : "An unknown error occurred during analysis.";
-        const notificationMessage = `**LỖI PHÂN TÍCH (Bybit)**
+        const notificationMessage = `**LỖI PHÂN TÍCH (${exchangeName})**
 Cặp: ${pair}
 Lỗi: \`\`\`${errorMessage}\`\`\``;
         await handleDiscordNotification(notificationMessage, discordWebhookUrl);

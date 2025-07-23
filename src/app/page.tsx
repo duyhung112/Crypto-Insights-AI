@@ -38,12 +38,21 @@ const TradingViewChart = dynamic(() => import('@/components/tradingview-chart'),
   loading: () => <Skeleton className="w-full h-full min-h-[500px]" />,
 });
 
-const pairs = [
+const bybitPairs = [
   { value: "BTCUSDT", label: "BTC/USDT" },
   { value: "ETHUSDT", label: "ETH/USDT" },
   { value: "SOLUSDT", label: "SOL/USDT" },
   { value: "BNBUSDT", label: "BNB/USDT" },
   { value: "XRPUSDT", label: "XRP/USDT" },
+];
+
+const onusPairs = [
+  { value: "BTC_USDT", label: "BTC/USDT" },
+  { value: "ETH_USDT", label: "ETH/USDT" },
+  { value: "SOL_USDT", label: "SOL/USDT" },
+  { value: "BNB_USDT", label: "BNB/USDT" },
+  { value: "XRP_USDT", label: "XRP/USDT" },
+  { value: "ONUS_USDT", label: "ONUS/USDT" },
 ];
 
 const timeframes = [
@@ -56,7 +65,7 @@ const timeframes = [
 const MONITORING_INTERVAL = 15 * 60 * 1000; // 15 minutes
 
 export default function Home() {
-  const [exchange, setExchange] = useState('bybit');
+  const [exchange, setExchange] = useState<'bybit' | 'onus'>('bybit');
   const [pair, setPair] = useState("ETHUSDT");
   const [timeframe, setTimeframe] = useState("60");
   const [loading, setLoading] = useState(true);
@@ -66,15 +75,15 @@ export default function Home() {
   const [isMonitoring, setIsMonitoring] = useState(false);
   const { toast } = useToast();
   const monitoringIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  
+  const availablePairs = exchange === 'bybit' ? bybitPairs : onusPairs;
 
-  const handleAnalyze = useCallback(async (currentPair: string, currentTimeframe: string, currentMode: 'swing' | 'scalping', currentExchange: string, isSilent = false) => {
-    if (currentExchange === 'attlas') {
-      setLoading(false);
-      setResult(null);
-      setError("Chức năng phân tích cho sàn Attlas đang được phát triển. Vui lòng cung cấp API để tiếp tục.");
-      return;
-    }
-    
+  useEffect(() => {
+    // Reset pair to a default when exchange changes
+    setPair(exchange === 'bybit' ? 'ETHUSDT' : 'ETH_USDT');
+  }, [exchange]);
+
+  const handleAnalyze = useCallback(async (currentPair: string, currentTimeframe: string, currentMode: 'swing' | 'scalping', currentExchange: 'bybit' | 'onus', isSilent = false) => {
     if (!isSilent) {
         setLoading(true);
         setError(null);
@@ -114,15 +123,6 @@ export default function Home() {
   }, [toast]);
 
   const handleMonitoringChange = (checked: boolean) => {
-    if (exchange === 'attlas') {
-        toast({
-            variant: "destructive",
-            title: "Chưa hỗ trợ",
-            description: "Tính năng giám sát tự động chưa có sẵn cho sàn Attlas.",
-        });
-        return;
-    }
-
     setIsMonitoring(checked);
     if (checked) {
         const discordWebhookUrl = localStorage.getItem('discordWebhookUrl') || '';
@@ -146,45 +146,125 @@ export default function Home() {
     }
   }
 
-  // Effect to run analysis on initial load and when selections change
   useEffect(() => {
     handleAnalyze(pair, timeframe, mode, exchange);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pair, mode, exchange]);
 
-  // Effect to handle the monitoring interval
   useEffect(() => {
-      if (isMonitoring && exchange === 'bybit') {
-          // Clear any existing interval
-          if (monitoringIntervalRef.current) {
-              clearInterval(monitoringIntervalRef.current);
-          }
-          // Start a new interval
+      if (isMonitoring) {
+          if (monitoringIntervalRef.current) clearInterval(monitoringIntervalRef.current);
           monitoringIntervalRef.current = setInterval(() => {
-              console.log(`[Monitoring] Checking for signals for ${pair}...`);
+              console.log(`[Monitoring] Checking for signals for ${pair} on ${exchange}...`);
               const analysisTimeframe = mode === 'scalping' ? '5' : timeframe;
-              // Run analysis silently
               handleAnalyze(pair, analysisTimeframe, mode, exchange, true);
           }, MONITORING_INTERVAL);
       } else {
-          // Clear interval if monitoring is turned off or exchange is not bybit
           if (monitoringIntervalRef.current) {
               clearInterval(monitoringIntervalRef.current);
               monitoringIntervalRef.current = null;
           }
       }
-      
-      // Cleanup function to clear interval on component unmount
       return () => {
-          if (monitoringIntervalRef.current) {
-              clearInterval(monitoringIntervalRef.current);
-          }
+          if (monitoringIntervalRef.current) clearInterval(monitoringIntervalRef.current);
       }
   }, [isMonitoring, pair, timeframe, mode, exchange, handleAnalyze]);
 
 
   const onRefreshClick = () => {
     handleAnalyze(pair, timeframe, mode, exchange);
+  }
+
+  const renderExchangeContent = (isBybit: boolean) => {
+    const currentPairLabel = availablePairs.find(p => p.value === pair)?.label || pair;
+    const chartPair = isBybit ? pair : pair.replace('_', '');
+
+    return (
+        <div className="mt-6 space-y-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle className="font-headline text-lg">Thông tin và Biểu đồ {currentPairLabel} ({isBybit ? "Bybit" : "ONUS"})</CardTitle>
+                    <CardDescription className="text-xs">
+                        Khung thời gian: {mode === 'scalping' ? '1 phút' : timeframes.find(t => t.value === timeframe)?.label}. Dữ liệu giá được cập nhật theo thời gian thực.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {isBybit && <RealtimeTicker pair={pair} />}
+                    {!isBybit && (
+                        <div className="text-center py-4 text-sm text-muted-foreground">
+                            Dữ liệu Ticker real-time cho ONUS đang được phát triển.
+                        </div>
+                    )}
+                    <div className="h-[600px] mt-4">
+                        <TradingViewChart 
+                            pair={chartPair} 
+                            timeframe={mode === 'scalping' ? '1' : timeframe}
+                            exchange={isBybit ? "BYBIT" : "ONUS"}
+                        />
+                    </div>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle className="font-headline text-lg">Bảng điều khiển và Giám sát</CardTitle>
+                    <CardDescription className="text-xs">
+                    Chọn cặp tiền, khung thời gian và bật giám sát để nhận thông báo tự động.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
+                    <div className="space-y-2">
+                        <Label htmlFor="pair-select" className="text-xs">Cặp tiền</Label>
+                        <Select value={pair} onValueChange={setPair} disabled={loading}>
+                        <SelectTrigger id="pair-select" className="text-xs">
+                            <SelectValue placeholder="Chọn một cặp tiền" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {availablePairs.map((p) => (
+                            <SelectItem key={p.value} value={p.value} className="text-xs">
+                                {p.label}
+                            </SelectItem>
+                            ))}
+                        </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="timeframe-select" className="text-xs">Khung thời gian (Swing)</Label>
+                        <Select value={timeframe} onValueChange={setTimeframe} disabled={loading || mode === 'scalping'}>
+                        <SelectTrigger id="timeframe-select" className="text-xs">
+                            <SelectValue placeholder="Chọn một khung thời gian" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {timeframes.map((t) => (
+                            <SelectItem key={t.value} value={t.value} className="text-xs">
+                                {t.label}
+                            </SelectItem>
+                            ))}
+                        </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="flex items-center">
+                        <Button onClick={onRefreshClick} disabled={loading} className="w-full">
+                            <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                            Làm mới
+                        </Button>
+                    </div>
+                     <div className="flex items-center space-x-2 justify-end">
+                        <Bell className={`h-4 w-4 ${isMonitoring ? 'text-primary' : 'text-muted-foreground'}`} />
+                        <Label htmlFor="monitoring-switch" className={`text-xs ${isMonitoring ? 'text-primary font-semibold' : 'text-muted-foreground'}`}>
+                            {isMonitoring ? 'Giám sát: Bật' : 'Giám sát: Tắt'}
+                        </Label>
+                        <Switch
+                            id="monitoring-switch"
+                            checked={isMonitoring}
+                            onCheckedChange={handleMonitoringChange}
+                            disabled={loading}
+                        />
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+    );
   }
 
   return (
@@ -224,110 +304,16 @@ export default function Home() {
             </div>
         </header>
 
-        <Tabs value={exchange} onValueChange={setExchange} className="w-full">
+        <Tabs value={exchange} onValueChange={(value) => setExchange(value as 'bybit' | 'onus')} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="bybit">Bybit</TabsTrigger>
-                <TabsTrigger value="attlas">Attlas</TabsTrigger>
+                <TabsTrigger value="onus">ONUS</TabsTrigger>
             </TabsList>
-            <TabsContent value="bybit" className="mt-6 space-y-6">
-                 <Card>
-                    <CardHeader>
-                        <CardTitle className="font-headline text-lg">Thông tin và Biểu đồ {pair} (Bybit)</CardTitle>
-                        <CardDescription className="text-xs">
-                            Khung thời gian: {mode === 'scalping' ? '1 phút' : timeframes.find(t => t.value === timeframe)?.label}. Dữ liệu giá được cập nhật theo thời gian thực.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <RealtimeTicker pair={pair} />
-                        <div className="h-[600px] mt-4">
-                            <TradingViewChart pair={pair} timeframe={mode === 'scalping' ? '1' : timeframe}/>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="font-headline text-lg">Bảng điều khiển và Giám sát</CardTitle>
-                        <CardDescription className="text-xs">
-                        Chọn cặp tiền, khung thời gian và bật giám sát để nhận thông báo tự động.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
-                        <div className="space-y-2">
-                            <Label htmlFor="pair-select" className="text-xs">Cặp tiền</Label>
-                            <Select value={pair} onValueChange={setPair} disabled={loading}>
-                            <SelectTrigger id="pair-select" className="text-xs">
-                                <SelectValue placeholder="Chọn một cặp tiền" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {pairs.map((p) => (
-                                <SelectItem key={p.value} value={p.value} className="text-xs">
-                                    {p.label}
-                                </SelectItem>
-                                ))}
-                            </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="timeframe-select" className="text-xs">Khung thời gian (Swing)</Label>
-                            <Select value={timeframe} onValueChange={setTimeframe} disabled={loading || mode === 'scalping'}>
-                            <SelectTrigger id="timeframe-select" className="text-xs">
-                                <SelectValue placeholder="Chọn một khung thời gian" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {timeframes.map((t) => (
-                                <SelectItem key={t.value} value={t.value} className="text-xs">
-                                    {t.label}
-                                </SelectItem>
-                                ))}
-                            </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="flex items-center">
-                            <Button onClick={onRefreshClick} disabled={loading} className="w-full">
-                                <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-                                Làm mới
-                            </Button>
-                        </div>
-                         <div className="flex items-center space-x-2 justify-end">
-                            <Bell className={`h-4 w-4 ${isMonitoring ? 'text-primary' : 'text-muted-foreground'}`} />
-                            <Label htmlFor="monitoring-switch" className={`text-xs ${isMonitoring ? 'text-primary font-semibold' : 'text-muted-foreground'}`}>
-                                {isMonitoring ? 'Giám sát: Bật' : 'Giám sát: Tắt'}
-                            </Label>
-                            <Switch
-                                id="monitoring-switch"
-                                checked={isMonitoring}
-                                onCheckedChange={handleMonitoringChange}
-                                disabled={loading}
-                            />
-                        </div>
-                    </CardContent>
-                </Card>
-
+            <TabsContent value="bybit">
+                {renderExchangeContent(true)}
             </TabsContent>
-            <TabsContent value="attlas">
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="font-headline text-lg flex items-center gap-2">
-                            <Construction className="h-5 w-5" />
-                            Tích hợp Sàn Attlas
-                        </CardTitle>
-                        <CardDescription>
-                            Tính năng phân tích và giao dịch cho sàn Attlas đang trong giai đoạn phát triển.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-center py-12 px-6 border-2 border-dashed rounded-lg">
-                            <h3 className="text-lg font-semibold text-foreground">Sắp ra mắt!</h3>
-                            <p className="text-muted-foreground mt-2 max-w-md mx-auto">
-                                Để hoàn thiện tính năng này, chúng tôi cần thông tin về API công khai (public API) của sàn Attlas để có thể lấy dữ liệu biểu đồ (k-line).
-                            </p>
-                             <p className="text-muted-foreground mt-2 max-w-md mx-auto">
-                                Nếu bạn có tài liệu hoặc đường dẫn API, vui lòng cung cấp để chúng tôi có thể tích hợp.
-                            </p>
-                        </div>
-                    </CardContent>
-                </Card>
+            <TabsContent value="onus">
+                {renderExchangeContent(false)}
             </TabsContent>
         </Tabs>
 
@@ -352,7 +338,7 @@ export default function Home() {
             </Card>
         )}
 
-        {result && exchange === 'bybit' && (
+        {result && (
             <div className="animate-in fade-in duration-500">
                 <Tabs defaultValue="analysis" className="w-full">
                 <TabsList className="grid w-full grid-cols-3">
