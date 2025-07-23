@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
@@ -18,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader, AlertTriangle, AreaChart, Zap, Settings, RefreshCw, Bell } from "lucide-react";
+import { Loader, AlertTriangle, AreaChart, Zap, Settings, RefreshCw, Bell, Construction } from "lucide-react";
 import { getAnalysis } from "@/app/actions";
 import type { AnalysisResult } from "@/lib/types";
 import { Label } from "@/components/ui/label";
@@ -55,6 +56,7 @@ const timeframes = [
 const MONITORING_INTERVAL = 15 * 60 * 1000; // 15 minutes
 
 export default function Home() {
+  const [exchange, setExchange] = useState('bybit');
   const [pair, setPair] = useState("ETHUSDT");
   const [timeframe, setTimeframe] = useState("60");
   const [loading, setLoading] = useState(true);
@@ -65,7 +67,14 @@ export default function Home() {
   const { toast } = useToast();
   const monitoringIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const handleAnalyze = useCallback(async (currentPair: string, currentTimeframe: string, currentMode: 'swing' | 'scalping', isSilent = false) => {
+  const handleAnalyze = useCallback(async (currentPair: string, currentTimeframe: string, currentMode: 'swing' | 'scalping', currentExchange: string, isSilent = false) => {
+    if (currentExchange === 'onus') {
+      setLoading(false);
+      setResult(null);
+      setError("Chức năng phân tích cho sàn ONUS đang được phát triển. Vui lòng cung cấp API để tiếp tục.");
+      return;
+    }
+    
     if (!isSilent) {
         setLoading(true);
         setError(null);
@@ -87,7 +96,7 @@ export default function Home() {
 
     const discordWebhookUrl = localStorage.getItem('discordWebhookUrl') || undefined;
     const analysisTimeframe = currentMode === 'scalping' ? '5' : currentTimeframe;
-    const response = await getAnalysis(currentPair, analysisTimeframe, currentMode, discordWebhookUrl, geminiApiKey);
+    const response = await getAnalysis(currentPair, analysisTimeframe, currentMode, currentExchange, discordWebhookUrl, geminiApiKey);
 
     if (response.error && !isSilent) {
       setError(response.error);
@@ -105,6 +114,15 @@ export default function Home() {
   }, [toast]);
 
   const handleMonitoringChange = (checked: boolean) => {
+    if (exchange === 'onus') {
+        toast({
+            variant: "destructive",
+            title: "Chưa hỗ trợ",
+            description: "Tính năng giám sát tự động chưa có sẵn cho sàn ONUS.",
+        });
+        return;
+    }
+
     setIsMonitoring(checked);
     if (checked) {
         const discordWebhookUrl = localStorage.getItem('discordWebhookUrl') || '';
@@ -130,15 +148,13 @@ export default function Home() {
 
   // Effect to run analysis on initial load and when selections change
   useEffect(() => {
-    handleAnalyze(pair, timeframe, mode);
-  // We only want this to run when the pair or mode changes, not timeframe.
-  // Timeframe changes will be handled by the manual refresh button.
+    handleAnalyze(pair, timeframe, mode, exchange);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pair, mode]);
+  }, [pair, mode, exchange]);
 
   // Effect to handle the monitoring interval
   useEffect(() => {
-      if (isMonitoring) {
+      if (isMonitoring && exchange === 'bybit') {
           // Clear any existing interval
           if (monitoringIntervalRef.current) {
               clearInterval(monitoringIntervalRef.current);
@@ -148,10 +164,10 @@ export default function Home() {
               console.log(`[Monitoring] Checking for signals for ${pair}...`);
               const analysisTimeframe = mode === 'scalping' ? '5' : timeframe;
               // Run analysis silently
-              handleAnalyze(pair, analysisTimeframe, mode, true);
+              handleAnalyze(pair, analysisTimeframe, mode, exchange, true);
           }, MONITORING_INTERVAL);
       } else {
-          // Clear interval if monitoring is turned off
+          // Clear interval if monitoring is turned off or exchange is not bybit
           if (monitoringIntervalRef.current) {
               clearInterval(monitoringIntervalRef.current);
               monitoringIntervalRef.current = null;
@@ -164,11 +180,11 @@ export default function Home() {
               clearInterval(monitoringIntervalRef.current);
           }
       }
-  }, [isMonitoring, pair, timeframe, mode, handleAnalyze]);
+  }, [isMonitoring, pair, timeframe, mode, exchange, handleAnalyze]);
 
 
   const onRefreshClick = () => {
-    handleAnalyze(pair, timeframe, mode);
+    handleAnalyze(pair, timeframe, mode, exchange);
   }
 
   return (
@@ -208,79 +224,112 @@ export default function Home() {
             </div>
         </header>
 
-        <Card>
-            <CardHeader>
-                <CardTitle className="font-headline text-lg">Thông tin và Biểu đồ {pair}</CardTitle>
-                <CardDescription className="text-xs">
-                    Khung thời gian: {mode === 'scalping' ? '1 phút' : timeframes.find(t => t.value === timeframe)?.label}. Dữ liệu giá được cập nhật theo thời gian thực.
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                <RealtimeTicker pair={pair} />
-                <div className="h-[600px] mt-4">
-                    <TradingViewChart pair={pair} timeframe={mode === 'scalping' ? '1' : timeframe}/>
-                </div>
-            </CardContent>
-        </Card>
+        <Tabs value={exchange} onValueChange={setExchange} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="bybit">Bybit</TabsTrigger>
+                <TabsTrigger value="onus">ONUS</TabsTrigger>
+            </TabsList>
+            <TabsContent value="bybit" className="mt-6 space-y-6">
+                 <Card>
+                    <CardHeader>
+                        <CardTitle className="font-headline text-lg">Thông tin và Biểu đồ {pair} (Bybit)</CardTitle>
+                        <CardDescription className="text-xs">
+                            Khung thời gian: {mode === 'scalping' ? '1 phút' : timeframes.find(t => t.value === timeframe)?.label}. Dữ liệu giá được cập nhật theo thời gian thực.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <RealtimeTicker pair={pair} />
+                        <div className="h-[600px] mt-4">
+                            <TradingViewChart pair={pair} timeframe={mode === 'scalping' ? '1' : timeframe}/>
+                        </div>
+                    </CardContent>
+                </Card>
 
-        <Card>
-            <CardHeader>
-                <CardTitle className="font-headline text-lg">Bảng điều khiển và Giám sát</CardTitle>
-                <CardDescription className="text-xs">
-                Chọn cặp tiền, khung thời gian và bật giám sát để nhận thông báo tự động.
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
-                <div className="space-y-2">
-                    <Label htmlFor="pair-select" className="text-xs">Cặp tiền</Label>
-                    <Select value={pair} onValueChange={setPair} disabled={loading}>
-                    <SelectTrigger id="pair-select" className="text-xs">
-                        <SelectValue placeholder="Chọn một cặp tiền" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {pairs.map((p) => (
-                        <SelectItem key={p.value} value={p.value} className="text-xs">
-                            {p.label}
-                        </SelectItem>
-                        ))}
-                    </SelectContent>
-                    </Select>
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="timeframe-select" className="text-xs">Khung thời gian (Swing)</Label>
-                    <Select value={timeframe} onValueChange={setTimeframe} disabled={loading || mode === 'scalping'}>
-                    <SelectTrigger id="timeframe-select" className="text-xs">
-                        <SelectValue placeholder="Chọn một khung thời gian" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {timeframes.map((t) => (
-                        <SelectItem key={t.value} value={t.value} className="text-xs">
-                            {t.label}
-                        </SelectItem>
-                        ))}
-                    </SelectContent>
-                    </Select>
-                </div>
-                <div className="flex items-center">
-                    <Button onClick={onRefreshClick} disabled={loading} className="w-full">
-                        <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-                        Làm mới
-                    </Button>
-                </div>
-                 <div className="flex items-center space-x-2 justify-end">
-                    <Bell className={`h-4 w-4 ${isMonitoring ? 'text-primary' : 'text-muted-foreground'}`} />
-                    <Label htmlFor="monitoring-switch" className={`text-xs ${isMonitoring ? 'text-primary font-semibold' : 'text-muted-foreground'}`}>
-                        {isMonitoring ? 'Giám sát: Bật' : 'Giám sát: Tắt'}
-                    </Label>
-                    <Switch
-                        id="monitoring-switch"
-                        checked={isMonitoring}
-                        onCheckedChange={handleMonitoringChange}
-                        disabled={loading}
-                    />
-                </div>
-            </CardContent>
-        </Card>
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="font-headline text-lg">Bảng điều khiển và Giám sát</CardTitle>
+                        <CardDescription className="text-xs">
+                        Chọn cặp tiền, khung thời gian và bật giám sát để nhận thông báo tự động.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
+                        <div className="space-y-2">
+                            <Label htmlFor="pair-select" className="text-xs">Cặp tiền</Label>
+                            <Select value={pair} onValueChange={setPair} disabled={loading}>
+                            <SelectTrigger id="pair-select" className="text-xs">
+                                <SelectValue placeholder="Chọn một cặp tiền" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {pairs.map((p) => (
+                                <SelectItem key={p.value} value={p.value} className="text-xs">
+                                    {p.label}
+                                </SelectItem>
+                                ))}
+                            </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="timeframe-select" className="text-xs">Khung thời gian (Swing)</Label>
+                            <Select value={timeframe} onValueChange={setTimeframe} disabled={loading || mode === 'scalping'}>
+                            <SelectTrigger id="timeframe-select" className="text-xs">
+                                <SelectValue placeholder="Chọn một khung thời gian" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {timeframes.map((t) => (
+                                <SelectItem key={t.value} value={t.value} className="text-xs">
+                                    {t.label}
+                                </SelectItem>
+                                ))}
+                            </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="flex items-center">
+                            <Button onClick={onRefreshClick} disabled={loading} className="w-full">
+                                <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                                Làm mới
+                            </Button>
+                        </div>
+                         <div className="flex items-center space-x-2 justify-end">
+                            <Bell className={`h-4 w-4 ${isMonitoring ? 'text-primary' : 'text-muted-foreground'}`} />
+                            <Label htmlFor="monitoring-switch" className={`text-xs ${isMonitoring ? 'text-primary font-semibold' : 'text-muted-foreground'}`}>
+                                {isMonitoring ? 'Giám sát: Bật' : 'Giám sát: Tắt'}
+                            </Label>
+                            <Switch
+                                id="monitoring-switch"
+                                checked={isMonitoring}
+                                onCheckedChange={handleMonitoringChange}
+                                disabled={loading}
+                            />
+                        </div>
+                    </CardContent>
+                </Card>
+
+            </TabsContent>
+            <TabsContent value="onus">
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="font-headline text-lg flex items-center gap-2">
+                            <Construction className="h-5 w-5" />
+                            Tích hợp Sàn ONUS
+                        </CardTitle>
+                        <CardDescription>
+                            Tính năng phân tích và giao dịch cho sàn ONUS đang trong giai đoạn phát triển.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-center py-12 px-6 border-2 border-dashed rounded-lg">
+                            <h3 className="text-lg font-semibold text-foreground">Sắp ra mắt!</h3>
+                            <p className="text-muted-foreground mt-2 max-w-md mx-auto">
+                                Để hoàn thiện tính năng này, chúng tôi cần thông tin về API công khai (public API) của sàn ONUS để có thể lấy dữ liệu biểu đồ (k-line).
+                            </p>
+                             <p className="text-muted-foreground mt-2 max-w-md mx-auto">
+                                Nếu bạn có tài liệu hoặc đường dẫn API, vui lòng cung cấp để chúng tôi có thể tích hợp.
+                            </p>
+                        </div>
+                    </CardContent>
+                </Card>
+            </TabsContent>
+        </Tabs>
 
         {loading && !result && !error && (
             <div className="flex flex-col justify-center items-center p-16 space-y-4">
@@ -303,7 +352,7 @@ export default function Home() {
             </Card>
         )}
 
-        {result && (
+        {result && exchange === 'bybit' && (
             <div className="animate-in fade-in duration-500">
                 <Tabs defaultValue="analysis" className="w-full">
                 <TabsList className="grid w-full grid-cols-3">
@@ -328,3 +377,5 @@ export default function Home() {
     </main>
   );
 }
+
+    

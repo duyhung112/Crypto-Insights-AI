@@ -1,3 +1,4 @@
+
 "use server";
 
 import { analyzeCryptoPair } from "@/ai/flows/analyze-crypto-pair";
@@ -48,7 +49,11 @@ async function handleDiscordNotification(message: string, webhookUrl: string) {
     }
 }
 
-export async function getAnalysis(pair: string, timeframe: string, mode: 'swing' | 'scalping', discordWebhookUrl?: string, geminiApiKey?: string) {
+export async function getAnalysis(pair: string, timeframe: string, mode: 'swing' | 'scalping', exchange: string, discordWebhookUrl?: string, geminiApiKey?: string) {
+  if (exchange !== 'bybit') {
+    return { error: "Sàn giao dịch này chưa được hỗ trợ để phân tích." };
+  }
+    
   try {
     if (!geminiApiKey) {
       throw new Error("Vui lòng cung cấp Gemini API Key trong phần Cài đặt để sử dụng tính năng phân tích.");
@@ -134,7 +139,7 @@ export async function getAnalysis(pair: string, timeframe: string, mode: 'swing'
     if (aiAnalysisResponse && discordWebhookUrl) {
         const signal = aiAnalysisResponse.buySellSignal.toUpperCase();
         if (signal.includes('MUA') || signal.includes('BUY') || signal.includes('BÁN') || signal.includes('SELL')) {
-            const message = `**Tín hiệu Mới: ${aiAnalysisResponse.buySellSignal.toUpperCase()} ${aiInput.pair}**
+            const message = `**Tín hiệu Mới: ${aiAnalysisResponse.buySellSignal.toUpperCase()} ${aiInput.pair} (Bybit)**
 Chế độ: ${aiInput.mode} | Khung: ${aiInput.timeframe}
 Giá hiện tại: ${aiInput.price}
 ---
@@ -154,7 +159,7 @@ Giá hiện tại: ${aiInput.price}
   } catch (error) {
     if (discordWebhookUrl) {
         const errorMessage = error instanceof Error ? error.message : "An unknown error occurred during analysis.";
-        const notificationMessage = `**LỖI PHÂN TÍCH**
+        const notificationMessage = `**LỖI PHÂN TÍCH (Bybit)**
 Cặp: ${pair}
 Lỗi: \`\`\`${errorMessage}\`\`\``;
         await handleDiscordNotification(notificationMessage, discordWebhookUrl);
@@ -166,3 +171,5 @@ Lỗi: \`\`\`${errorMessage}\`\`\``;
     return { error: "Đã xảy ra lỗi không xác định." };
   }
 }
+
+    
