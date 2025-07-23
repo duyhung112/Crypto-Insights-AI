@@ -20,10 +20,6 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'spot-markets-dev.goonus.io',
       },
-      {
-        protocol: 'https',
-        hostname: 'nami.exchange',
-      },
     ],
   },
 };

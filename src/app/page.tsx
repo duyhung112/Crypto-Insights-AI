@@ -20,8 +20,8 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader, AlertTriangle, AreaChart, Zap, Settings, RefreshCw, Bell } from "lucide-react";
-import { getAnalysis, getNamiKlineData } from "@/app/actions";
-import type { AnalysisResult, KlineData } from "@/lib/types";
+import { getAnalysis } from "@/app/actions";
+import type { AnalysisResult } from "@/lib/types";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AnalysisDisplay } from "@/components/analysis-display";
@@ -32,14 +32,8 @@ import { NewsAnalysisDisplay } from "@/components/news-analysis-display";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
-import { NamiRecentTrades } from "@/components/NamiRecentTrades";
 
 const TradingViewChart = dynamic(() => import('@/components/tradingview-chart'), {
-  ssr: false,
-  loading: () => <Skeleton className="w-full h-full min-h-[500px]" />,
-});
-
-const NamiChart = dynamic(() => import('@/components/nami-chart'), {
   ssr: false,
   loading: () => <Skeleton className="w-full h-full min-h-[500px]" />,
 });
@@ -52,15 +46,6 @@ const bybitPairs = [
   { value: "XRPUSDT", label: "XRP/USDT" },
 ];
 
-const namiPairs = [
-    { value: "BTCVNDC", label: "BTC/VNDC" },
-    { value: "ETHVNDC", label: "ETH/VNDC" },
-    { value: "USDT_VNDC", label: "USDT/VNDC"},
-    { value: "NAMIVNDC", label: "NAMI/VNDC" },
-    { value: "BNBVNDC", label: "BNB/VNDC" },
-    { value: "XRPVNDC", label: "XRP/VNDC" },
-];
-
 const timeframes = [
   { value: "15", label: "15 phút" },
   { value: "60", label: "1 giờ" },
@@ -71,7 +56,6 @@ const timeframes = [
 const MONITORING_INTERVAL = 15 * 60 * 1000; // 15 minutes
 
 export default function Home() {
-  const [exchange, setExchange] = useState<'bybit' | 'nami'>('bybit');
   const [pair, setPair] = useState("BTCUSDT");
   const [timeframe, setTimeframe] = useState("60");
   const [loading, setLoading] = useState(false);
@@ -81,45 +65,12 @@ export default function Home() {
   const [isMonitoring, setIsMonitoring] = useState(false);
   const { toast } = useToast();
   const monitoringIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const [namiChartData, setNamiChartData] = useState<KlineData[]>([]);
-  
-  const availablePairs = exchange === 'bybit' ? bybitPairs : namiPairs;
-
-  // Effect to switch the default pair when exchange changes
-  useEffect(() => {
-    const newPair = exchange === 'bybit' ? 'BTCUSDT' : 'BTCVNDC';
-    setPair(newPair);
-    setResult(null); // Clear previous results
-    setError(null);
-  }, [exchange]);
-
-  const fetchNamiChartData = useCallback(async (currentPair: string, currentTimeframe: string) => {
-    if (exchange !== 'nami') return;
-    // Don't set loading here to avoid flashing loader for chart data only
-    try {
-      const data = await getNamiKlineData(currentPair, currentTimeframe, 500);
-      setNamiChartData(data);
-    } catch (e) {
-      console.error("Failed to fetch Nami data for chart", e);
-      if (e instanceof Error) {
-          setError(`Không thể tải dữ liệu biểu đồ Nami: ${e.message}`);
-      } else {
-          setError('Đã có lỗi không xác định khi tải dữ liệu biểu đồ Nami.');
-      }
-      setNamiChartData([]); 
-    }
-  }, [exchange]);
   
   const handleAnalyze = useCallback(async (isSilent = false) => {
     if (!isSilent) {
         setLoading(true);
         setError(null);
         setResult(null);
-    }
-    
-    // Fetch chart data for Nami alongside the analysis
-    if (exchange === 'nami') {
-        await fetchNamiChartData(pair, timeframe);
     }
 
     const geminiApiKey = localStorage.getItem('geminiApiKey');
@@ -138,7 +89,7 @@ export default function Home() {
     const discordWebhookUrl = localStorage.getItem('discordWebhookUrl') || undefined;
     const analysisTimeframe = mode === 'scalping' ? '15' : timeframe;
     
-    const response = await getAnalysis(pair, analysisTimeframe, mode, exchange, discordWebhookUrl, geminiApiKey);
+    const response = await getAnalysis(pair, analysisTimeframe, mode, discordWebhookUrl, geminiApiKey);
 
     if (response.error) {
         if (!isSilent) setError(response.error);
@@ -154,12 +105,12 @@ export default function Home() {
     if (!isSilent) {
         setLoading(false);
     }
-  }, [pair, timeframe, mode, exchange, toast, fetchNamiChartData]);
+  }, [pair, timeframe, mode, toast]);
   
   useEffect(() => {
     handleAnalyze();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pair, timeframe, mode, exchange]);
+  }, [pair, timeframe, mode]);
 
 
   const handleMonitoringChange = (checked: boolean) => {
@@ -191,7 +142,7 @@ export default function Home() {
       if (isMonitoring) {
           if (monitoringIntervalRef.current) clearInterval(monitoringIntervalRef.current);
           monitoringIntervalRef.current = setInterval(() => {
-              console.log(`[Monitoring] Checking for signals for ${pair} on ${exchange}...`);
+              console.log(`[Monitoring] Checking for signals for ${pair}...`);
               handleAnalyze(true);
           }, MONITORING_INTERVAL);
       } else {
@@ -203,43 +154,67 @@ export default function Home() {
       return () => {
           if (monitoringIntervalRef.current) clearInterval(monitoringIntervalRef.current);
       }
-  }, [isMonitoring, pair, exchange, handleAnalyze]);
+  }, [isMonitoring, pair, handleAnalyze]);
 
   const onRefreshClick = () => {
     handleAnalyze();
   }
 
-  const renderExchangeContent = (currentExchange: 'bybit' | 'nami') => {
-    const isBybit = currentExchange === 'bybit';
-    const currentPairLabel = availablePairs.find(p => p.value === pair)?.label || pair;
-    const chartPair = pair.replace(/\//g, ''); 
+  const currentPairLabel = bybitPairs.find(p => p.value === pair)?.label || pair;
 
-    return (
+  return (
+    <main className="flex min-h-screen flex-col items-center p-4 sm:p-6 md:p-8 bg-background transition-colors duration-300">
+      <div className="w-full max-w-7xl space-y-6">
+        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex items-center gap-3">
+                 <h1 className="font-headline text-2xl font-bold text-foreground">
+                    Trading Expert AI
+                </h1>
+            </div>
+             <div className="flex w-full sm:w-auto items-center gap-4 justify-between sm:justify-end">
+                <div className="flex flex-col items-start sm:items-end">
+                    <Label className="text-xs text-muted-foreground mb-1">Chế độ</Label>
+                    <Tabs value={mode} onValueChange={(value) => setMode(value as 'swing' | 'scalping')} className="w-full sm:w-auto">
+                        <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="swing" className="flex items-center gap-2 text-xs">
+                                <AreaChart className="h-4 w-4"/>
+                                Swing (15m+)
+                            </TabsTrigger>
+                            <TabsTrigger value="scalping" className="flex items-center gap-2 text-xs">
+                                <Zap className="h-4 w-4"/>
+                                Scalping (15m)
+                            </TabsTrigger>
+                        </TabsList>
+                    </Tabs>
+                </div>
+                <div className="flex items-center gap-2 pt-5">
+                    <Link href="/settings">
+                        <Button variant="outline" size="icon">
+                            <Settings className="h-4 w-4" />
+                            <span className="sr-only">Cài đặt</span>
+                        </Button>
+                    </Link>
+                    <ThemeToggle />
+                </div>
+            </div>
+        </header>
+
         <div className="mt-6 space-y-6">
             <Card>
                 <CardHeader>
-                    <CardTitle className="font-headline text-lg">Thông tin và Biểu đồ {currentPairLabel} ({isBybit ? "Bybit" : "Nami"})</CardTitle>
+                    <CardTitle className="font-headline text-lg">Thông tin và Biểu đồ {currentPairLabel} (Bybit)</CardTitle>
                     <CardDescription className="text-xs">
                         Khung thời gian: {mode === 'scalping' ? '15 phút' : timeframes.find(t => t.value === timeframe)?.label}.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {isBybit && <RealtimeTicker pair={pair} />}
-                    {!isBybit && (
-                        <div className="mb-4">
-                            <NamiRecentTrades />
-                        </div>
-                    )}
+                    <RealtimeTicker pair={pair} />
                     <div className="h-[600px] mt-4">
-                       {isBybit ? (
-                         <TradingViewChart 
-                            pair={chartPair} 
+                        <TradingViewChart 
+                            pair={pair} 
                             timeframe={mode === 'scalping' ? '15' : timeframe}
                             exchange={"BYBIT"}
                         />
-                       ) : (
-                         <NamiChart data={namiChartData} pair={pair.replace('/', '')} />
-                       )}
                     </div>
                 </CardContent>
             </Card>
@@ -259,7 +234,7 @@ export default function Home() {
                             <SelectValue placeholder="Chọn một cặp tiền" />
                         </SelectTrigger>
                         <SelectContent>
-                            {availablePairs.map((p) => (
+                            {bybitPairs.map((p) => (
                             <SelectItem key={p.value} value={p.value} className="text-xs">
                                 {p.label}
                             </SelectItem>
@@ -303,59 +278,7 @@ export default function Home() {
                 </CardContent>
             </Card>
         </div>
-    );
-  }
-
-  return (
-    <main className="flex min-h-screen flex-col items-center p-4 sm:p-6 md:p-8 bg-background transition-colors duration-300">
-      <div className="w-full max-w-7xl space-y-6">
-        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="flex items-center gap-3">
-                 <h1 className="font-headline text-2xl font-bold text-foreground">
-                    Trading Expert AI
-                </h1>
-            </div>
-             <div className="flex w-full sm:w-auto items-center gap-4 justify-between sm:justify-end">
-                <div className="flex flex-col items-start sm:items-end">
-                    <Label className="text-xs text-muted-foreground mb-1">Chế độ</Label>
-                    <Tabs value={mode} onValueChange={(value) => setMode(value as 'swing' | 'scalping')} className="w-full sm:w-auto">
-                        <TabsList className="grid w-full grid-cols-2">
-                            <TabsTrigger value="swing" className="flex items-center gap-2 text-xs">
-                                <AreaChart className="h-4 w-4"/>
-                                Swing (15m+)
-                            </TabsTrigger>
-                            <TabsTrigger value="scalping" className="flex items-center gap-2 text-xs">
-                                <Zap className="h-4 w-4"/>
-                                Scalping (15m)
-                            </TabsTrigger>
-                        </TabsList>
-                    </Tabs>
-                </div>
-                <div className="flex items-center gap-2 pt-5">
-                    <Link href="/settings">
-                        <Button variant="outline" size="icon">
-                            <Settings className="h-4 w-4" />
-                            <span className="sr-only">Cài đặt</span>
-                        </Button>
-                    </Link>
-                    <ThemeToggle />
-                </div>
-            </div>
-        </header>
-
-        <Tabs value={exchange} onValueChange={(value) => setExchange(value as 'bybit' | 'nami')} className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="bybit">Bybit</TabsTrigger>
-                <TabsTrigger value="nami">Nami</TabsTrigger>
-            </TabsList>
-            <TabsContent value="bybit">
-                {renderExchangeContent('bybit')}
-            </TabsContent>
-            <TabsContent value="nami">
-                {renderExchangeContent('nami')}
-            </TabsContent>
-        </Tabs>
-
+        
         {loading && !result && (
             <div className="flex flex-col justify-center items-center p-16 space-y-4">
                 <Loader className="h-12 w-12 animate-spin text-primary" />

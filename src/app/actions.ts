@@ -47,71 +47,6 @@ export async function getBybitKlineData(pair: string, timeframe: string, limit: 
     }
 }
 
-const convertTimeframeToNami = (timeframe: string): string => {
-    const mapping: { [key: string]: string } = {
-        '15': '15m',
-        '60': '1h',
-        '240': '4h',
-        'D': '1d',
-    };
-    return mapping[timeframe] || '1h'; 
-}
-
-
-export async function getNamiKlineData(pair: string, timeframe: string, limit: number = 500): Promise<KlineData[]> {
-    const resolution = convertTimeframeToNami(timeframe);
-    const now = Math.floor(Date.now() / 1000);
-    // Fetch a reasonable amount of data based on timeframe
-    const from = now - (60 * 60 * 24 * 90); // 90 days of data
-    
-    const params = new URLSearchParams({
-        symbol: pair.replace(/\//g, ''), // Nami uses format like 'BTCVNDC'
-        resolution: resolution,
-        from: String(from),
-        to: String(now),
-    });
-
-    const url = `/api/nami/history?${params.toString()}`;
-
-    try {
-        const response = await fetch(new URL(url, process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:9002'), { cache: 'no-store' });
-
-        if (!response.ok) {
-            const errorBody = await response.text();
-            throw new Error(`Nami API Error: ${response.statusText} - ${errorBody}`);
-        }
-        
-        const data = await response.json();
-        
-        if (!Array.isArray(data)) {
-           // Handle cases where Nami returns an error object, e.g., { s: 'error', errmsg: '...' }
-           if (data && typeof data === 'object' && 's' in data && data.s !== 'ok') {
-               throw new Error(`Nami API returned an error: ${data.errmsg || 'Unknown error'}`);
-           }
-           // Handle other unexpected non-array responses
-           throw new Error(`Nami API returned an unexpected data format.`);
-        }
-
-        const klineData: KlineData[] = data.map((d: number[]) => ({
-            time: d[0] * 1000, // Convert seconds to milliseconds
-            open: d[1],
-            high: d[2],
-            low: d[3],
-            close: d[4],
-        }));
-        
-        return klineData;
-
-    } catch (error) {
-        console.error("Failed to fetch kline data from Nami:", error);
-        if (error instanceof Error) {
-            throw new Error(`Không thể tải dữ liệu từ Nami: ${error.message}`);
-        }
-        throw new Error("Không thể tải dữ liệu biểu đồ từ Nami.");
-    }
-}
-
-
 async function handleDiscordNotification(message: string, webhookUrl: string) {
     if (!webhookUrl) return;
     try {
@@ -121,7 +56,7 @@ async function handleDiscordNotification(message: string, webhookUrl: string) {
     }
 }
 
-export async function getAnalysis(pair: string, timeframe: string, mode: 'swing' | 'scalping', exchange: 'bybit' | 'nami', discordWebhookUrl?: string, geminiApiKey?: string) {
+export async function getAnalysis(pair: string, timeframe: string, mode: 'swing' | 'scalping', discordWebhookUrl?: string, geminiApiKey?: string) {
   try {
     if (!geminiApiKey) {
       throw new Error("Vui lòng cung cấp Gemini API Key trong phần Cài đặt để sử dụng tính năng phân tích.");
@@ -129,17 +64,8 @@ export async function getAnalysis(pair: string, timeframe: string, mode: 'swing'
     
     const userAi = initGenkit(geminiApiKey);
 
-    let klineData: KlineData[];
-    const exchangeName = exchange.toUpperCase();
-
-    if (exchange === 'bybit') {
-        klineData = await getBybitKlineData(pair, timeframe, 200);
-    } else if (exchange === 'nami') {
-        klineData = await getNamiKlineData(pair, timeframe, 500);
-    } else {
-        throw new Error("Sàn giao dịch không được hỗ trợ.");
-    }
-
+    const klineData = await getBybitKlineData(pair, timeframe, 200);
+   
     if (klineData.length < 50) {
       throw new Error("Không đủ dữ liệu lịch sử để phân tích cặp tiền này.");
     }
@@ -174,7 +100,7 @@ export async function getAnalysis(pair: string, timeframe: string, mode: 'swing'
       low: klineData[klineData.length - 1].low,
     };
     
-    const cryptoSymbol = pair.replace(/USDT$/, '').replace(/_USDT$/, '').replace(/_VNDC$/, '').replace(/\/.*/, '');
+    const cryptoSymbol = pair.replace(/USDT$/, '').replace(/\/.*/, '');
     const newsArticles = await getNewsForCrypto({ cryptoSymbol });
     const newsInput: NewsAnalysisInput = { cryptoSymbol, articles: newsArticles };
 
@@ -188,7 +114,7 @@ export async function getAnalysis(pair: string, timeframe: string, mode: 'swing'
     if (aiAnalysisResponse && discordWebhookUrl) {
         const signal = aiAnalysisResponse.buySellSignal.toUpperCase();
         if (signal.includes('MUA') || signal.includes('BUY') || signal.includes('BÁN') || signal.includes('SELL')) {
-            const message = `**Tín hiệu Mới: ${aiAnalysisResponse.buySellSignal.toUpperCase()} ${aiInput.pair} (${exchangeName})**
+            const message = `**Tín hiệu Mới: ${aiAnalysisResponse.buySellSignal.toUpperCase()} ${aiInput.pair} (BYBIT)**
 Chế độ: ${aiInput.mode} | Khung: ${aiInput.timeframe}
 Giá hiện tại: ${aiInput.price}
 ---
@@ -206,10 +132,9 @@ Giá hiện tại: ${aiInput.price}
         newsAnalysis: newsAnalysisResponse,
      };
   } catch (error) {
-    const exchangeName = exchange.toUpperCase();
     if (discordWebhookUrl) {
         const errorMessage = error instanceof Error ? error.message : "An unknown error occurred during analysis.";
-        const notificationMessage = `**LỖI PHÂN TÍCH (${exchangeName})**
+        const notificationMessage = `**LỖI PHÂN TÍCH (BYBIT)**
 Cặp: ${pair}
 Lỗi: \`\`\`${errorMessage}\`\`\``;
         await handleDiscordNotification(notificationMessage, discordWebhookUrl);
