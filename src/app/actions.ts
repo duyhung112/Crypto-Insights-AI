@@ -65,7 +65,7 @@ export async function getNamiKlineData(pair: string, timeframe: string, limit: n
     const from = now - (60 * 60 * 24 * 90); // 90 days of data
     
     const params = new URLSearchParams({
-        symbol: pair.replace('/', ''), // Nami uses format like 'BTCVNDC'
+        symbol: pair.replace(/\//g, ''), // Nami uses format like 'BTCVNDC'
         resolution: resolution,
         from: String(from),
         to: String(now),
@@ -85,7 +85,7 @@ export async function getNamiKlineData(pair: string, timeframe: string, limit: n
         
         if (!Array.isArray(data)) {
            // Handle cases where Nami returns an error object, e.g., { s: 'error', errmsg: '...' }
-           if (data.s && data.s !== 'ok') {
+           if (data && typeof data === 'object' && 's' in data && data.s !== 'ok') {
                throw new Error(`Nami API returned an error: ${data.errmsg || 'Unknown error'}`);
            }
            // Handle other unexpected non-array responses
@@ -221,7 +221,3 @@ Lỗi: \`\`\`${errorMessage}\`\`\``;
     return { error: "Đã xảy ra lỗi không xác định." };
   }
 }
-
-    
-
-    
