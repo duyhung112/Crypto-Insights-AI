@@ -41,8 +41,6 @@ export async function getBybitKlineData(pair: string, timeframe: string, limit: 
 const ONUS_API_URL = "https://spot-markets-dev.goonus.io/candlesticks";
 
 const convertTimeframeToOnus = (timeframe: string) => {
-    // Bybit: 1, 3, 5, 15, 30, 60, 120, 240, 360, 720, D, M, W
-    // ONUS: 1m, 5m, 15m, 30m, 1h, 2h, 4h, 6h, 12h, 1d, 1w, 1M
     const mapping: { [key: string]: string } = {
         '15': '15m',
         '60': '1h',
@@ -51,32 +49,12 @@ const convertTimeframeToOnus = (timeframe: string) => {
         'W': '1w',
         'M': '1M'
     };
-    return mapping[timeframe] || '1h'; // Default to 1 hour
+    return mapping[timeframe] || '1h'; 
 }
 
 export async function getOnusKlineData(pair: string, timeframe: string, limit: number = 500): Promise<KlineData[]> {
-    const onusSymbol = pair; 
-    const onusTimeframe = convertTimeframeToOnus(timeframe);
-    
-    const to = Math.floor(Date.now() / 1000) * 1000;
-    let from: number;
-
-    const getFromTimestamp = (days: number) => {
-      return to - (days * 24 * 60 * 60 * 1000);
-    }
-    
-    // Define a reasonable lookback period in days to avoid overly large requests
-    switch(onusTimeframe) {
-        case '15m': from = getFromTimestamp(7); break; // 7 days of 15m data
-        case '1h': from = getFromTimestamp(30); break; // 30 days of 1h data
-        case '4h': from = getFromTimestamp(90); break; // 90 days of 4h data
-        case '1d': from = getFromTimestamp(365); break; // 1 year of daily data
-        case '1w': from = getFromTimestamp(365 * 2); break; // 2 years of weekly data
-        case '1M': from = getFromTimestamp(365 * 5); break; // 5 years of monthly data
-        default: from = getFromTimestamp(90); 
-    }
-
-    const url = `${ONUS_API_URL}?symbol_name=${onusSymbol}&interval=${onusTimeframe}&from=${from}&to=${to}`;
+    // Hardcoded known working URL to isolate the problem
+    const url = "https://spot-markets-dev.goonus.io/candlesticks?symbol_name=ONX_USDT&interval=5m&from=1725937488000&to=1837403913011";
 
     try {
         const response = await fetch(url, { cache: 'no-store' });
@@ -87,10 +65,9 @@ export async function getOnusKlineData(pair: string, timeframe: string, limit: n
         const data = await response.json();
          if (!Array.isArray(data)) {
             console.error("ONUS API did not return an array:", data);
-            throw new Error(`API của ONUS không trả về dữ liệu hợp lệ cho cặp ${onusSymbol}. Vui lòng kiểm tra lại cặp tiền.`);
+            throw new Error(`API của ONUS không trả về dữ liệu hợp lệ cho cặp ${pair}. Vui lòng kiểm tra lại cặp tiền.`);
         }
 
-        // ONUS returns data in a different structure with string values
         const klineData: KlineData[] = data.map((d: any) => ({
             time: parseInt(d.t, 10),
             open: parseFloat(d.o),
