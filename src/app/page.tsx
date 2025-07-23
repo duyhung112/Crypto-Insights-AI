@@ -107,7 +107,6 @@ export default function Home() {
     if (!isSilent) {
         setLoading(true);
         setError(null);
-        setResult(null);
     }
     
     // Fetch data for ONUS chart regardless of silent mode
@@ -134,7 +133,7 @@ export default function Home() {
 
     if (response.error && !isSilent) {
       setError(response.error);
-      setResult(null);
+      // Keep old result if there is an error
     } else if (!response.error) {
       setResult({ 
         aiAnalysis: response.aiAnalysis,
@@ -352,7 +351,7 @@ export default function Home() {
             </TabsContent>
         </Tabs>
 
-        {loading && !result && !error && (
+        {loading && !result && (
             <div className="flex flex-col justify-center items-center p-16 space-y-4">
                 <Loader className="h-12 w-12 animate-spin text-primary" />
                 <p className="text-muted-foreground">Đang lấy dữ liệu và phân tích...</p>
@@ -360,7 +359,7 @@ export default function Home() {
         )}
 
         {error && (
-            <Card className="border-destructive bg-destructive/10">
+            <Card className="border-destructive bg-destructive/10 mt-4">
                 <CardHeader className="flex flex-row items-center gap-4">
                 <AlertTriangle className="h-8 w-8 text-destructive" />
                 <div>
@@ -398,3 +397,5 @@ export default function Home() {
     </main>
   );
 }
+
+    
