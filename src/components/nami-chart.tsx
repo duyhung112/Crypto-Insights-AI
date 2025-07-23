@@ -114,20 +114,19 @@ const NamiChart: React.FC<NamiChartProps> = ({ data, pair }) => {
     });
 
     socket.on("spot:recent_trade:add", (trade) => {
-       if (candlestickSeriesRef.current && trade.p && trade.t) {
-        // Find the last candle to update it
-        const lastCandle = data[data.length - 1];
-        if (lastCandle) {
-             const newCandle: CandlestickData<Time> = {
+       const lastCandle = data.length > 0 ? data[data.length - 1] : null;
+       // Data validation before processing
+       if (candlestickSeriesRef.current && trade && typeof trade.p !== 'undefined' && !isNaN(parseFloat(trade.p)) && lastCandle) {
+            const tradePrice = parseFloat(trade.p);
+            const newCandle: CandlestickData<Time> = {
                 time: lastCandle.time / 1000 as UTCTimestamp,
                 open: lastCandle.open,
-                high: Math.max(lastCandle.high, trade.p),
-                low: Math.min(lastCandle.low, trade.p),
-                close: trade.p,
+                high: Math.max(lastCandle.high, tradePrice),
+                low: Math.min(lastCandle.low, tradePrice),
+                close: tradePrice,
             };
             candlestickSeriesRef.current.update(newCandle);
         }
-      }
     });
     
     return () => {
