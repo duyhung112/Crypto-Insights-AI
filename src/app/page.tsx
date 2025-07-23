@@ -44,6 +44,21 @@ const bybitPairs = [
   { value: "SOLUSDT", label: "SOL/USDT" },
   { value: "BNBUSDT", label: "BNB/USDT" },
   { value: "XRPUSDT", label: "XRP/USDT" },
+  { value: "DOGEUSDT", label: "DOGE/USDT" },
+  { value: "ADAUSDT", label: "ADA/USDT" },
+  { value: "AVAXUSDT", label: "AVAX/USDT" },
+  { value: "LINKUSDT", label: "LINK/USDT" },
+  { value: "DOTUSDT", label: "DOT/USDT" },
+  { value: "MATICUSDT", label: "MATIC/USDT" },
+  { value: "1000SHIBUSDT", label: "SHIB/USDT" },
+  { value: "LTCUSDT", label: "LTC/USDT" },
+  { value: "NEARUSDT", label: "NEAR/USDT" },
+  { value: "UNIUSDT", label: "UNI/USDT" },
+  { value: "OPUSDT", label: "OP/USDT" },
+  { value: "INJUSDT", label: "INJ/USDT" },
+  { value: "ICPUSDT", label: "ICP/USDT" },
+  { value: "SUIUSDT", label: "SUI/USDT" },
+  { value: "PEPEUSDT", label: "PEPE/USDT" },
 ];
 
 const timeframes = [
