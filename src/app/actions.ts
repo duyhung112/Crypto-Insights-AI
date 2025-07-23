@@ -55,16 +55,32 @@ const convertTimeframeToOnus = (timeframe: string) => {
 }
 
 export async function getOnusKlineData(pair: string, timeframe: string, limit: number = 500): Promise<KlineData[]> {
-    // The pair from the UI is already in the correct format e.g., "BTC_USDT"
     const onusSymbol = pair; 
     const onusTimeframe = convertTimeframeToOnus(timeframe);
     
-    // ONUS uses 'from' and 'to' timestamps
+    // ONUS uses 'from' and 'to' timestamps. Let's calculate a rough 'from'.
+    // This is an approximation. A more robust solution might need pagination.
     const to = Date.now();
-    const timeframeMinutes = parseInt(timeframe, 10) || 60; // default to 60 for 'D', 'W', 'M'
-    const from = to - (limit * timeframeMinutes * 60 * 1000);
+    let from;
+    const now = new Date();
 
-    const url = `${ONUS_API_URL}?symbol_name=${onusSymbol}&interval=${onusTimeframe}&from=${from}&to=${to}`;
+    // A very rough mapping to calculate the 'from' timestamp
+    switch(onusTimeframe) {
+        case '15m': from = to - (limit * 15 * 60 * 1000); break;
+        case '1h': from = to - (limit * 60 * 60 * 1000); break;
+        case '4h': from = to - (limit * 4 * 60 * 60 * 1000); break;
+        case '1d': from = to - (limit * 24 * 60 * 60 * 1000); break;
+        case '1w': from = to - (limit * 7 * 24 * 60 * 60 * 1000); break;
+        case '1M':
+            // Approximate a month as 30 days for this calculation
+            const fromDate = new Date(now.setMonth(now.getMonth() - (limit / 30)));
+            from = fromDate.getTime();
+            break;
+        default: from = to - (limit * 60 * 60 * 1000); // Default to 1h calculation
+    }
+
+
+    const url = `${ONUS_API_URL}?symbol_name=${onusSymbol}&interval=${onusTimeframe}&from=${Math.floor(from)}&to=${Math.floor(to)}`;
 
     try {
         const response = await fetch(url, { cache: 'no-store' });
@@ -75,7 +91,7 @@ export async function getOnusKlineData(pair: string, timeframe: string, limit: n
         const data = await response.json();
          if (!Array.isArray(data)) {
             console.error("ONUS API did not return an array:", data);
-            throw new Error(`API ONUS không trả về dữ liệu hợp lệ cho cặp ${onusSymbol}.`);
+            throw new Error(`API của ONUS không trả về dữ liệu hợp lệ cho cặp ${onusSymbol}. Vui lòng kiểm tra lại cặp tiền.`);
         }
 
         // ONUS returns data in a different structure
@@ -90,6 +106,9 @@ export async function getOnusKlineData(pair: string, timeframe: string, limit: n
         return klineData;
     } catch (error) {
         console.error("Failed to fetch kline data from ONUS:", error);
+        if (error instanceof Error) {
+            throw new Error(`Không thể tải dữ liệu từ ONUS: ${error.message}`);
+        }
         throw new Error("Không thể tải dữ liệu biểu đồ từ ONUS.");
     }
 }
