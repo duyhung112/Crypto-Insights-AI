@@ -93,35 +93,23 @@ export default function Home() {
     setError(null);
   }, [exchange]);
 
-  // Effect to fetch chart data when pair or timeframe changes for Nami
   const fetchNamiChartData = useCallback(async (currentPair: string, currentTimeframe: string) => {
-      if (exchange !== 'nami') return;
-      setLoading(true);
-      setError(null);
-      try {
-        const data = await getNamiKlineData(currentPair, currentTimeframe, 500);
-        setNamiChartData(data);
-      } catch (e) {
-        console.error("Failed to fetch Nami data for chart", e);
-        if (e instanceof Error) {
-            setError(`Không thể tải dữ liệu biểu đồ Nami: ${e.message}`);
-        } else {
-            setError('Đã có lỗi không xác định khi tải dữ liệu biểu đồ Nami.');
-        }
-        setNamiChartData([]); 
-      } finally {
-        setLoading(false);
+    if (exchange !== 'nami') return;
+    // Don't set loading here to avoid flashing loader for chart data only
+    try {
+      const data = await getNamiKlineData(currentPair, currentTimeframe, 500);
+      setNamiChartData(data);
+    } catch (e) {
+      console.error("Failed to fetch Nami data for chart", e);
+      if (e instanceof Error) {
+          setError(`Không thể tải dữ liệu biểu đồ Nami: ${e.message}`);
+      } else {
+          setError('Đã có lỗi không xác định khi tải dữ liệu biểu đồ Nami.');
       }
+      setNamiChartData([]); 
+    }
   }, [exchange]);
   
-  useEffect(() => {
-    if (exchange === 'nami') {
-      fetchNamiChartData(pair, timeframe);
-    }
-  }, [pair, timeframe, exchange, fetchNamiChartData]);
-
-
-  // Function to perform AI analysis, called on-demand
   const handleAnalyze = useCallback(async (isSilent = false) => {
     if (!isSilent) {
         setLoading(true);
@@ -129,6 +117,11 @@ export default function Home() {
         setResult(null);
     }
     
+    // Fetch chart data for Nami alongside the analysis
+    if (exchange === 'nami') {
+        await fetchNamiChartData(pair, timeframe);
+    }
+
     const geminiApiKey = localStorage.getItem('geminiApiKey');
     if (!geminiApiKey) {
         if (!isSilent) {
@@ -161,14 +154,10 @@ export default function Home() {
     if (!isSilent) {
         setLoading(false);
     }
-  }, [pair, timeframe, mode, exchange, toast]);
+  }, [pair, timeframe, mode, exchange, toast, fetchNamiChartData]);
   
-  // Initial analysis fetch for Bybit
   useEffect(() => {
-    if (exchange === 'bybit') {
-        handleAnalyze();
-    }
-    // For Nami, analysis is triggered by the refresh button, not automatically
+    handleAnalyze();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pair, timeframe, mode, exchange]);
 
@@ -216,19 +205,13 @@ export default function Home() {
       }
   }, [isMonitoring, pair, exchange, handleAnalyze]);
 
-
   const onRefreshClick = () => {
-    if (exchange === 'nami') {
-        // For Nami, fetch both chart data and analysis
-        fetchNamiChartData(pair, timeframe);
-    }
     handleAnalyze();
   }
 
   const renderExchangeContent = (currentExchange: 'bybit' | 'nami') => {
     const isBybit = currentExchange === 'bybit';
     const currentPairLabel = availablePairs.find(p => p.value === pair)?.label || pair;
-    // Bybit pairs don't have '/', Nami pairs do. TradingView needs the '/' removed.
     const chartPair = pair.replace(/\//g, ''); 
 
     return (
