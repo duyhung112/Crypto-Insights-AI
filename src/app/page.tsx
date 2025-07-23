@@ -68,10 +68,10 @@ export default function Home() {
   const monitoringIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleAnalyze = useCallback(async (currentPair: string, currentTimeframe: string, currentMode: 'swing' | 'scalping', currentExchange: string, isSilent = false) => {
-    if (currentExchange === 'onus') {
+    if (currentExchange === 'attlas') {
       setLoading(false);
       setResult(null);
-      setError("Chức năng phân tích cho sàn ONUS đang được phát triển. Vui lòng cung cấp API để tiếp tục.");
+      setError("Chức năng phân tích cho sàn Attlas đang được phát triển. Vui lòng cung cấp API để tiếp tục.");
       return;
     }
     
@@ -114,11 +114,11 @@ export default function Home() {
   }, [toast]);
 
   const handleMonitoringChange = (checked: boolean) => {
-    if (exchange === 'onus') {
+    if (exchange === 'attlas') {
         toast({
             variant: "destructive",
             title: "Chưa hỗ trợ",
-            description: "Tính năng giám sát tự động chưa có sẵn cho sàn ONUS.",
+            description: "Tính năng giám sát tự động chưa có sẵn cho sàn Attlas.",
         });
         return;
     }
@@ -227,7 +227,7 @@ export default function Home() {
         <Tabs value={exchange} onValueChange={setExchange} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="bybit">Bybit</TabsTrigger>
-                <TabsTrigger value="onus">ONUS</TabsTrigger>
+                <TabsTrigger value="attlas">Attlas</TabsTrigger>
             </TabsList>
             <TabsContent value="bybit" className="mt-6 space-y-6">
                  <Card>
@@ -305,22 +305,22 @@ export default function Home() {
                 </Card>
 
             </TabsContent>
-            <TabsContent value="onus">
+            <TabsContent value="attlas">
                 <Card>
                     <CardHeader>
                         <CardTitle className="font-headline text-lg flex items-center gap-2">
                             <Construction className="h-5 w-5" />
-                            Tích hợp Sàn ONUS
+                            Tích hợp Sàn Attlas
                         </CardTitle>
                         <CardDescription>
-                            Tính năng phân tích và giao dịch cho sàn ONUS đang trong giai đoạn phát triển.
+                            Tính năng phân tích và giao dịch cho sàn Attlas đang trong giai đoạn phát triển.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="text-center py-12 px-6 border-2 border-dashed rounded-lg">
                             <h3 className="text-lg font-semibold text-foreground">Sắp ra mắt!</h3>
                             <p className="text-muted-foreground mt-2 max-w-md mx-auto">
-                                Để hoàn thiện tính năng này, chúng tôi cần thông tin về API công khai (public API) của sàn ONUS để có thể lấy dữ liệu biểu đồ (k-line).
+                                Để hoàn thiện tính năng này, chúng tôi cần thông tin về API công khai (public API) của sàn Attlas để có thể lấy dữ liệu biểu đồ (k-line).
                             </p>
                              <p className="text-muted-foreground mt-2 max-w-md mx-auto">
                                 Nếu bạn có tài liệu hoặc đường dẫn API, vui lòng cung cấp để chúng tôi có thể tích hợp.
@@ -377,5 +377,3 @@ export default function Home() {
     </main>
   );
 }
-
-    
