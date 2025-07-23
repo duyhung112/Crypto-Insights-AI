@@ -6,6 +6,7 @@ export interface KlineData {
   high: number;
   low: number;
   close: number;
+  volume: number;
 }
 
 export interface AnalysisResult {
@@ -40,7 +41,7 @@ const BaseAnalysisInputSchema = z.object({
 export const AnalyzeCryptoPairInputSchema = BaseAnalysisInputSchema.extend({
   high: z.number().describe("The high price of the current candle."),
   low: z.number().describe("The low price of the current candle."),
-  discordWebhookUrl: z.string().optional().describe("The Discord Webhook URL to send a notification to."),
+  volume: z.number().describe("The volume of the most recent candle."),
 });
 export type AnalyzeCryptoPairInput = z.infer<typeof AnalyzeCryptoPairInputSchema>;
 
@@ -54,7 +55,7 @@ const SignalSchema = z.object({
 export const AnalyzeCryptoPairOutputSchema = z.object({
   marketOverview: z.string().describe('Đánh giá tổng quan thị trường dựa trên tất cả các chỉ báo.'),
   indicatorExplanations: z.string().describe('Giải thích chi tiết về tín hiệu của từng chỉ báo kỹ thuật.'),
-  buySellSignal: z.string().describe('Kết luận cuối cùng: "MUA", "BÁN", hoặc "GIỮ".'),
+  buySellSignal: z.string().describe('Kết luận cuối cùng: "MUA", "BÁN", hoặc "CHỜ ĐỢI".'),
   entrySuggestion: z.string().describe('Giá hoặc khoảng giá đề xuất để vào lệnh.'),
   stopLossSuggestion: z.string().describe('Mức giá dừng lỗ đề xuất.'),
   takeProfitSuggestion: z.string().describe('Mức giá chốt lời đề xuất.'),

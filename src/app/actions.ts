@@ -34,6 +34,7 @@ export async function getBybitKlineData(pair: string, timeframe: string, limit: 
                 high: parseFloat(d[2]),
                 low: parseFloat(d[3]),
                 close: parseFloat(d[4]),
+                volume: parseFloat(d[5]),
             }))
             .reverse(); // Bybit returns newest first, so reverse
 
@@ -71,7 +72,7 @@ export async function getAnalysis(pair: string, timeframe: string, mode: 'swing'
     }
 
     const closePrices = klineData.map((k) => k.close);
-    const latestPrice = closePrices[closePrices.length - 1];
+    const latestKline = klineData[klineData.length - 1];
 
     const rsiResult = RSI.calculate({ values: closePrices, period: 14 });
     const macdResult = MACD.calculate({ values: closePrices, fastPeriod: 12, slowPeriod: 26, signalPeriod: 9, SimpleMA: false });
@@ -91,13 +92,14 @@ export async function getAnalysis(pair: string, timeframe: string, mode: 'swing'
     const aiInput: AnalyzeCryptoPairInput = {
       pair,
       timeframe,
-      price: latestPrice,
+      price: latestKline.close,
       mode,
       rsi: latestRsi,
       macd: { line: latestMacdLine, signal: latestMacdSignal },
       ema: { ema9: latestEma9, ema21: latestEma21 },
-      high: klineData[klineData.length - 1].high,
-      low: klineData[klineData.length - 1].low,
+      high: latestKline.high,
+      low: latestKline.low,
+      volume: latestKline.volume,
     };
     
     const cryptoSymbol = pair.replace(/USDT$/, '').replace(/\/.*/, '');

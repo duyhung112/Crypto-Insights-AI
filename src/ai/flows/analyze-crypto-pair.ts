@@ -19,49 +19,55 @@ export async function analyzeCryptoPair(input: AnalyzeCryptoPairInput, dynamicAi
     name: 'analyzeCryptoPairPrompt',
     input: {schema: AnalyzeCryptoPairInputSchema},
     output: {schema: AnalyzeCryptoPairOutputSchema},
-    prompt: `Bạn là một chuyên gia phân tích kỹ thuật thị trường tiền mã hóa, đưa ra lời khuyên cho chế độ giao dịch: {{{mode}}}.
-Dựa vào dữ liệu đầu vào cho cặp {{{pair}}} trên khung thời gian {{{timeframe}}}, hãy thực hiện một phân tích chi tiết.
+    prompt: `Bạn là một nhà phân tích kỹ thuật và giao dịch tiền mã hóa chuyên nghiệp. Nhiệm vụ của bạn là đưa ra một phân tích toàn diện, chuyên sâu và có tính thực tiễn cao cho cặp {{{pair}}} trên khung thời gian {{{timeframe}}}, phù hợp với chế độ giao dịch '{{{mode}}}'.
 
 **Dữ liệu đầu vào:**
 - Giá hiện tại: {{{price}}}
-- RSI (14):** {{{rsi}}}
-- **MACD (12, 26, 9):**
+- RSI (14): {{{rsi}}}
+- MACD (12, 26, 9):
     - Đường MACD: {{{macd.line}}}
     - Đường tín hiệu: {{{macd.signal}}}
-- **EMA:**
+- EMA:
     - EMA 9: {{{ema.ema9}}}
     - EMA 21: {{{ema.ema21}}}
+- Khối lượng giao dịch (Volume) nến gần nhất: {{{volume}}}
 
-**Thực hiện phân tích theo các bước sau, tùy chỉnh theo chế độ giao dịch '{{{mode}}}':**
+**QUY TRÌNH PHÂN TÍCH CHUYÊN SÂU:**
 
-**Phần 1: Tín hiệu Giao dịch Chi tiết**
-Tạo một danh sách các tín hiệu giao dịch cho từng chỉ báo. Đối với mỗi chỉ báo, hãy cung cấp một tín hiệu rõ ràng "Mua", "Bán" hoặc "Trung tính", mức độ tự tin ("Cao", "Trung bình" hoặc "Thấp") và lý do ngắn gọn bằng tiếng Việt.
-1.  **RSI**: Tài sản đang bị quá mua (>70), quá bán (<30), hay trung tính? Tín hiệu này mạnh hơn cho giao dịch 'Swing' khi ở các khung giờ lớn.
-2.  **MACD**: Đường MACD đang cắt lên trên đường tín hiệu (tăng giá), cắt xuống dưới (giảm giá), hay không có sự giao cắt rõ ràng?
-3.  **EMA Crossover**: Có giao cắt vàng (EMA9 cắt lên EMA21) hay giao cắt tử thần (EMA9 cắt xuống EMA21) không?
-4.  **Price vs EMA**: Giá hiện tại đang ở trên hay dưới các đường EMA? Đây là tín hiệu nền tảng cho xu hướng.
+**Bước 1: Phân tích bối cảnh thị trường (Market Context)**
+1.  **Xu hướng chính (Primary Trend):** Dựa vào vị trí của giá so với các đường EMA, xác định xu hướng dài hạn hơn trên khung thời gian này (Tăng giá, Giảm giá, Đi ngang).
+2.  **Xu hướng phụ (Secondary Trend):** Phân tích các tín hiệu gần đây từ RSI và MACD để xác định động thái giá ngắn hạn.
 
-**Phần 2: Phân tích Tổng hợp**
-1.  **Đánh giá tổng quan xu hướng:**
-    - Phân tích và kết hợp tất cả các tín hiệu từ Phần 1 để đưa ra đánh giá chung (Tăng giá, Giảm giá, Đi ngang).
+**Bước 2: Phân tích hợp lưu các chỉ báo (Confluence Analysis)**
+Tạo ra một danh sách các tín hiệu giao dịch chi tiết. Mỗi tín hiệu phải có "Tín hiệu" (Mua, Bán, Trung tính), "Độ tin cậy" (Cao, Trung bình, Thấp) và "Lý do" bằng tiếng Việt.
+1.  **RSI (Relative Strength Index):**
+    - Tín hiệu: Tài sản đang quá mua (>70), quá bán (<30) hay trung tính? Có tín hiệu phân kỳ không?
+    - Độ tin cậy: Tín hiệu mạnh hơn khi ở các vùng cực trị và khi có sự xác nhận từ khối lượng.
+2.  **MACD (Moving Average Convergence Divergence):**
+    - Tín hiệu: Có sự giao cắt (bullish/bearish cross) không? Histogram đang dương hay âm và có đang mạnh lên hay yếu đi không?
+    - Độ tin cậy: Tín hiệu mạnh hơn khi có sự giao cắt rõ ràng và histogram đồng thuận với xu hướng.
+3.  **EMA (Exponential Moving Averages):**
+    - Tín hiệu: Giá đang nằm trên hay dưới các đường EMA? Có sự giao cắt vàng (EMA9 cắt lên EMA21) hay giao cắt tử thần không?
+    - Độ tin cậy: Cao khi giá tôn trọng các đường EMA như các mức hỗ trợ/kháng cự động.
+4.  **Volume (Khối lượng giao dịch):**
+    - Tín hiệu: Khối lượng giao dịch có đang tăng đột biến không? Nó đang xác nhận cho xu hướng hiện tại hay báo hiệu sự suy yếu? (ví dụ: giá tăng nhưng volume giảm là tín hiệu xấu).
+    - Độ tin cậy: Cao khi có sự đột biến về khối lượng tại các vùng giá quan trọng.
 
-2.  **Giải thích các chỉ báo:**
-    - Giải thích ngắn gọn các tín hiệu quan trọng nhất từ Phần 1 đã dẫn đến kết luận của bạn.
+**Bước 3: Tổng hợp và đưa ra kết luận (Synthesis & Conclusion)**
+1.  **Đánh giá tổng quan:** Tổng hợp tất cả các phân tích trên để đưa ra một nhận định chung về thị trường (Tăng giá mạnh, Tăng giá yếu, Giảm giá mạnh, Giảm giá yếu, Đi ngang).
+2.  **Giải thích logic:** Giải thích ngắn gọn cách các tín hiệu từ Bước 2 hỗ trợ cho đánh giá tổng quan của bạn. Cái nào là tín hiệu mạnh nhất? Có tín hiệu nào trái chiều không?
+3.  **Tín hiệu giao dịch cuối cùng:** Dựa trên tất cả phân tích, đưa ra một tín hiệu cuối cùng: **MUA**, **BÁN**, hoặc **CHỜ ĐỢI**.
 
-3.  **Kết luận và Tín hiệu Giao dịch:**
-    - Dựa trên phân tích tổng hợp, đưa ra kết luận cuối cùng: **MUA**, **BÁN**, hoặc **GIỮ**.
+**Bước 4: Xây dựng kế hoạch giao dịch (Actionable Trading Plan)**
+1.  **Chiến lược vào lệnh:** Đề xuất một chiến lược cụ thể, không chỉ là một con số. Ví dụ: "Chờ giá điều chỉnh về vùng EMA 21 quanh [giá] rồi vào lệnh" hoặc "Mua khi giá phá vỡ và đóng cửa trên ngưỡng kháng cự [giá]".
+2.  **Vùng giá vào lệnh (Entry Zone):** Cung cấp một khoảng giá hợp lý để thực hiện chiến lược trên.
+3.  **Dừng lỗ (Stop-loss):** Đề xuất mức dừng lỗ cụ thể. Mức này phải được đặt dựa trên một cơ sở kỹ thuật (ví dụ: dưới mức đáy gần nhất, dưới đường EMA quan trọng).
+4.  **Chốt lời (Take-profit):** Đề xuất 1-2 mức chốt lời tiềm năng, dựa trên các mức kháng cự/hỗ trợ hoặc các mục tiêu giá hợp lý.
 
-4.  **Kế hoạch Giao dịch Đề xuất (Tùy chỉnh theo chế độ '{{{mode}}}'):**
-    - **Nếu là 'Scalping'**: Tập trung vào các mục tiêu ngắn hạn. Giá vào lệnh phải rất gần giá hiện tại. Dừng lỗ và Chốt lời phải rất chặt chẽ.
-    - **Nếu là 'Swing'**: Tập trung vào các mục tiêu dài hạn hơn. Giá vào lệnh có thể ở một vùng rộng hơn. Dừng lỗ và Chốt lời sẽ dựa trên các mức hỗ trợ/kháng cự quan trọng.
-    - **Giá vào lệnh:** Đề xuất một khoảng giá hợp lý.
-    - **Dừng lỗ:** Đề xuất một mức dừng lỗ để bảo vệ vốn.
-    - **Chốt lời:** Đề xuất các mức chốt lời tiềm năng.
+**Bước 5: Quản lý rủi ro (Risk Management)**
+Cung cấp một lời khuyên ngắn gọn, súc tích và QUAN TRỌNG NHẤT về quản lý rủi ro cho giao dịch này.
 
-5.  **Quản lý rủi ro:**
-    - Cung cấp một lời khuyên ngắn gọn, súc tích về quản lý rủi ro.
-
-**Yêu cầu:** Trả về kết quả bằng tiếng Việt, trình bày rõ ràng, dễ hiểu, và tuân thủ nghiêm ngặt định dạng JSON đầu ra.`,
+**Yêu cầu:** Trả về kết quả bằng tiếng Việt, tuân thủ nghiêm ngặt định dạng JSON đầu ra, và thể hiện sự chuyên sâu trong phân tích.`,
   });
 
   const { output } = await analyzeCryptoPairPrompt(input);
