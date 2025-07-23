@@ -58,7 +58,7 @@ export async function getOnusKlineData(pair: string, timeframe: string, limit: n
     const onusSymbol = pair; 
     const onusTimeframe = convertTimeframeToOnus(timeframe);
     
-    const to = Date.now();
+    const to = Math.floor(Date.now() / 1000) * 1000;
     let from: number;
 
     const getFromTimestamp = (days: number) => {
