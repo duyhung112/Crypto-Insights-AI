@@ -32,6 +32,19 @@ export async function analyzeCryptoPair(input: AnalyzeCryptoPairInput, dynamicAi
     - EMA 21: {{{ema.ema21}}}
 - Khối lượng giao dịch (Volume) nến gần nhất: {{{volume}}}
 
+---
+
+**CÁC KHÁI NIỆM VÀ CHIẾN LƯỢC GIAO DỊCH CẦN ÁP DỤNG:**
+
+*   **Chiến lược Giao dịch Mua theo Sóng Điều Chỉnh (Pullback Entry):**
+    *   **Mô tả:** Đây là chiến lược tìm kiếm cơ hội mua trong một xu hướng tăng đang diễn ra. Thay vì mua ở đỉnh, nhà giao dịch sẽ chờ đợi một đợt giá "điều chỉnh" (pullback) hoặc "giảm tạm thời" về một vùng hỗ trợ quan trọng.
+    *   **Cách xác định:**
+        1.  **Xu hướng tăng rõ ràng:** Giá phải đang giao dịch phía trên các đường EMA (ví dụ: EMA9 > EMA21).
+        2.  **Sóng điều chỉnh:** Giá giảm nhẹ và tiệm cận về các vùng hỗ trợ động như đường EMA 9 hoặc EMA 21.
+        3.  **Điểm vào lệnh:** Khi giá chạm vào vùng hỗ trợ và có dấu hiệu đảo chiều (ví dụ: nến rút chân, RSI bật lên từ vùng 40-50), đó là tín hiệu để vào lệnh MUA.
+
+---
+
 **QUY TRÌNH PHÂN TÍCH CHUYÊN SÂU:**
 
 **Bước 1: Phân tích bối cảnh thị trường (Market Context)**
@@ -41,16 +54,16 @@ export async function analyzeCryptoPair(input: AnalyzeCryptoPairInput, dynamicAi
 **Bước 2: Phân tích hợp lưu các chỉ báo (Confluence Analysis)**
 Tạo ra một danh sách các tín hiệu giao dịch chi tiết. Mỗi tín hiệu phải có "Tín hiệu" (Mua, Bán, Trung tính), "Độ tin cậy" (Cao, Trung bình, Thấp) và "Lý do" bằng tiếng Việt.
 1.  **RSI (Relative Strength Index):**
-    - Tín hiệu: Tài sản đang quá mua (>70), quá bán (<30) hay trung tính? Có tín hiệu phân kỳ không?
+    - Tín hiệu: Tài sản đang quá mua (>70), quá bán (<30) hay trung tính? Có tín hiệu phân kỳ không? Trong một xu hướng tăng, RSI được hỗ trợ trên mức 40 là một dấu hiệu tốt.
     - Độ tin cậy: Tín hiệu mạnh hơn khi ở các vùng cực trị và khi có sự xác nhận từ khối lượng.
 2.  **MACD (Moving Average Convergence Divergence):**
     - Tín hiệu: Có sự giao cắt (bullish/bearish cross) không? Histogram đang dương hay âm và có đang mạnh lên hay yếu đi không?
     - Độ tin cậy: Tín hiệu mạnh hơn khi có sự giao cắt rõ ràng và histogram đồng thuận với xu hướng.
 3.  **EMA (Exponential Moving Averages):**
-    - Tín hiệu: Giá đang nằm trên hay dưới các đường EMA? Có sự giao cắt vàng (EMA9 cắt lên EMA21) hay giao cắt tử thần không?
-    - Độ tin cậy: Cao khi giá tôn trọng các đường EMA như các mức hỗ trợ/kháng cự động.
+    - Tín hiệu: Giá đang nằm trên hay dưới các đường EMA? Các đường EMA có đang dốc lên không? Chúng có đang hoạt động như các mức hỗ trợ/kháng cự động không?
+    - Độ tin cậy: Cao khi giá tôn trọng các đường EMA.
 4.  **Volume (Khối lượng giao dịch):**
-    - Tín hiệu: Khối lượng giao dịch có đang tăng đột biến không? Nó đang xác nhận cho xu hướng hiện tại hay báo hiệu sự suy yếu? (ví dụ: giá tăng nhưng volume giảm là tín hiệu xấu).
+    - Tín hiệu: Khối lượng giao dịch có đang tăng đột biến không? Nó đang xác nhận cho xu hướng hiện tại hay báo hiệu sự suy yếu? (ví dụ: giá tăng nhưng volume giảm là tín hiệu xấu; giá điều chỉnh với volume thấp là tín hiệu tốt cho phe mua).
     - Độ tin cậy: Cao khi có sự đột biến về khối lượng tại các vùng giá quan trọng.
 
 **Bước 3: Tổng hợp và đưa ra kết luận (Synthesis & Conclusion)**
@@ -59,7 +72,7 @@ Tạo ra một danh sách các tín hiệu giao dịch chi tiết. Mỗi tín hi
 3.  **Tín hiệu giao dịch cuối cùng:** Dựa trên tất cả phân tích, đưa ra một tín hiệu cuối cùng: **MUA**, **BÁN**, hoặc **CHỜ ĐỢI**.
 
 **Bước 4: Xây dựng kế hoạch giao dịch (Actionable Trading Plan)**
-1.  **Chiến lược vào lệnh:** Đề xuất một chiến lược cụ thể, không chỉ là một con số. Ví dụ: "Chờ giá điều chỉnh về vùng EMA 21 quanh [giá] rồi vào lệnh" hoặc "Mua khi giá phá vỡ và đóng cửa trên ngưỡng kháng cự [giá]".
+1.  **Chiến lược vào lệnh:** Đề xuất một chiến lược cụ thể. **QUAN TRỌNG:** Nếu thị trường đang trong xu hướng tăng, hãy ưu tiên xem xét và đề xuất "Chiến lược Mua theo Sóng Điều Chỉnh". Ví dụ: "Chờ giá điều chỉnh về vùng EMA 21 quanh [giá] rồi vào lệnh" hoặc "Mua khi giá phá vỡ và đóng cửa trên ngưỡng kháng cự [giá]".
 2.  **Vùng giá vào lệnh (Entry Zone):** Cung cấp một khoảng giá hợp lý để thực hiện chiến lược trên.
 3.  **Dừng lỗ (Stop-loss):** Đề xuất mức dừng lỗ cụ thể. Mức này phải được đặt dựa trên một cơ sở kỹ thuật (ví dụ: dưới mức đáy gần nhất, dưới đường EMA quan trọng).
 4.  **Chốt lời (Take-profit):** Đề xuất 1-2 mức chốt lời tiềm năng, dựa trên các mức kháng cự/hỗ trợ hoặc các mục tiêu giá hợp lý.
