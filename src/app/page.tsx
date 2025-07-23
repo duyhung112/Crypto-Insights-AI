@@ -53,6 +53,7 @@ const onusPairs = [
   { value: "BNB_USDT", label: "BNB/USDT" },
   { value: "XRP_USDT", label: "XRP/USDT" },
   { value: "ONUS_USDT", label: "ONUS/USDT" },
+  { value: "BTC_VNDC", label: "BTC/VNDC" },
 ];
 
 const timeframes = [
@@ -79,8 +80,11 @@ export default function Home() {
   const availablePairs = exchange === 'bybit' ? bybitPairs : onusPairs;
 
   useEffect(() => {
-    // Reset pair to a default when exchange changes
-    setPair(exchange === 'bybit' ? 'ETHUSDT' : 'ETH_USDT');
+    // Reset pair to a default when exchange changes, and trigger analysis
+    const newPair = exchange === 'bybit' ? 'ETHUSDT' : 'ETH_USDT';
+    setPair(newPair);
+    handleAnalyze(newPair, timeframe, mode, exchange);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [exchange]);
 
   const handleAnalyze = useCallback(async (currentPair: string, currentTimeframe: string, currentMode: 'swing' | 'scalping', currentExchange: 'bybit' | 'onus', isSilent = false) => {
@@ -104,17 +108,19 @@ export default function Home() {
     }
 
     const discordWebhookUrl = localStorage.getItem('discordWebhookUrl') || undefined;
-    const analysisTimeframe = currentMode === 'scalping' ? '5' : currentTimeframe;
+    const analysisTimeframe = currentMode === 'scalping' ? '15' : currentTimeframe;
     const response = await getAnalysis(currentPair, analysisTimeframe, currentMode, currentExchange, discordWebhookUrl, geminiApiKey);
 
     if (response.error && !isSilent) {
       setError(response.error);
+      setResult(null);
     } else if (!response.error) {
       setResult({ 
         aiAnalysis: response.aiAnalysis,
         tradingSignals: response.tradingSignals,
         newsAnalysis: response.newsAnalysis,
       });
+      setError(null);
     }
 
     if (!isSilent) {
@@ -137,7 +143,7 @@ export default function Home() {
         }
         toast({
             title: "Đã bật Giám sát Tự động",
-            description: `Hệ thống sẽ kiểm tra tín hiệu cho ${pair} mỗi 15 phút.`,
+            description: `Hệ thống sẽ kiểm tra tín hiệu cho ${pair.replace('_', '/')} mỗi 15 phút.`,
         });
     } else {
         toast({
@@ -146,17 +152,19 @@ export default function Home() {
     }
   }
 
+  // Effect for initial load and when parameters change
   useEffect(() => {
     handleAnalyze(pair, timeframe, mode, exchange);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pair, mode, exchange]);
+  }, [pair, timeframe, mode]); // Removed `exchange` because it's handled in its own effect
 
+  // Effect for monitoring
   useEffect(() => {
       if (isMonitoring) {
           if (monitoringIntervalRef.current) clearInterval(monitoringIntervalRef.current);
           monitoringIntervalRef.current = setInterval(() => {
               console.log(`[Monitoring] Checking for signals for ${pair} on ${exchange}...`);
-              const analysisTimeframe = mode === 'scalping' ? '5' : timeframe;
+              const analysisTimeframe = mode === 'scalping' ? '15' : timeframe;
               handleAnalyze(pair, analysisTimeframe, mode, exchange, true);
           }, MONITORING_INTERVAL);
       } else {
@@ -175,9 +183,11 @@ export default function Home() {
     handleAnalyze(pair, timeframe, mode, exchange);
   }
 
-  const renderExchangeContent = (isBybit: boolean) => {
+  const renderExchangeContent = (currentExchange: 'bybit' | 'onus') => {
+    const isBybit = currentExchange === 'bybit';
     const currentPairLabel = availablePairs.find(p => p.value === pair)?.label || pair;
-    const chartPair = isBybit ? pair : pair.replace('_', '');
+    // TradingView needs symbols without underscores, e.g. BTCUSDT, not BTC_USDT
+    const chartPair = pair.replace('_', '');
 
     return (
         <div className="mt-6 space-y-6">
@@ -185,7 +195,7 @@ export default function Home() {
                 <CardHeader>
                     <CardTitle className="font-headline text-lg">Thông tin và Biểu đồ {currentPairLabel} ({isBybit ? "Bybit" : "ONUS"})</CardTitle>
                     <CardDescription className="text-xs">
-                        Khung thời gian: {mode === 'scalping' ? '1 phút' : timeframes.find(t => t.value === timeframe)?.label}. Dữ liệu giá được cập nhật theo thời gian thực.
+                        Khung thời gian: {mode === 'scalping' ? '15 phút' : timeframes.find(t => t.value === timeframe)?.label}.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -198,7 +208,7 @@ export default function Home() {
                     <div className="h-[600px] mt-4">
                         <TradingViewChart 
                             pair={chartPair} 
-                            timeframe={mode === 'scalping' ? '1' : timeframe}
+                            timeframe={mode === 'scalping' ? '15' : timeframe}
                             exchange={isBybit ? "BYBIT" : "ONUS"}
                         />
                     </div>
@@ -283,11 +293,11 @@ export default function Home() {
                         <TabsList className="grid w-full grid-cols-2">
                             <TabsTrigger value="swing" className="flex items-center gap-2 text-xs">
                                 <AreaChart className="h-4 w-4"/>
-                                Swing (5m+)
+                                Swing (15m+)
                             </TabsTrigger>
                             <TabsTrigger value="scalping" className="flex items-center gap-2 text-xs">
                                 <Zap className="h-4 w-4"/>
-                                Scalping (1m)
+                                Scalping (15m)
                             </TabsTrigger>
                         </TabsList>
                     </Tabs>
@@ -310,10 +320,10 @@ export default function Home() {
                 <TabsTrigger value="onus">ONUS</TabsTrigger>
             </TabsList>
             <TabsContent value="bybit">
-                {renderExchangeContent(true)}
+                {renderExchangeContent('bybit')}
             </TabsContent>
             <TabsContent value="onus">
-                {renderExchangeContent(false)}
+                {renderExchangeContent('onus')}
             </TabsContent>
         </Tabs>
 

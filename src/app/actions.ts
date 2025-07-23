@@ -55,13 +55,14 @@ const convertTimeframeToOnus = (timeframe: string) => {
 }
 
 export async function getOnusKlineData(pair: string, timeframe: string, limit: number = 500): Promise<KlineData[]> {
-    const onusSymbol = pair.replace('USDT', '_USDT');
+    // The pair from the UI is already in the correct format e.g., "BTC_USDT"
+    const onusSymbol = pair; 
     const onusTimeframe = convertTimeframeToOnus(timeframe);
     
     // ONUS uses 'from' and 'to' timestamps
     const to = Date.now();
-    // A rough estimation for 'from' based on limit. This might not be precise.
-    const from = to - (limit * parseInt(timeframe, 10) * 60 * 1000);
+    const timeframeMinutes = parseInt(timeframe, 10) || 60; // default to 60 for 'D', 'W', 'M'
+    const from = to - (limit * timeframeMinutes * 60 * 1000);
 
     const url = `${ONUS_API_URL}?symbol_name=${onusSymbol}&interval=${onusTimeframe}&from=${from}&to=${to}`;
 
@@ -72,6 +73,10 @@ export async function getOnusKlineData(pair: string, timeframe: string, limit: n
             throw new Error(`ONUS API Error: ${response.statusText} - ${errorBody}`);
         }
         const data = await response.json();
+         if (!Array.isArray(data)) {
+            console.error("ONUS API did not return an array:", data);
+            throw new Error(`API ONUS không trả về dữ liệu hợp lệ cho cặp ${onusSymbol}.`);
+        }
 
         // ONUS returns data in a different structure
         const klineData: KlineData[] = data.map((d: any) => ({
@@ -152,7 +157,7 @@ export async function getAnalysis(pair: string, timeframe: string, mode: 'swing'
       low: klineData[klineData.length - 1].low,
     };
     
-    const cryptoSymbol = pair.replace(/USDT$/, '');
+    const cryptoSymbol = pair.replace(/USDT$/, '').replace(/_USDT$/, '').replace(/_VNDC$/, '');
     const newsArticles = await getNewsForCrypto({ cryptoSymbol });
     const newsInput: NewsAnalysisInput = { cryptoSymbol, articles: newsArticles };
 
