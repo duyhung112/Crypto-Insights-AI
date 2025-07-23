@@ -20,8 +20,8 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader, AlertTriangle, AreaChart, Zap, Settings, RefreshCw, Bell, Construction } from "lucide-react";
-import { getAnalysis } from "@/app/actions";
-import type { AnalysisResult } from "@/lib/types";
+import { getAnalysis, getOnusKlineData } from "@/app/actions";
+import type { AnalysisResult, KlineData } from "@/lib/types";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AnalysisDisplay } from "@/components/analysis-display";
@@ -34,6 +34,11 @@ import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
 
 const TradingViewChart = dynamic(() => import('@/components/tradingview-chart'), {
+  ssr: false,
+  loading: () => <Skeleton className="w-full h-full min-h-[500px]" />,
+});
+
+const OnusChart = dynamic(() => import('@/components/onus-chart'), {
   ssr: false,
   loading: () => <Skeleton className="w-full h-full min-h-[500px]" />,
 });
@@ -76,6 +81,7 @@ export default function Home() {
   const [isMonitoring, setIsMonitoring] = useState(false);
   const { toast } = useToast();
   const monitoringIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [onusChartData, setOnusChartData] = useState<KlineData[]>([]);
   
   const availablePairs = exchange === 'bybit' ? bybitPairs : onusPairs;
 
@@ -87,6 +93,16 @@ export default function Home() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [exchange]);
 
+  const fetchOnusDataForChart = useCallback(async (currentPair: string, currentTimeframe: string) => {
+      try {
+        const data = await getOnusKlineData(currentPair, currentTimeframe, 500);
+        setOnusChartData(data);
+      } catch (e) {
+        console.error("Failed to fetch ONUS data for chart", e);
+        setOnusChartData([]); // Clear data on error
+      }
+  }, []);
+
   const handleAnalyze = useCallback(async (currentPair: string, currentTimeframe: string, currentMode: 'swing' | 'scalping', currentExchange: 'bybit' | 'onus', isSilent = false) => {
     if (!isSilent) {
         setLoading(true);
@@ -94,6 +110,11 @@ export default function Home() {
         setResult(null);
     }
     
+    // Fetch data for ONUS chart regardless of silent mode
+    if (currentExchange === 'onus') {
+        fetchOnusDataForChart(currentPair, currentTimeframe);
+    }
+
     const geminiApiKey = localStorage.getItem('geminiApiKey');
     if (!geminiApiKey) {
         if (!isSilent) {
@@ -126,7 +147,7 @@ export default function Home() {
     if (!isSilent) {
         setLoading(false);
     }
-  }, [toast]);
+  }, [toast, fetchOnusDataForChart]);
 
   const handleMonitoringChange = (checked: boolean) => {
     setIsMonitoring(checked);
@@ -206,11 +227,15 @@ export default function Home() {
                         </div>
                     )}
                     <div className="h-[600px] mt-4">
-                        <TradingViewChart 
+                       {isBybit ? (
+                         <TradingViewChart 
                             pair={chartPair} 
                             timeframe={mode === 'scalping' ? '15' : timeframe}
-                            exchange={isBybit ? "BYBIT" : "ONUS"}
+                            exchange={"BYBIT"}
                         />
+                       ) : (
+                         <OnusChart data={onusChartData} />
+                       )}
                     </div>
                 </CardContent>
             </Card>
