@@ -59,18 +59,21 @@ export async function getOnusKlineData(pair: string, timeframe: string, limit: n
     const onusTimeframe = convertTimeframeToOnus(timeframe);
     
     const to = Date.now();
-    let from;
+    let from: number;
 
-    const getFromTimestamp = (minutes: number) => to - (limit * minutes * 60 * 1000);
-
+    const getFromTimestamp = (days: number) => {
+      return to - (days * 24 * 60 * 60 * 1000);
+    }
+    
+    // Define a reasonable lookback period in days to avoid overly large requests
     switch(onusTimeframe) {
-        case '15m': from = getFromTimestamp(15); break;
-        case '1h': from = getFromTimestamp(60); break;
-        case '4h': from = getFromTimestamp(4 * 60); break;
-        case '1d': from = getFromTimestamp(24 * 60); break;
-        case '1w': from = getFromTimestamp(7 * 24 * 60); break;
-        case '1M': from = getFromTimestamp(30 * 24 * 60); break; // Approximation
-        default: from = getFromTimestamp(60); 
+        case '15m': from = getFromTimestamp(7); break; // 7 days of 15m data
+        case '1h': from = getFromTimestamp(30); break; // 30 days of 1h data
+        case '4h': from = getFromTimestamp(90); break; // 90 days of 4h data
+        case '1d': from = getFromTimestamp(365); break; // 1 year of daily data
+        case '1w': from = getFromTimestamp(365 * 2); break; // 2 years of weekly data
+        case '1M': from = getFromTimestamp(365 * 5); break; // 5 years of monthly data
+        default: from = getFromTimestamp(90); 
     }
 
     const url = `${ONUS_API_URL}?symbol_name=${onusSymbol}&interval=${onusTimeframe}&from=${from}&to=${to}`;
@@ -216,3 +219,4 @@ Lỗi: \`\`\`${errorMessage}\`\`\``;
     return { error: "Đã xảy ra lỗi không xác định." };
   }
 }
+
