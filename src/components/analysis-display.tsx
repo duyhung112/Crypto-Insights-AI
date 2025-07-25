@@ -7,8 +7,11 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowUp, ArrowDown, Minus, ShieldCheck } from "lucide-react";
+import { ArrowUp, ArrowDown, Minus, ShieldCheck, Star } from "lucide-react";
 import { Separator } from "./ui/separator";
+import { Progress } from "./ui/progress";
+import { cn } from "@/lib/utils";
+
 
 interface AnalysisDisplayProps {
   analysis: AnalyzeCryptoPairOutput;
@@ -34,25 +37,53 @@ const getSignalIcon = (signal: string) => {
   return <Minus className="h-4 w-4 text-muted-foreground" />;
 };
 
+
+const getConfidenceColor = (confidence: number) => {
+    if (confidence > 75) return "bg-primary";
+    if (confidence > 50) return "bg-yellow-500";
+    return "bg-muted-foreground";
+}
+
+
 export function AnalysisDisplay({ analysis }: AnalysisDisplayProps) {
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle className="font-headline text-xl flex flex-wrap items-center gap-4">
-          Phân tích từ Chuyên gia AI
-          <Badge
-            variant={getSignalBadgeVariant(analysis.buySellSignal)}
-            className="text-base px-3 py-1"
-          >
-            <span className="flex items-center gap-2">
-              {getSignalIcon(analysis.buySellSignal)}
-              {analysis.buySellSignal}
-            </span>
-          </Badge>
-        </CardTitle>
-        <CardDescription>
-          Dưới đây là phân tích chi tiết được cung cấp bởi Gemini AI dựa trên các chỉ báo kỹ thuật.
-        </CardDescription>
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+            <div className="flex-1">
+                <CardTitle className="font-headline text-xl flex flex-wrap items-center gap-4">
+                  Phân tích từ Chuyên gia AI
+                  <Badge
+                    variant={getSignalBadgeVariant(analysis.buySellSignal)}
+                    className="text-base px-3 py-1"
+                  >
+                    <span className="flex items-center gap-2">
+                      {getSignalIcon(analysis.buySellSignal)}
+                      {analysis.buySellSignal}
+                    </span>
+                  </Badge>
+                </CardTitle>
+                <CardDescription className="mt-2">
+                  Dưới đây là phân tích chi tiết được cung cấp bởi Gemini AI dựa trên các chỉ báo kỹ thuật.
+                </CardDescription>
+            </div>
+            <Card className="p-4 w-full md:w-auto md:min-w-[250px] bg-muted/50">
+                <div className="flex items-center justify-between mb-2">
+                    <CardDescription className="text-xs font-semibold flex items-center gap-2">
+                        <Star className="h-4 w-4 text-primary"/>
+                        Độ tin cậy Tổng thể
+                    </CardDescription>
+                    <span className="text-sm font-bold font-mono text-primary">
+                        {analysis.overallConfidence}%
+                    </span>
+                </div>
+                 <Progress 
+                    value={analysis.overallConfidence} 
+                    indicatorClassName={getConfidenceColor(analysis.overallConfidence)} 
+                    className="h-2"
+                />
+            </Card>
+        </div>
       </CardHeader>
       <CardContent className="space-y-6 text-sm">
         <div className="space-y-2">
@@ -65,7 +96,7 @@ export function AnalysisDisplay({ analysis }: AnalysisDisplayProps) {
         </div>
         <div className="space-y-2">
           <h3 className="font-headline text-lg font-semibold">
-            Giải thích Chỉ báo
+            Giải thích logic
           </h3>
           <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
             {analysis.indicatorExplanations}

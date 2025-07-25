@@ -50,8 +50,9 @@ export type Signal = z.infer<typeof SignalSchema>;
 
 export const AnalyzeCryptoPairOutputSchema = z.object({
   marketOverview: z.string().describe('Đánh giá tổng quan thị trường dựa trên tất cả các chỉ báo.'),
-  indicatorExplanations: z.string().describe('Giải thích chi tiết về tín hiệu của từng chỉ báo kỹ thuật.'),
+  indicatorExplanations: z.string().describe('Giải thích chi tiết về logic đằng sau kết luận tổng thể, dựa trên sự hợp lưu của các tín hiệu.'),
   buySellSignal: z.string().describe('Kết luận cuối cùng: "MUA", "BÁN", hoặc "CHỜ ĐỢI".'),
+  overallConfidence: z.number().describe('Điểm tin cậy tổng thể cho tín hiệu cuối cùng, từ 0-100, dựa trên sự hợp lưu của các chỉ báo.'),
   entrySuggestion: z.string().describe('Chiến lược và vùng giá đề xuất để vào lệnh.'),
   stopLossSuggestion: z.string().describe('Mức giá dừng lỗ đề xuất.'),
   takeProfitSuggestion: z.string().describe('Mức giá chốt lời đề xuất.'),
