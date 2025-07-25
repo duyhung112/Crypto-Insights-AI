@@ -89,28 +89,26 @@ export async function getAnalysis(pair: string, timeframe: string, mode: 'swing'
       throw new Error("Không thể tính toán các chỉ báo kỹ thuật. Cần thêm dữ liệu.");
     }
 
-    // --- Start parallel analysis ---
+    // --- Start sequential analysis ---
     const cryptoSymbol = pair.replace(/USDT$/, '').replace(/\/.*/, '');
 
-    // Fetch news and analyze sentiment
-    const newsAnalysisPromise: Promise<NewsAnalysisOutput> = (async () => {
-        const newsArticles = await getNewsForCrypto({ cryptoSymbol });
-        if (!newsArticles || newsArticles.length === 0) {
-             return {
-                sentiment: 'Neutral',
-                summary: 'Không tìm thấy tin tức mới.',
-                reasoning: 'Không có dữ liệu tin tức để phân tích.',
-                articles: [],
-            };
-        }
+    // 1. Fetch news and analyze sentiment first
+    const newsArticles = await getNewsForCrypto({ cryptoSymbol });
+    let newsAnalysisResponse: NewsAnalysisOutput;
+    
+    if (!newsArticles || newsArticles.length === 0) {
+        newsAnalysisResponse = {
+            sentiment: 'Neutral',
+            summary: 'Không tìm thấy tin tức mới.',
+            reasoning: 'Không có dữ liệu tin tức để phân tích.',
+            articles: [],
+        };
+    } else {
         const newsInput: NewsAnalysisInput = { cryptoSymbol, articles: newsArticles };
-        return await analyzeNewsSentiment(newsInput, userAi);
-    })();
+        newsAnalysisResponse = await analyzeNewsSentiment(newsInput, userAi);
+    }
     
-    // Wait for news analysis to get sentiment
-    const newsAnalysisResponse = await newsAnalysisPromise;
-    
-    // Now run crypto analysis with news sentiment as input
+    // 2. Now run crypto analysis with news sentiment as input
     const aiInput: AnalyzeCryptoPairInput = {
       pair,
       timeframe,
@@ -119,14 +117,12 @@ export async function getAnalysis(pair: string, timeframe: string, mode: 'swing'
       rsi: latestRsi,
       macd: { line: latestMacdLine, signal: latestMacdSignal },
       ema: { ema9: latestEma9, ema21: latestEma21 },
-      high: latestKline.high,
-      low: latestKline.low,
       volume: latestKline.volume,
-      newsSentiment: newsAnalysisResponse.sentiment,
+      newsSentiment: newsAnalysisResponse.sentiment, // Pass sentiment to the next step
     };
     
     const aiAnalysisResponse = await analyzeCryptoPair(aiInput, userAi);
-    // --- End parallel analysis ---
+    // --- End sequential analysis ---
 
     const tradingSignalsResponse = { signals: aiAnalysisResponse.signals };
 

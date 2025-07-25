@@ -31,7 +31,7 @@ export async function analyzeCryptoPair(input: AnalyzeCryptoPairInput, dynamicAi
     - EMA 9: {{{ema.ema9}}}
     - EMA 21: {{{ema.ema21}}}
 - Khối lượng giao dịch (Volume) nến gần nhất: {{{volume}}}
-- Tâm lý tin tức gần đây: {{{newsSentiment}}} (Positive/Negative/Neutral)
+- **Tâm lý tin tức gần đây: {{{newsSentiment}}} (Positive/Negative/Neutral)**
 
 ---
 
@@ -81,7 +81,7 @@ Tạo ra một danh sách các tín hiệu giao dịch chi tiết. Mỗi tín hi
     - Độ tin cậy: Cao khi có sự đột biến về khối lượng tại các vùng giá quan trọng.
 
 **Bước 3: Tổng hợp và đưa ra kết luận (Synthesis & Conclusion)**
-1.  **Đánh giá tổng quan:** Tổng hợp tất cả các phân tích trên và cả **tâm lý tin tức** để đưa ra một nhận định chung về thị trường (Tăng giá mạnh, Tăng giá yếu, Giảm giá mạnh, Giảm giá yếu, Đi ngang). Ví dụ, một tín hiệu kỹ thuật 'MUA' sẽ được củng cố nếu 'newsSentiment' là 'Positive'.
+1.  **Đánh giá tổng quan:** Tổng hợp tất cả các phân tích trên và cả **tâm lý tin tức** để đưa ra một nhận định chung về thị trường (Tăng giá mạnh, Tăng giá yếu, Giảm giá mạnh, Giảm giá yếu, Đi ngang). **QUAN TRỌNG:** Một tín hiệu kỹ thuật 'MUA' phải được cân nhắc kỹ lưỡng và có thể bị giảm độ tin cậy nếu 'newsSentiment' là 'Negative'. Ngược lại, tín hiệu 'MUA' sẽ được củng cố nếu 'newsSentiment' là 'Positive'.
 2.  **Giải thích logic:** Giải thích ngắn gọn cách các tín hiệu từ Bước 2 và tâm lý tin tức hỗ trợ cho đánh giá tổng quan của bạn. Cái nào là tín hiệu mạnh nhất? Có tín hiệu nào trái chiều không?
 3.  **Tín hiệu giao dịch cuối cùng:** Dựa trên tất cả phân tích, đưa ra một tín hiệu cuối cùng: **MUA**, **BÁN**, hoặc **CHỜ ĐỢI**.
 

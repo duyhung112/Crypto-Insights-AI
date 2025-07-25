@@ -25,8 +25,8 @@ const EMASchema = z.object({
   ema21: z.number().describe("The 21-period Exponential Moving Average."),
 });
 
-// Base input schema for AI analysis
-const BaseAnalysisInputSchema = z.object({
+// Schema for the analyzeCryptoPair flow
+export const AnalyzeCryptoPairInputSchema = z.object({
   pair: z.string().describe("The cryptocurrency pair to analyze (e.g., ETH/USDT)."),
   timeframe: z.string().describe("The timeframe for the analysis (e.g., 15m, 1h, 4h, 1d)."),
   price: z.number().describe("Current price of the crypto pair."),
@@ -34,13 +34,6 @@ const BaseAnalysisInputSchema = z.object({
   rsi: z.number().describe("Relative Strength Index (14) value."),
   macd: MACDSchema,
   ema: EMASchema,
-});
-
-
-// Schema for the combined analyzeCryptoPair flow
-export const AnalyzeCryptoPairInputSchema = BaseAnalysisInputSchema.extend({
-  high: z.number().describe("The high price of the current candle."),
-  low: z.number().describe("The low price of the current candle."),
   volume: z.number().describe("The volume of the most recent candle."),
   newsSentiment: z.enum(["Positive", "Negative", "Neutral"]).describe("The recent news sentiment for the crypto pair."),
 });

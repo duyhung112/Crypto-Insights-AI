@@ -50,7 +50,7 @@ const bybitPairs = [
   { value: "LINKUSDT", label: "LINK/USDT" },
   { value: "DOTUSDT", label: "DOT/USDT" },
   { value: "MATICUSDT", label: "MATIC/USDT" },
-  { value: "1000SHIBUSDT", label: "SHIB/USDT" },
+  { value: "SHIBUSDT", label: "SHIB/USDT" },
   { value: "LTCUSDT", label: "LTC/USDT" },
   { value: "NEARUSDT", label: "NEAR/USDT" },
   { value: "UNIUSDT", label: "UNI/USDT" },
