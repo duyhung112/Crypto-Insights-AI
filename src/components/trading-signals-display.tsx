@@ -17,6 +17,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Zap } from "lucide-react";
+import { Progress } from "./ui/progress";
 
 interface TradingSignalsDisplayProps {
   signals: TradingSignalsOutput;
@@ -34,17 +35,12 @@ const getSignalBadgeClass = (signal: string) => {
   return "bg-gray-500/20 text-gray-700 border-gray-500/50 hover:bg-gray-500/30 dark:text-gray-300";
 };
 
-const getConfidenceBadgeClass = (confidence: string) => {
-    if (!confidence) return "border-muted-foreground/50 text-muted-foreground";
-    const lowerConfidence = confidence.toLowerCase();
-    if (lowerConfidence.includes("high") || lowerConfidence.includes("cao")) {
-        return "border-primary/80 text-primary";
-    }
-    if (lowerConfidence.includes("medium") || lowerConfidence.includes("trung bình")) {
-        return "border-yellow-500/80 text-yellow-600 dark:text-yellow-400";
-    }
-    return "border-muted-foreground/50 text-muted-foreground";
+const getConfidenceColor = (confidence: number) => {
+    if (confidence > 75) return "bg-primary";
+    if (confidence > 50) return "bg-yellow-500";
+    return "bg-muted-foreground";
 }
+
 
 export function TradingSignalsDisplay({ signals }: TradingSignalsDisplayProps) {
   if (!signals || !signals.signals || signals.signals.length === 0) {
@@ -76,7 +72,7 @@ export function TradingSignalsDisplay({ signals }: TradingSignalsDisplayProps) {
                 <TableRow>
                 <TableHead className="w-[150px]">Chỉ báo</TableHead>
                 <TableHead className="text-center w-[120px]">Tín hiệu</TableHead>
-                <TableHead className="text-center w-[120px]">Độ tin cậy</TableHead>
+                <TableHead className="w-[150px]">Độ tin cậy</TableHead>
                 <TableHead>Lý do</TableHead>
                 </TableRow>
             </TableHeader>
@@ -89,10 +85,11 @@ export function TradingSignalsDisplay({ signals }: TradingSignalsDisplayProps) {
                         {signal.signal}
                     </Badge>
                     </TableCell>
-                    <TableCell className="text-center">
-                    <Badge variant="outline" className={cn("text-xs font-semibold", getConfidenceBadgeClass(signal.confidence))}>
-                        {signal.confidence}
-                    </Badge>
+                    <TableCell>
+                        <div className="flex items-center gap-2">
+                            <Progress value={signal.confidence} indicatorClassName={getConfidenceColor(signal.confidence)} className="h-2 flex-grow"/>
+                            <span className="text-xs font-mono text-muted-foreground w-10 text-right">{signal.confidence}%</span>
+                        </div>
                     </TableCell>
                     <TableCell className="text-muted-foreground text-xs">{signal.reasoning}</TableCell>
                 </TableRow>

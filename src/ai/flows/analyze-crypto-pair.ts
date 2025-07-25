@@ -66,7 +66,7 @@ export async function analyzeCryptoPair(input: AnalyzeCryptoPairInput, dynamicAi
 2.  **Xu hướng phụ (Secondary Trend):** Phân tích các tín hiệu gần đây từ RSI và MACD để xác định động thái giá ngắn hạn.
 
 **Bước 2: Phân tích hợp lưu các chỉ báo (Confluence Analysis)**
-Tạo ra một danh sách các tín hiệu giao dịch chi tiết. Mỗi tín hiệu phải có "indicator" (RSI, MACD, EMA, Volume), "signal" (Mua, Bán, Trung tính), "confidence" (Cao, Trung bình, Thấp) và "reasoning" bằng tiếng Việt.
+Tạo ra một danh sách các tín hiệu giao dịch chi tiết. Mỗi tín hiệu phải có "indicator" (RSI, MACD, EMA, Volume), "signal" (Mua, Bán, Trung tính), "confidence" (một con số từ 0 đến 100 đại diện cho phần trăm độ tin cậy) và "reasoning" bằng tiếng Việt.
 1.  **RSI (Relative Strength Index):**
     - Tín hiệu: Tài sản đang quá mua (>70), quá bán (<30) hay trung tính? Có tín hiệu phân kỳ không? Trong một xu hướng tăng, RSI được hỗ trợ trên mức 40 là một dấu hiệu tốt.
     - Độ tin cậy: Tín hiệu mạnh hơn khi ở các vùng cực trị và khi có sự xác nhận từ khối lượng.

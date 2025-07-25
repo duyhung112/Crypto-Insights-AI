@@ -42,7 +42,7 @@ export type AnalyzeCryptoPairInput = z.infer<typeof AnalyzeCryptoPairInputSchema
 const SignalSchema = z.object({
     indicator: z.string().describe('Tên của chỉ báo kỹ thuật (ví dụ: "RSI", "MACD", "EMA", "Volume").'),
     signal: z.string().describe('Tín hiệu giao dịch được suy ra từ chỉ báo (Mua, Bán, Trung tính).'),
-    confidence: z.string().describe('Mức độ tin cậy của tín hiệu (Cao, Trung bình, Thấp).'),
+    confidence: z.number().describe('Tỉ lệ phần trăm độ tin cậy của tín hiệu (0-100).'),
     reasoning: z.string().describe('Giải thích ngắn gọn cho tín hiệu bằng tiếng Việt.')
 });
 export type Signal = z.infer<typeof SignalSchema>;
