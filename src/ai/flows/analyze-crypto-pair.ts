@@ -31,6 +31,7 @@ export async function analyzeCryptoPair(input: AnalyzeCryptoPairInput, dynamicAi
     - EMA 9: {{{ema.ema9}}}
     - EMA 21: {{{ema.ema21}}}
 - Khối lượng giao dịch (Volume) nến gần nhất: {{{volume}}}
+- Tâm lý tin tức gần đây: {{{newsSentiment}}} (Positive/Negative/Neutral)
 
 ---
 
@@ -65,7 +66,7 @@ export async function analyzeCryptoPair(input: AnalyzeCryptoPairInput, dynamicAi
 2.  **Xu hướng phụ (Secondary Trend):** Phân tích các tín hiệu gần đây từ RSI và MACD để xác định động thái giá ngắn hạn.
 
 **Bước 2: Phân tích hợp lưu các chỉ báo (Confluence Analysis)**
-Tạo ra một danh sách các tín hiệu giao dịch chi tiết. Mỗi tín hiệu phải có "Tín hiệu" (Mua, Bán, Trung tính), "Độ tin cậy" (Cao, Trung bình, Thấp) và "Lý do" bằng tiếng Việt.
+Tạo ra một danh sách các tín hiệu giao dịch chi tiết. Mỗi tín hiệu phải có "indicator" (RSI, MACD, EMA, Volume), "signal" (Mua, Bán, Trung tính), "confidence" (Cao, Trung bình, Thấp) và "reasoning" bằng tiếng Việt.
 1.  **RSI (Relative Strength Index):**
     - Tín hiệu: Tài sản đang quá mua (>70), quá bán (<30) hay trung tính? Có tín hiệu phân kỳ không? Trong một xu hướng tăng, RSI được hỗ trợ trên mức 40 là một dấu hiệu tốt.
     - Độ tin cậy: Tín hiệu mạnh hơn khi ở các vùng cực trị và khi có sự xác nhận từ khối lượng.
@@ -80,8 +81,8 @@ Tạo ra một danh sách các tín hiệu giao dịch chi tiết. Mỗi tín hi
     - Độ tin cậy: Cao khi có sự đột biến về khối lượng tại các vùng giá quan trọng.
 
 **Bước 3: Tổng hợp và đưa ra kết luận (Synthesis & Conclusion)**
-1.  **Đánh giá tổng quan:** Tổng hợp tất cả các phân tích trên để đưa ra một nhận định chung về thị trường (Tăng giá mạnh, Tăng giá yếu, Giảm giá mạnh, Giảm giá yếu, Đi ngang).
-2.  **Giải thích logic:** Giải thích ngắn gọn cách các tín hiệu từ Bước 2 hỗ trợ cho đánh giá tổng quan của bạn. Cái nào là tín hiệu mạnh nhất? Có tín hiệu nào trái chiều không?
+1.  **Đánh giá tổng quan:** Tổng hợp tất cả các phân tích trên và cả **tâm lý tin tức** để đưa ra một nhận định chung về thị trường (Tăng giá mạnh, Tăng giá yếu, Giảm giá mạnh, Giảm giá yếu, Đi ngang). Ví dụ, một tín hiệu kỹ thuật 'MUA' sẽ được củng cố nếu 'newsSentiment' là 'Positive'.
+2.  **Giải thích logic:** Giải thích ngắn gọn cách các tín hiệu từ Bước 2 và tâm lý tin tức hỗ trợ cho đánh giá tổng quan của bạn. Cái nào là tín hiệu mạnh nhất? Có tín hiệu nào trái chiều không?
 3.  **Tín hiệu giao dịch cuối cùng:** Dựa trên tất cả phân tích, đưa ra một tín hiệu cuối cùng: **MUA**, **BÁN**, hoặc **CHỜ ĐỢI**.
 
 **Bước 4: Xây dựng kế hoạch giao dịch (Actionable Trading Plan)**

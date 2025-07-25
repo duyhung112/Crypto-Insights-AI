@@ -4,7 +4,7 @@
 import { analyzeCryptoPair } from "@/ai/flows/analyze-crypto-pair";
 import { analyzeNewsSentiment } from "@/ai/flows/analyze-news-sentiment";
 import { initGenkit } from "@/ai/genkit";
-import type { AnalyzeCryptoPairInput, KlineData, NewsAnalysisInput, AnalyzeCryptoPairOutput, NewsArticle } from "@/lib/types";
+import type { AnalyzeCryptoPairInput, KlineData, NewsAnalysisInput, AnalyzeCryptoPairOutput, NewsArticle, NewsAnalysisOutput } from "@/lib/types";
 import { RSI, MACD, EMA } from "technicalindicators";
 import { sendDiscordNotification, getNewsForCrypto } from "@/lib/tools";
 
@@ -89,6 +89,28 @@ export async function getAnalysis(pair: string, timeframe: string, mode: 'swing'
       throw new Error("Không thể tính toán các chỉ báo kỹ thuật. Cần thêm dữ liệu.");
     }
 
+    // --- Start parallel analysis ---
+    const cryptoSymbol = pair.replace(/USDT$/, '').replace(/\/.*/, '');
+
+    // Fetch news and analyze sentiment
+    const newsAnalysisPromise: Promise<NewsAnalysisOutput> = (async () => {
+        const newsArticles = await getNewsForCrypto({ cryptoSymbol });
+        if (!newsArticles || newsArticles.length === 0) {
+             return {
+                sentiment: 'Neutral',
+                summary: 'Không tìm thấy tin tức mới.',
+                reasoning: 'Không có dữ liệu tin tức để phân tích.',
+                articles: [],
+            };
+        }
+        const newsInput: NewsAnalysisInput = { cryptoSymbol, articles: newsArticles };
+        return await analyzeNewsSentiment(newsInput, userAi);
+    })();
+    
+    // Wait for news analysis to get sentiment
+    const newsAnalysisResponse = await newsAnalysisPromise;
+    
+    // Now run crypto analysis with news sentiment as input
     const aiInput: AnalyzeCryptoPairInput = {
       pair,
       timeframe,
@@ -100,17 +122,12 @@ export async function getAnalysis(pair: string, timeframe: string, mode: 'swing'
       high: latestKline.high,
       low: latestKline.low,
       volume: latestKline.volume,
+      newsSentiment: newsAnalysisResponse.sentiment,
     };
     
-    const cryptoSymbol = pair.replace(/USDT$/, '').replace(/\/.*/, '');
-    const newsArticles = await getNewsForCrypto({ cryptoSymbol });
-    const newsInput: NewsAnalysisInput = { cryptoSymbol, articles: newsArticles };
+    const aiAnalysisResponse = await analyzeCryptoPair(aiInput, userAi);
+    // --- End parallel analysis ---
 
-    const [aiAnalysisResponse, newsAnalysisResponse] = await Promise.all([
-        analyzeCryptoPair(aiInput, userAi),
-        analyzeNewsSentiment(newsInput, userAi),
-    ]);
-    
     const tradingSignalsResponse = { signals: aiAnalysisResponse.signals };
 
     if (aiAnalysisResponse && discordWebhookUrl) {

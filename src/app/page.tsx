@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader, AlertTriangle, AreaChart, Zap, Settings, RefreshCw, Bell } from "lucide-react";
+import { Loader, AlertTriangle, AreaChart, Zap, Settings, RefreshCw, Bell, BotMessageSquare, Newspaper } from "lucide-react";
 import { getAnalysis } from "@/app/actions";
 import type { AnalysisResult } from "@/lib/types";
 import { Label } from "@/components/ui/label";
@@ -319,9 +319,15 @@ export default function Home() {
             <div className="animate-in fade-in duration-500">
                 <Tabs defaultValue="analysis" className="w-full">
                 <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="analysis">Phân tích AI ({mode === 'scalping' ? 'Scalping' : 'Swing'})</TabsTrigger>
-                    <TabsTrigger value="signals">Tín hiệu Giao dịch ({mode === 'scalping' ? 'Scalping' : 'Swing'})</TabsTrigger>
-                    <TabsTrigger value="news">Tin tức &amp; Tâm lý</TabsTrigger>
+                    <TabsTrigger value="analysis" className="flex items-center gap-2">
+                        <BotMessageSquare className="h-4 w-4"/>Phân tích AI
+                    </TabsTrigger>
+                    <TabsTrigger value="signals" className="flex items-center gap-2">
+                        <Zap className="h-4 w-4"/>Tín hiệu Chi tiết
+                    </TabsTrigger>
+                    <TabsTrigger value="news" className="flex items-center gap-2">
+                        <Newspaper className="h-4 w-4"/>Tin tức &amp; Tâm lý
+                    </TabsTrigger>
                 </TabsList>
                 <TabsContent value="analysis">
                     {result.aiAnalysis && <AnalysisDisplay analysis={result.aiAnalysis} />}

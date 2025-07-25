@@ -42,21 +42,24 @@ export const AnalyzeCryptoPairInputSchema = BaseAnalysisInputSchema.extend({
   high: z.number().describe("The high price of the current candle."),
   low: z.number().describe("The low price of the current candle."),
   volume: z.number().describe("The volume of the most recent candle."),
+  newsSentiment: z.enum(["Positive", "Negative", "Neutral"]).describe("The recent news sentiment for the crypto pair."),
 });
 export type AnalyzeCryptoPairInput = z.infer<typeof AnalyzeCryptoPairInputSchema>;
 
 const SignalSchema = z.object({
-    indicator: z.string().describe('Tên của chỉ báo kỹ thuật (ví dụ: "RSI", "MACD", "EMA Crossover").'),
-    signal: z.enum(["Buy", "Sell", "Neutral", "Mua", "Bán", "Trung tính"]).describe('Tín hiệu giao dịch được suy ra từ chỉ báo.'),
-    confidence: z.enum(["High", "Medium", "Low", "Cao", "Trung bình", "Thấp"]).describe('Mức độ tin cậy của tín hiệu.'),
+    indicator: z.string().describe('Tên của chỉ báo kỹ thuật (ví dụ: "RSI", "MACD", "EMA", "Volume").'),
+    signal: z.string().describe('Tín hiệu giao dịch được suy ra từ chỉ báo (Mua, Bán, Trung tính).'),
+    confidence: z.string().describe('Mức độ tin cậy của tín hiệu (Cao, Trung bình, Thấp).'),
     reasoning: z.string().describe('Giải thích ngắn gọn cho tín hiệu bằng tiếng Việt.')
 });
+export type Signal = z.infer<typeof SignalSchema>;
+
 
 export const AnalyzeCryptoPairOutputSchema = z.object({
   marketOverview: z.string().describe('Đánh giá tổng quan thị trường dựa trên tất cả các chỉ báo.'),
   indicatorExplanations: z.string().describe('Giải thích chi tiết về tín hiệu của từng chỉ báo kỹ thuật.'),
   buySellSignal: z.string().describe('Kết luận cuối cùng: "MUA", "BÁN", hoặc "CHỜ ĐỢI".'),
-  entrySuggestion: z.string().describe('Giá hoặc khoảng giá đề xuất để vào lệnh.'),
+  entrySuggestion: z.string().describe('Chiến lược và vùng giá đề xuất để vào lệnh.'),
   stopLossSuggestion: z.string().describe('Mức giá dừng lỗ đề xuất.'),
   takeProfitSuggestion: z.string().describe('Mức giá chốt lời đề xuất.'),
   riskManagementAdvice: z.string().describe('Một mẹo ngắn gọn, có thể hành động để quản lý rủi ro.'),
