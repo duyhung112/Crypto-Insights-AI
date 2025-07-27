@@ -4,7 +4,7 @@
 import { analyzeCryptoPair } from "@/ai/flows/analyze-crypto-pair";
 import { analyzeNewsSentiment } from "@/ai/flows/analyze-news-sentiment";
 import { initGenkit } from "@/ai/genkit";
-import type { AnalyzeCryptoPairInput, KlineData, NewsAnalysisInput, AnalyzeCryptoPairOutput, NewsArticle, NewsAnalysisOutput } from "@/lib/types";
+import type { AnalyzeCryptoPairInput, KlineData, NewsAnalysisInput, AnalyzeCryptoPairOutput, NewsArticle, NewsAnalysisOutput, HigherTimeframeData } from "@/lib/types";
 import { RSI, MACD, EMA } from "technicalindicators";
 import { sendDiscordNotification, getNewsForCrypto } from "@/lib/tools";
 
@@ -57,6 +57,15 @@ async function handleDiscordNotification(message: string, webhookUrl: string) {
     }
 }
 
+const getHigherTimeframe = (timeframe: string): string | null => {
+    const mapping: { [key: string]: string } = {
+        '15': '60',
+        '60': '240',
+        '240': 'D',
+    };
+    return mapping[timeframe] || null;
+}
+
 export async function getAnalysis(pair: string, timeframe: string, mode: 'swing' | 'scalping', discordWebhookUrl?: string, geminiApiKey?: string) {
   try {
     if (!geminiApiKey) {
@@ -65,34 +74,54 @@ export async function getAnalysis(pair: string, timeframe: string, mode: 'swing'
     
     const userAi = initGenkit(geminiApiKey);
 
-    const klineData = await getBybitKlineData(pair, timeframe, 200);
+    const primaryTimeframe = mode === 'scalping' ? '15' : timeframe;
+    const higherTimeframe = getHigherTimeframe(primaryTimeframe);
+
+    // Fetch data for both timeframes
+    const [primaryKlineData, higherTimeframeKlineData] = await Promise.all([
+        getBybitKlineData(pair, primaryTimeframe, 200),
+        higherTimeframe ? getBybitKlineData(pair, higherTimeframe, 200) : Promise.resolve(null)
+    ]);
    
-    if (klineData.length < 50) {
+    if (primaryKlineData.length < 50) {
       throw new Error("Không đủ dữ liệu lịch sử để phân tích cặp tiền này.");
     }
 
-    const closePrices = klineData.map((k) => k.close);
-    const latestKline = klineData[klineData.length - 1];
+    // --- Calculate indicators for primary timeframe ---
+    const primaryClosePrices = primaryKlineData.map((k) => k.close);
+    const latestPrimaryKline = primaryKlineData[primaryKlineData.length - 1];
+    const primaryRsi = RSI.calculate({ values: primaryClosePrices, period: 14 }).pop();
+    const primaryMacd = MACD.calculate({ values: primaryClosePrices, fastPeriod: 12, slowPeriod: 26, signalPeriod: 9, SimpleMA: false }).pop();
+    const primaryEma9 = EMA.calculate({ values: primaryClosePrices, period: 9 }).pop();
+    const primaryEma21 = EMA.calculate({ values: primaryClosePrices, period: 21 }).pop();
 
-    const rsiResult = RSI.calculate({ values: closePrices, period: 14 });
-    const macdResult = MACD.calculate({ values: closePrices, fastPeriod: 12, slowPeriod: 26, signalPeriod: 9, SimpleMA: false });
-    const ema9Result = EMA.calculate({ values: closePrices, period: 9 });
-    const ema21Result = EMA.calculate({ values: closePrices, period: 21 });
-
-    const latestRsi = rsiResult[rsiResult.length - 1];
-    const latestMacdLine = macdResult[macdResult.length - 1]?.MACD;
-    const latestMacdSignal = macdResult[macdResult.length - 1]?.signal;
-    const latestEma9 = ema9Result[ema9Result.length - 1];
-    const latestEma21 = ema21Result[ema21Result.length - 1];
-    
-    if (latestRsi === undefined || latestMacdLine === undefined || latestMacdSignal === undefined || latestEma9 === undefined || latestEma21 === undefined) {
-      throw new Error("Không thể tính toán các chỉ báo kỹ thuật. Cần thêm dữ liệu.");
+    if (!primaryRsi || !primaryMacd?.MACD || !primaryMacd?.signal || !primaryEma9 || !primaryEma21) {
+         throw new Error("Không thể tính toán các chỉ báo kỹ thuật cho khung thời gian chính.");
     }
-
-    // --- Start sequential analysis ---
+    
+    // --- Calculate indicators for higher timeframe ---
+    let htfData: HigherTimeframeData | undefined = undefined;
+    if (higherTimeframe && higherTimeframeKlineData && higherTimeframeKlineData.length > 50) {
+        const htfClosePrices = higherTimeframeKlineData.map((k) => k.close);
+        const latestHtfKline = higherTimeframeKlineData[higherTimeframeKlineData.length - 1];
+        const htfRsi = RSI.calculate({ values: htfClosePrices, period: 14 }).pop();
+        const htfMacd = MACD.calculate({ values: htfClosePrices, fastPeriod: 12, slowPeriod: 26, signalPeriod: 9, SimpleMA: false }).pop();
+        const htfEma9 = EMA.calculate({ values: htfClosePrices, period: 9 }).pop();
+        const htfEma21 = EMA.calculate({ values: htfClosePrices, period: 21 }).pop();
+        
+        if (htfRsi && htfMacd?.MACD && htfMacd?.signal && htfEma9 && htfEma21) {
+            htfData = {
+                timeframe: higherTimeframe,
+                price: latestHtfKline.close,
+                rsi: htfRsi,
+                macd: { line: htfMacd.MACD, signal: htfMacd.signal },
+                ema: { ema9: htfEma9, ema21: htfEma21 },
+            };
+        }
+    }
+    
+    // --- News Analysis ---
     const cryptoSymbol = pair.replace(/USDT$/, '').replace(/\/.*/, '');
-
-    // 1. Fetch news and analyze sentiment first
     const newsArticles = await getNewsForCrypto({ cryptoSymbol });
     let newsAnalysisResponse: NewsAnalysisOutput;
     
@@ -108,21 +137,21 @@ export async function getAnalysis(pair: string, timeframe: string, mode: 'swing'
         newsAnalysisResponse = await analyzeNewsSentiment(newsInput, userAi);
     }
     
-    // 2. Now run crypto analysis with news sentiment as input
+    // --- Final AI Crypto Analysis ---
     const aiInput: AnalyzeCryptoPairInput = {
       pair,
-      timeframe,
-      price: latestKline.close,
+      timeframe: primaryTimeframe,
+      price: latestPrimaryKline.close,
       mode,
-      rsi: latestRsi,
-      macd: { line: latestMacdLine, signal: latestMacdSignal },
-      ema: { ema9: latestEma9, ema21: latestEma21 },
-      volume: latestKline.volume,
-      newsSentiment: newsAnalysisResponse.sentiment, // Pass sentiment to the next step
+      rsi: primaryRsi,
+      macd: { line: primaryMacd.MACD, signal: primaryMacd.signal },
+      ema: { ema9: primaryEma9, ema21: primaryEma21 },
+      volume: latestPrimaryKline.volume,
+      newsSentiment: newsAnalysisResponse.sentiment,
+      higherTimeframeData: htfData, // Pass HTF data to the AI
     };
     
     const aiAnalysisResponse = await analyzeCryptoPair(aiInput, userAi);
-    // --- End sequential analysis ---
 
     const tradingSignalsResponse = { signals: aiAnalysisResponse.signals };
 
@@ -130,7 +159,7 @@ export async function getAnalysis(pair: string, timeframe: string, mode: 'swing'
         const signal = aiAnalysisResponse.buySellSignal.toUpperCase();
         if (signal.includes('MUA') || signal.includes('BUY') || signal.includes('BÁN') || signal.includes('SELL')) {
             const message = `**Tín hiệu Mới: ${aiAnalysisResponse.buySellSignal.toUpperCase()} ${aiInput.pair} (BYBIT)**
-Chế độ: ${aiInput.mode} | Khung: ${aiInput.timeframe}
+Chế độ: ${aiInput.mode} | Khung: ${aiInput.timeframe} (HTF: ${higherTimeframe || 'N/A'})
 Giá hiện tại: ${aiInput.price}
 ---
 **Kế hoạch Giao dịch Đề xuất:**

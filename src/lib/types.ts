@@ -25,17 +25,28 @@ const EMASchema = z.object({
   ema21: z.number().describe("The 21-period Exponential Moving Average."),
 });
 
+const HigherTimeframeDataSchema = z.object({
+    timeframe: z.string().describe("The higher timeframe (e.g., 4h, 1d)."),
+    price: z.number().describe("Current price on the higher timeframe."),
+    rsi: z.number().describe("RSI value on the higher timeframe."),
+    macd: MACDSchema,
+    ema: EMASchema,
+}).describe("Technical indicators from a higher timeframe to determine the primary trend.");
+
+export type HigherTimeframeData = z.infer<typeof HigherTimeframeDataSchema>;
+
 // Schema for the analyzeCryptoPair flow
 export const AnalyzeCryptoPairInputSchema = z.object({
   pair: z.string().describe("The cryptocurrency pair to analyze (e.g., ETH/USDT)."),
-  timeframe: z.string().describe("The timeframe for the analysis (e.g., 15m, 1h, 4h, 1d)."),
-  price: z.number().describe("Current price of the crypto pair."),
+  timeframe: z.string().describe("The primary (lower) timeframe for the analysis (e.g., 15m, 1h, 4h)."),
+  price: z.number().describe("Current price of the crypto pair on the primary timeframe."),
   mode: z.enum(["swing", "scalping"]).describe("The trading mode: 'swing' for longer-term, 'scalping' for short-term."),
-  rsi: z.number().describe("Relative Strength Index (14) value."),
-  macd: MACDSchema,
-  ema: EMASchema,
-  volume: z.number().describe("The volume of the most recent candle."),
+  rsi: z.number().describe("Relative Strength Index (14) value on the primary timeframe."),
+  macd: MACDSchema.describe("MACD data on the primary timeframe."),
+  ema: EMASchema.describe("EMA data on the primary timeframe."),
+  volume: z.number().describe("The volume of the most recent candle on the primary timeframe."),
   newsSentiment: z.enum(["Positive", "Negative", "Neutral"]).describe("The recent news sentiment for the crypto pair."),
+  higherTimeframeData: HigherTimeframeDataSchema.optional().describe("Technical indicator data from the higher timeframe. If available, this should be used to determine the main market trend."),
 });
 export type AnalyzeCryptoPairInput = z.infer<typeof AnalyzeCryptoPairInputSchema>;
 

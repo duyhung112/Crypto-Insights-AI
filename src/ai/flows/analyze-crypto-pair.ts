@@ -20,9 +20,17 @@ export async function analyzeCryptoPair(input: AnalyzeCryptoPairInput, dynamicAi
     name: 'analyzeCryptoPairPrompt',
     input: {schema: AnalyzeCryptoPairInputSchema},
     output: {schema: AnalyzeCryptoPairOutputSchema},
-    prompt: `Bạn là một nhà phân tích kỹ thuật và giao dịch tiền mã hóa chuyên nghiệp. Nhiệm vụ của bạn là đưa ra một phân tích toàn diện, chuyên sâu, khách quan và có tính thực tiễn cao cho cặp {{{pair}}} trên khung thời gian {{{timeframe}}}, phù hợp với chế độ giao dịch '{{{mode}}}'.
+    prompt: `Bạn là một nhà phân tích kỹ thuật và giao dịch tiền mã hóa chuyên nghiệp. Nhiệm vụ của bạn là thực hiện một phân tích đa khung thời gian (Multi-Timeframe Analysis - MTA) toàn diện, chuyên sâu và khách quan cho cặp {{{pair}}}.
 
-**Dữ liệu đầu vào:**
+**BỐI CẢNH PHÂN TÍCH:**
+- **Chế độ giao dịch:** '{{{mode}}}'
+- **Khung thời gian chính (để vào lệnh):** {{{timeframe}}}
+{{#if higherTimeframeData}}
+- **Khung thời gian phụ (để xác định xu hướng lớn):** {{{higherTimeframeData.timeframe}}}
+{{/if}}
+
+---
+**Dữ liệu đầu vào (Khung thời gian chính - {{{timeframe}}}):**
 - Giá hiện tại: {{{price}}}
 - RSI (14): {{{rsi}}}
 - MACD (12, 26, 9):
@@ -34,9 +42,21 @@ export async function analyzeCryptoPair(input: AnalyzeCryptoPairInput, dynamicAi
 - Khối lượng giao dịch (Volume) nến gần nhất: {{{volume}}}
 - **Tâm lý tin tức gần đây: {{{newsSentiment}}} (Positive/Negative/Neutral)**
 
+{{#if higherTimeframeData}}
+**Dữ liệu đầu vào (Khung thời gian phụ - {{{higherTimeframeData.timeframe}}}):**
+- Giá: {{{higherTimeframeData.price}}}
+- RSI (14): {{{higherTimeframeData.rsi}}}
+- MACD (12, 26, 9):
+    - Đường MACD: {{{higherTimeframeData.macd.line}}}
+    - Đường tín hiệu: {{{higherTimeframeData.macd.signal}}}
+- EMA:
+    - EMA 9: {{{higherTimeframeData.ema.ema9}}}
+    - EMA 21: {{{higherTimeframeData.ema.ema21}}}
+{{/if}}
+
 ---
 
-**CÁC KHÁI NIỆM VÀ CHIẾN LƯỢC GIAO DỊCH CẦN ÁP DỤNG:**
+**CÁC KHÁI NIỆM VÀ CHIẾN LƯỢỢC GIAO DỊCH CẦN ÁP DỤNG:**
 
 *   **1. Chiến lược Giao dịch Mua theo Sóng Điều Chỉnh (Pullback Entry):**
     *   **Mô tả:** Trong một xu hướng tăng đang diễn ra, tìm kiếm cơ hội mua khi giá "điều chỉnh" (pullback) về một vùng hỗ trợ động quan trọng.
@@ -60,13 +80,18 @@ export async function analyzeCryptoPair(input: AnalyzeCryptoPairInput, dynamicAi
 
 ---
 
-**QUY TRÌNH PHÂN TÍCH CHUYÊN SÂU:**
+**QUY TRÌNH PHÂN TÍCH CHUYÊN SÂU (MTA):**
 
-**Bước 1: Phân tích bối cảnh thị trường (Market Context)**
-1.  **Xu hướng chính (Primary Trend):** Dựa vào vị trí của giá so với các đường EMA và cấu trúc đỉnh/đáy, xác định xu hướng dài hạn hơn trên khung thời gian này (Tăng giá, Giảm giá, Đi ngang).
-2.  **Xu hướng phụ (Secondary Trend):** Phân tích các tín hiệu gần đây từ RSI và MACD để xác định động thái giá ngắn hạn.
+**Bước 1: Phân tích bối cảnh thị trường (Market Context & Primary Trend)**
+{{#if higherTimeframeData}}
+1.  **QUAN TRỌNG NHẤT: Xác định Xu hướng Chính trên Khung Thời gian Lớn ({{{higherTimeframeData.timeframe}}}):** Dựa vào vị trí của giá so với các đường EMA và cấu trúc đỉnh/đáy trên khung thời gian LỚN, hãy xác định xu hướng dài hạn (Tăng giá, Giảm giá, Đi ngang). Đây là yếu tố quan trọng nhất để ra quyết định. Một tín hiệu MUA trên khung thời gian nhỏ sẽ đáng tin cậy hơn rất nhiều nếu xu hướng trên khung thời gian lớn là TĂNG.
+2.  **Xác định Xu hướng Phụ trên Khung Thời gian Chính ({{{timeframe}}}):** Phân tích các tín hiệu gần đây từ RSI và MACD trên khung thời gian chính để xác định động thái giá ngắn hạn.
+{{else}}
+1.  **Xác định Xu hướng Chính (Primary Trend):** Dựa vào vị trí của giá so với các đường EMA và cấu trúc đỉnh/đáy, xác định xu hướng chính trên khung thời gian này (Tăng giá, Giảm giá, Đi ngang).
+2.  **Xác định Xu hướng Phụ (Secondary Trend):** Phân tích các tín hiệu gần đây từ RSI và MACD để xác định động thái giá ngắn hạn.
+{{/if}}
 
-**Bước 2: Phân tích hợp lưu các chỉ báo (Confluence Analysis)**
+**Bước 2: Phân tích hợp lưu các chỉ báo trên Khung Thời gian Chính ({{{timeframe}}})**
 Tạo ra một danh sách các tín hiệu giao dịch chi tiết và khách quan. Mỗi tín hiệu phải có "indicator" (RSI, MACD, EMA, Volume), "signal" (Mua, Bán, Trung tính), "confidence" (một con số từ 0 đến 100 đại diện cho phần trăm độ tin cậy) và "reasoning" bằng tiếng Việt.
 1.  **RSI (Relative Strength Index):**
     - Tín hiệu: Tài sản đang quá mua (>70 - tín hiệu tiềm năng BÁN), quá bán (<30 - tín hiệu tiềm năng MUA) hay trung tính? Có tín hiệu phân kỳ không?
@@ -82,7 +107,7 @@ Tạo ra một danh sách các tín hiệu giao dịch chi tiết và khách qua
     - Độ tin cậy: Cao khi có sự đột biến về khối lượng tại các vùng giá quan trọng.
 
 **Bước 3: Tổng hợp và đưa ra kết luận (Synthesis & Conclusion)**
-1.  **Đánh giá tổng quan:** Tổng hợp tất cả các phân tích trên và cả **tâm lý tin tức** để đưa ra một nhận định chung về thị trường (Tăng giá mạnh, Giảm giá mạnh, Đi ngang, etc.). **QUAN TRỌNG:** Một tín hiệu kỹ thuật 'MUA' phải được cân nhắc kỹ lưỡng và có thể bị giảm độ tin cậy nếu 'newsSentiment' là 'Negative'. Ngược lại, tín hiệu 'BÁN' có thể được củng cố nếu 'newsSentiment' là 'Negative'.
+1.  **Đánh giá tổng quan:** Tổng hợp tất cả các phân tích trên, **kết hợp xu hướng chính từ khung thời gian lớn**, các tín hiệu từ khung thời gian nhỏ và **tâm lý tin tức** để đưa ra một nhận định chung về thị trường (Tăng giá mạnh, Giảm giá mạnh, Đi ngang, etc.). **QUAN TRỌNG:** Một tín hiệu kỹ thuật 'MUA' phải được cân nhắc kỹ lưỡng nếu xu hướng chính đang GIẢM hoặc 'newsSentiment' là 'Negative'. Ngược lại, tín hiệu 'BÁN' được củng cố nếu xu hướng chính đang GIẢM và 'newsSentiment' là 'Negative'.
 2.  **Giải thích logic:** Giải thích ngắn gọn cách các tín hiệu từ Bước 2 và tâm lý tin tức hỗ trợ cho đánh giá tổng quan của bạn. Có tín hiệu nào mạnh nhất? Có tín hiệu nào trái chiều không?
 3.  **Tín hiệu giao dịch cuối cùng:** Dựa trên tất cả phân tích, đưa ra một tín hiệu cuối cùng một cách khách quan: **MUA**, **BÁN**, hoặc **CHỜ ĐỢI**.
 4.  **Độ tin cậy tổng thể (Overall Confidence):** Dựa trên sự hợp lưu và độ tin cậy của các tín hiệu từ Bước 2, hãy tính toán và đưa ra một điểm **overallConfidence** (từ 0-100) cho tín hiệu giao dịch cuối cùng của bạn.
@@ -106,4 +131,3 @@ Cung cấp một lời khuyên ngắn gọn, súc tích và QUAN TRỌNG NHẤT 
   }
   return output;
 }
-
