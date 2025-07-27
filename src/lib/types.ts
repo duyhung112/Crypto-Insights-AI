@@ -64,11 +64,12 @@ export const AnalyzeCryptoPairOutputSchema = z.object({
   indicatorExplanations: z.string().describe('Giải thích chi tiết về logic đằng sau kết luận tổng thể, dựa trên sự hợp lưu của các tín hiệu.'),
   buySellSignal: z.string().describe('Kết luận cuối cùng: "MUA", "BÁN", hoặc "CHỜ ĐỢI".'),
   overallConfidence: z.number().describe('Điểm tin cậy tổng thể cho tín hiệu cuối cùng, từ 0-100, dựa trên sự hợp lưu của các chỉ báo.'),
-  entrySuggestion: z.string().describe('Chiến lược và vùng giá đề xuất để vào lệnh.'),
-  stopLossSuggestion: z.string().describe('Mức giá dừng lỗ đề xuất.'),
-  takeProfitSuggestion: z.string().describe('Mức giá chốt lời đề xuất.'),
+  entrySuggestion: z.number().describe('Mức giá đề xuất để vào lệnh. Phải là một con số.'),
+  stopLossSuggestion: z.number().describe('Mức giá dừng lỗ đề xuất. Phải là một con số.'),
+  takeProfitSuggestion: z.number().describe('Mức giá chốt lời đề xuất. Phải là một con số.'),
   riskManagementAdvice: z.string().describe('Một mẹo ngắn gọn, có thể hành động để quản lý rủi ro.'),
   signals: z.array(SignalSchema).describe('Một mảng các tín hiệu giao dịch chi tiết từ từng chỉ báo.'),
+  strategy: z.string().describe("Tên của chiến lược giao dịch được đề xuất (ví dụ: Pullback Entry, Breakout Trading, Trend Following)."),
 });
 export type AnalyzeCryptoPairOutput = z.infer<typeof AnalyzeCryptoPairOutputSchema>;
 

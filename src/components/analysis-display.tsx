@@ -7,10 +7,10 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowUp, ArrowDown, Minus, ShieldCheck, Star } from "lucide-react";
+import { ArrowUp, ArrowDown, Minus, ShieldCheck, Star, Route } from "lucide-react";
 import { Separator } from "./ui/separator";
 import { Progress } from "./ui/progress";
-import { cn } from "@/lib/utils";
+import { SignalVisualization } from "./signal-visualization";
 
 
 interface AnalysisDisplayProps {
@@ -46,6 +46,7 @@ const getConfidenceColor = (confidence: number) => {
 
 
 export function AnalysisDisplay({ analysis }: AnalysisDisplayProps) {
+  const isTradeableSignal = analysis.buySellSignal.toUpperCase() !== 'CHỜ ĐỢI' && analysis.buySellSignal.toUpperCase() !== 'WAIT';
   return (
     <Card className="w-full">
       <CardHeader>
@@ -105,43 +106,26 @@ export function AnalysisDisplay({ analysis }: AnalysisDisplayProps) {
 
         <Separator />
         
-        <div className="space-y-4">
-            <h3 className="font-headline text-lg font-semibold">
-                Kế hoạch Giao dịch Đề xuất
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-            <Card>
-                <CardHeader className="p-4">
-                    <CardDescription>Giá vào lệnh</CardDescription>
-                </CardHeader>
-                <CardContent className="p-4 pt-0">
-                    <p className="text-base font-bold text-primary">
-                        {analysis.entrySuggestion}
-                    </p>
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader className="p-4">
-                    <CardDescription>Dừng lỗ</CardDescription>
-                </CardHeader>
-                <CardContent className="p-4 pt-0">
-                    <p className="text-base font-bold text-destructive">
-                        {analysis.stopLossSuggestion}
-                    </p>
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader className="p-4">
-                    <CardDescription>Chốt lời</CardDescription>
-                </CardHeader>
-                <CardContent className="p-4 pt-0">
-                    <p className="text-base font-bold text-chart-2">
-                        {analysis.takeProfitSuggestion}
-                    </p>
-                </CardContent>
-            </Card>
-            </div>
-        </div>
+        {isTradeableSignal && (
+          <div className="space-y-4">
+              <h3 className="font-headline text-lg font-semibold">
+                  Kế hoạch Giao dịch Đề xuất
+              </h3>
+               <div className="p-4 rounded-lg border bg-muted/30">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+                    <Route className="h-4 w-4 text-primary" />
+                    <span>Chiến lược được áp dụng: <span className="font-semibold text-foreground">{analysis.strategy}</span></span>
+                  </div>
+                  <SignalVisualization
+                    entryPrice={analysis.entrySuggestion}
+                    stopLoss={analysis.stopLossSuggestion}
+                    takeProfit={analysis.takeProfitSuggestion}
+                    signalType={analysis.buySellSignal}
+                  />
+               </div>
+          </div>
+        )}
+
 
          <Card className="bg-muted/50 border-primary/50">
             <CardHeader className="flex flex-row items-start gap-4">

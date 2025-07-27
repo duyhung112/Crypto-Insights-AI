@@ -113,10 +113,10 @@ Tạo ra một danh sách các tín hiệu giao dịch chi tiết và khách qua
 4.  **Độ tin cậy tổng thể (Overall Confidence):** Dựa trên sự hợp lưu và độ tin cậy của các tín hiệu từ Bước 2, hãy tính toán và đưa ra một điểm **overallConfidence** (từ 0-100) cho tín hiệu giao dịch cuối cùng của bạn.
 
 **Bước 4: Xây dựng kế hoạch giao dịch (Actionable Trading Plan)**
-1.  **Chiến lược vào lệnh:** Đề xuất một chiến lược cụ thể dựa trên các chiến lược đã nêu ở trên. **QUAN TRỌNG:** Phải nêu rõ tên chiến lược đang áp dụng. Ví dụ: "Chờ giá điều chỉnh về vùng EMA 21 quanh [giá] rồi vào lệnh MUA" hoặc "Vào lệnh BÁN khi giá phá vỡ và đóng cửa dưới ngưỡng hỗ trợ [giá] với khối lượng lớn".
-2.  **Vùng giá vào lệnh (Entry Zone):** Cung cấp một khoảng giá hợp lý để thực hiện chiến lược trên.
-3.  **Dừng lỗ (Stop-loss):** Đề xuất mức dừng lỗ cụ thể. Mức này phải được đặt dựa trên một cơ sở kỹ thuật (ví dụ: dưới mức đáy gần nhất cho lệnh MUA, trên đỉnh gần nhất cho lệnh BÁN).
-4.  **Chốt lời (Take-profit):** Đề xuất 1-2 mức chốt lời tiềm năng, dựa trên các mức kháng cự/hỗ trợ hoặc các mục tiêu giá hợp lý.
+1.  **Chiến lược vào lệnh:** Đề xuất một chiến lược cụ thể dựa trên các chiến lược đã nêu ở trên. **QUAN TRỌNG:** Phải nêu rõ tên chiến lược đang áp dụng trong trường \`strategy\`.
+2.  **Giá vào lệnh (Entry Price):** Cung cấp MỘT con số cụ thể làm giá vào lệnh. Ví dụ: 68500.5.
+3.  **Dừng lỗ (Stop-loss):** Đề xuất MỘT con số cụ thể làm mức dừng lỗ. Mức này phải được đặt dựa trên một cơ sở kỹ thuật (ví dụ: dưới mức đáy gần nhất cho lệnh MUA, trên đỉnh gần nhất cho lệnh BÁN).
+4.  **Chốt lời (Take-profit):** Đề xuất MỘT con số cụ thể làm mức chốt lời.
 
 **Bước 5: Quản lý rủi ro (Risk Management)**
 Cung cấp một lời khuyên ngắn gọn, súc tích và QUAN TRỌNG NHẤT về quản lý rủi ro cho giao dịch này.
