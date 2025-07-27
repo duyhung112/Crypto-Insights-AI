@@ -61,13 +61,14 @@ const TradingViewChart = ({ pair, timeframe, exchange = 'BYBIT' }: TradingViewCh
             },
             {
               id: "PivotPointsStandard@tv-basicstudies",
+              // Hide higher-level pivots for a cleaner chart
               styles: {
-                "R3": { visible: false },
-                "R4": { visible: false },
-                "R5": { visible: false },
-                "S3": { visible: false },
-                "S4": { visible: false },
-                "S5": { visible: false },
+                "R3": { "visible": false },
+                "R4": { "visible": false },
+                "R5": { "visible": false },
+                "S3": { "visible": false },
+                "S4": { "visible": false },
+                "S5": { "visible": false },
               }
             }
         ],
