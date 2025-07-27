@@ -82,16 +82,18 @@ export async function analyzeCryptoPair(input: AnalyzeCryptoPairInput, dynamicAi
 
 **QUY TRÌNH PHÂN TÍCH CHUYÊN SÂU (MTA):**
 
-**Bước 1: Phân tích bối cảnh thị trường (Market Context & Primary Trend)**
+**Bước 1: Phân tích bối cảnh thị trường (Market Context & Primary Trend) -> Điền vào trường 'marketOverview'**
 {{#if higherTimeframeData}}
 1.  **QUAN TRỌNG NHẤT: Xác định Xu hướng Chính trên Khung Thời gian Lớn ({{{higherTimeframeData.timeframe}}}):** Dựa vào vị trí của giá so với các đường EMA và cấu trúc đỉnh/đáy trên khung thời gian LỚN, hãy xác định xu hướng dài hạn (Tăng giá, Giảm giá, Đi ngang). Đây là yếu tố quan trọng nhất để ra quyết định. Một tín hiệu MUA trên khung thời gian nhỏ sẽ đáng tin cậy hơn rất nhiều nếu xu hướng trên khung thời gian lớn là TĂNG.
 2.  **Xác định Xu hướng Phụ trên Khung Thời gian Chính ({{{timeframe}}}):** Phân tích các tín hiệu gần đây từ RSI và MACD trên khung thời gian chính để xác định động thái giá ngắn hạn.
+3.  **Đưa ra nhận định tổng quan:** Viết một đoạn văn ngắn gọn tổng hợp các phân tích trên vào trường \`marketOverview\`.
 {{else}}
 1.  **Xác định Xu hướng Chính (Primary Trend):** Dựa vào vị trí của giá so với các đường EMA và cấu trúc đỉnh/đáy, xác định xu hướng chính trên khung thời gian này (Tăng giá, Giảm giá, Đi ngang).
 2.  **Xác định Xu hướng Phụ (Secondary Trend):** Phân tích các tín hiệu gần đây từ RSI và MACD để xác định động thái giá ngắn hạn.
+3.  **Đưa ra nhận định tổng quan:** Viết một đoạn văn ngắn gọn tổng hợp các phân tích trên vào trường \`marketOverview\`.
 {{/if}}
 
-**Bước 2: Phân tích hợp lưu các chỉ báo trên Khung Thời gian Chính ({{{timeframe}}})**
+**Bước 2: Phân tích hợp lưu các chỉ báo trên Khung Thời gian Chính ({{{timeframe}}}) -> Tạo danh sách 'signals'**
 Tạo ra một danh sách các tín hiệu giao dịch chi tiết và khách quan. Mỗi tín hiệu phải có "indicator" (RSI, MACD, EMA, Volume), "signal" (Mua, Bán, Trung tính), "confidence" (một con số từ 0 đến 100 đại diện cho phần trăm độ tin cậy) và "reasoning" bằng tiếng Việt.
 1.  **RSI (Relative Strength Index):**
     - Tín hiệu: Tài sản đang quá mua (>70 - tín hiệu tiềm năng BÁN), quá bán (<30 - tín hiệu tiềm năng MUA) hay trung tính? Có tín hiệu phân kỳ không?
@@ -106,13 +108,12 @@ Tạo ra một danh sách các tín hiệu giao dịch chi tiết và khách qua
     - Tín hiệu: Khối lượng giao dịch có đang tăng đột biến không? Nó đang xác nhận cho xu hướng hiện tại hay báo hiệu sự suy yếu? (ví dụ: giá tăng mạnh với volume lớn xác nhận phe MUA; giá giảm mạnh với volume lớn xác nhận phe BÁN).
     - Độ tin cậy: Cao khi có sự đột biến về khối lượng tại các vùng giá quan trọng.
 
-**Bước 3: Tổng hợp và đưa ra kết luận (Synthesis & Conclusion)**
-1.  **Đánh giá tổng quan:** Tổng hợp tất cả các phân tích trên, **kết hợp xu hướng chính từ khung thời gian lớn**, các tín hiệu từ khung thời gian nhỏ và **tâm lý tin tức** để đưa ra một nhận định chung về thị trường (Tăng giá mạnh, Giảm giá mạnh, Đi ngang, etc.). **QUAN TRỌNG:** Một tín hiệu kỹ thuật 'MUA' phải được cân nhắc kỹ lưỡng nếu xu hướng chính đang GIẢM hoặc 'newsSentiment' là 'Negative'. Ngược lại, tín hiệu 'BÁN' được củng cố nếu xu hướng chính đang GIẢM và 'newsSentiment' là 'Negative'.
-2.  **Giải thích logic:** Giải thích ngắn gọn cách các tín hiệu từ Bước 2 và tâm lý tin tức hỗ trợ cho đánh giá tổng quan của bạn. Có tín hiệu nào mạnh nhất? Có tín hiệu nào trái chiều không?
-3.  **Tín hiệu giao dịch cuối cùng:** Dựa trên tất cả phân tích, đưa ra một tín hiệu cuối cùng một cách khách quan: **MUA**, **BÁN**, hoặc **CHỜ ĐỢI**.
-4.  **Độ tin cậy tổng thể (Overall Confidence):** Dựa trên sự hợp lưu và độ tin cậy của các tín hiệu từ Bước 2, hãy tính toán và đưa ra một điểm **overallConfidence** (từ 0-100) cho tín hiệu giao dịch cuối cùng của bạn.
+**Bước 3: Tổng hợp và đưa ra kết luận -> Điền vào trường 'indicatorExplanations', 'buySellSignal', 'overallConfidence'**
+1.  **Giải thích logic chi tiết (Điền vào \`indicatorExplanations\`):** Dựa trên kết quả từ Bước 1 và danh sách tín hiệu từ Bước 2, hãy viết một lời giải thích chi tiết, có cấu trúc. **QUAN TRỌNG:** Phải giải thích rõ ràng TẠI SAO bạn lại đưa ra quyết định cuối cùng. Hãy chỉ ra tín hiệu nào là mạnh nhất, tín hiệu nào yếu hoặc trái chiều, và cách bạn đã cân nhắc chúng như thế nào. Phân tích cả sự ủng hộ (hoặc mâu thuẫn) từ \`newsSentiment\`. Lời giải thích phải sâu sắc, rõ ràng và thể hiện sự tư duy tổng hợp.
+2.  **Tín hiệu giao dịch cuối cùng (Điền vào \`buySellSignal\`):** Dựa trên tất cả phân tích, đưa ra một tín hiệu cuối cùng một cách khách quan: **MUA**, **BÁN**, hoặc **CHỜ ĐỢI**.
+3.  **Độ tin cậy tổng thể (Điền vào \`overallConfidence\`):** Dựa trên sự hợp lưu và độ tin cậy của các tín hiệu từ Bước 2, hãy tính toán và đưa ra một điểm **overallConfidence** (từ 0-100) cho tín hiệu giao dịch cuối cùng của bạn.
 
-**Bước 4: Xây dựng kế hoạch giao dịch (Actionable Trading Plan)**
+**Bước 4: Xây dựng kế hoạch giao dịch (Actionable Trading Plan) -> Điền vào các trường còn lại**
 1.  **Chiến lược vào lệnh:** Đề xuất một chiến lược cụ thể dựa trên các chiến lược đã nêu ở trên. **QUAN TRỌNG:** Phải nêu rõ tên chiến lược đang áp dụng trong trường \`strategy\`.
 2.  **Giá vào lệnh (Entry Price):** Cung cấp MỘT con số cụ thể làm giá vào lệnh. Ví dụ: 68500.5.
 3.  **Dừng lỗ (Stop-loss):** Đề xuất MỘT con số cụ thể làm mức dừng lỗ. Mức này phải được đặt dựa trên một cơ sở kỹ thuật (ví dụ: dưới mức đáy gần nhất cho lệnh MUA, trên đỉnh gần nhất cho lệnh BÁN).

@@ -106,7 +106,7 @@ export function AnalysisDisplay({ analysis }: AnalysisDisplayProps) {
 
         <Separator />
         
-        {isTradeableSignal && (
+        {isTradeableSignal ? (
           <div className="space-y-4">
               <h3 className="font-headline text-lg font-semibold">
                   Kế hoạch Giao dịch Đề xuất
@@ -124,6 +124,10 @@ export function AnalysisDisplay({ analysis }: AnalysisDisplayProps) {
                   />
                </div>
           </div>
+        ) : (
+             <div className="text-center py-4">
+                <p className="text-muted-foreground">Không có kế hoạch giao dịch nào được đề xuất khi tín hiệu là "CHỜ ĐỢI".</p>
+            </div>
         )}
 
 
