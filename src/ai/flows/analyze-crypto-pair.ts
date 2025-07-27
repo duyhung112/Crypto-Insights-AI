@@ -56,7 +56,7 @@ export async function analyzeCryptoPair(input: AnalyzeCryptoPairInput, dynamicAi
 
 ---
 
-**CÁC KHÁI NIỆM VÀ CHIẾN LƯỢỢC GIAO DỊCH CẦN ÁP DỤNG:**
+**CÁC KHÁI NIỆM VÀ CHIẾN LƯỢC GIAO DỊCH CẦN ÁP DỤNG:**
 
 *   **1. Chiến lược Giao dịch Mua theo Sóng Điều Chỉnh (Pullback Entry):**
     *   **Mô tả:** Trong một xu hướng tăng đang diễn ra, tìm kiếm cơ hội mua khi giá "điều chỉnh" (pullback) về một vùng hỗ trợ động quan trọng.
