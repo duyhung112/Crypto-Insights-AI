@@ -59,9 +59,9 @@ async function handleDiscordNotification(message: string, webhookUrl: string) {
 
 const getHigherTimeframe = (timeframe: string): string | null => {
     const mapping: { [key: string]: string } = {
-        '15': '60',
-        '60': '240',
-        '240': 'D',
+        '15': '60', // 15m -> 1h
+        '60': '240', // 1h -> 4h
+        '240': 'D',  // 4h -> 1D
     };
     return mapping[timeframe] || null;
 }
@@ -77,11 +77,14 @@ export async function getAnalysis(pair: string, timeframe: string, mode: 'swing'
     const primaryTimeframe = mode === 'scalping' ? '15' : timeframe;
     const higherTimeframe = getHigherTimeframe(primaryTimeframe);
 
-    // Fetch data for both timeframes
-    const [primaryKlineData, higherTimeframeKlineData] = await Promise.all([
+    // Fetch data for both timeframes, only fetch HTF if it's different and exists
+    const promises = [
         getBybitKlineData(pair, primaryTimeframe, 200),
-        higherTimeframe ? getBybitKlineData(pair, higherTimeframe, 200) : Promise.resolve(null)
-    ]);
+        (higherTimeframe) ? getBybitKlineData(pair, higherTimeframe, 200) : Promise.resolve(null),
+        getNewsForCrypto({ cryptoSymbol: pair.replace(/USDT$/, '').replace(/\/.*/, '') })
+    ];
+
+    const [primaryKlineData, higherTimeframeKlineData, newsArticles] = await Promise.all(promises);
    
     if (primaryKlineData.length < 50) {
       throw new Error("Không đủ dữ liệu lịch sử để phân tích cặp tiền này.");
@@ -122,7 +125,6 @@ export async function getAnalysis(pair: string, timeframe: string, mode: 'swing'
     
     // --- News Analysis ---
     const cryptoSymbol = pair.replace(/USDT$/, '').replace(/\/.*/, '');
-    const newsArticles = await getNewsForCrypto({ cryptoSymbol });
     let newsAnalysisResponse: NewsAnalysisOutput;
     
     if (!newsArticles || newsArticles.length === 0) {

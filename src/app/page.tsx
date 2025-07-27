@@ -32,6 +32,7 @@ import { NewsAnalysisDisplay } from "@/components/news-analysis-display";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
+import { SignalVisualization } from "@/components/signal-visualization";
 
 const TradingViewChart = dynamic(() => import('@/components/tradingview-chart'), {
   ssr: false,
@@ -193,7 +194,7 @@ export default function Home() {
                         <TabsList className="grid w-full grid-cols-2">
                             <TabsTrigger value="swing" className="flex items-center gap-2 text-xs">
                                 <AreaChart className="h-4 w-4"/>
-                                Swing (15m+)
+                                Swing (1h+)
                             </TabsTrigger>
                             <TabsTrigger value="scalping" className="flex items-center gap-2 text-xs">
                                 <Zap className="h-4 w-4"/>

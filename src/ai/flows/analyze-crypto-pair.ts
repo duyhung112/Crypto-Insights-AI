@@ -23,7 +23,7 @@ export async function analyzeCryptoPair(input: AnalyzeCryptoPairInput, dynamicAi
     prompt: `Bạn là một nhà phân tích kỹ thuật và giao dịch tiền mã hóa chuyên nghiệp. Nhiệm vụ của bạn là thực hiện một phân tích đa khung thời gian (Multi-Timeframe Analysis - MTA) toàn diện, chuyên sâu và khách quan cho cặp {{{pair}}}.
 
 **BỐI CẢNH PHÂN TÍCH:**
-- **Chế độ giao dịch:** '{{{mode}}}'
+- **Chế độ giao dịch:** '{{{mode}}}' (Swing trading ưu tiên xu hướng dài hạn, Scalping ưu tiên động lượng ngắn hạn)
 - **Khung thời gian chính (để vào lệnh):** {{{timeframe}}}
 {{#if higherTimeframeData}}
 - **Khung thời gian phụ (để xác định xu hướng lớn):** {{{higherTimeframeData.timeframe}}}
